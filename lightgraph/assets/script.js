@@ -405,11 +405,13 @@
         function recalculateForce() {
             try {
                 simulationForce = 4000 / nodes.length;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
 
                 simulation = d3.forceSimulation(nodes)
                     .force("link", d3.forceLink(edges).id(d => d.id).distance(100))
                     .force("charge", d3.forceManyBody().strength(-simulationForce))
-                    .force("center", d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2))
+                    .force("center", d3.forceCenter(centerX, centerY))
                     .on("tick", ticked);
 
                 d3.select(canvas).call(zoom);
@@ -547,11 +549,15 @@
         
         reloadData();
 
-        window.addEventListener('resize', () => {
-            canvas.width = lightGraph.clientWidth;
-            canvas.height = lightGraph.clientHeight;
-            recalculateForce(); 
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                canvas.width = width;
+                canvas.height = height;
+                recalculateForce(); 
+            }
         });
+        resizeObserver.observe(lightGraph);
 
         const observer = new MutationObserver((mutationsList, observer) => {
             setTimeout(() => {

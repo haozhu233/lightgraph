@@ -55,15 +55,19 @@ def net_vis(adj_matrix, node_names, node_groups=None, remove_unconnected=True,
     nodes_json = json.dumps(nodes)
     edges_json = json.dumps(edges)
 
+    d3script_path = os.path.join(os.path.dirname(__file__), "assets", "d3.v7.min.js")
+    with open(d3script_path, 'r') as f:
+        d3script_js = f.read()
+
     script_path = os.path.join(os.path.dirname(__file__), "assets", "script.js")
     with open(script_path, 'r') as f:
         script_js = f.read()
     
     html_content = f"""
-    <div id="lightGraph" style="width: 100%; height: 800px;"></div>
+    <div id="lightGraph" style="width: 100%; height: 100vh;"></div>
     <script type="application/json" id="nodesData">{nodes_json}</script>
     <script type="application/json" id="edgesData">{edges_json}</script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>{d3script_js}</script>
     <script>{script_js}</script>
     """
 
