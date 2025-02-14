@@ -1,0 +1,24 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "lightgraph"
+version = "0.1.0"
+description = "A lightweight Python binding for lightGraph network visualization"
+authors = [
+    {name = "Hao Zhu", email = "haozhu233@gmail.com"},
+    {name = "Donna Slonim", email = "donna.slonim@tufts.edu"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+homepage = "https://github.com/haozhu233/lightgraph"
+requires-python = ">=3.6"
+dependencies = ["numpy", "IPython"]
+
+# [tool.flit.scripts]
+# lightgraph = "lightgraph.visualize:visualize_network_lightGraph"
+
+# [tool.flit.metadata]
+# module = "lightgraph"
+# include = ["lightgraph/assets/script.js"]
