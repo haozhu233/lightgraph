@@ -55,7 +55,8 @@ def net_vis(adj_matrix, node_names, node_groups=None, remove_unconnected=True,
     nodes_json = json.dumps(nodes)
     edges_json = json.dumps(edges)
 
-    script_path = os.path.join(os.path.dirname(__file__), "assets", "script.js")
+    script_path = os.path.join(
+        os.path.dirname(__file__), "assets", "lightgraph.js")
     with open(script_path, 'r') as f:
         script_js = f.read()
     
