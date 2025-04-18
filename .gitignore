@@ -1,2 +1,4 @@
 dist/
 .ipynb_checkpoints/
+.DS_Store
+tests/

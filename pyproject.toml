@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "lightgraph"
-version = "0.1.0"
+version = "0.2.0"
 description = "A lightweight Python binding for lightGraph network visualization"
 authors = [
     {name = "Hao Zhu", email = "haozhu233@gmail.com"},
@@ -21,4 +21,4 @@ dependencies = ["numpy", "IPython"]
 
 # [tool.flit.metadata]
 # module = "lightgraph"
-# include = ["lightgraph/assets/script.js"]
+# include = ["lightgraph/assets/script.js", "lightgraph/assets/d3.v7.min.js"]

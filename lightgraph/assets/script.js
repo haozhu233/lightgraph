@@ -6,6 +6,15 @@
         // 1. Visual Element Section -------------------------------------------
         // =====================================================================
 
+        const style = document.createElement('style');
+        style.textContent = `
+            .select-icon { color: #666; }
+            .zoom-icon { color: #666; }
+            .active-mode .select-icon { opacity: 0.3; }
+            .active-mode .zoom-icon { opacity: 1; }
+        `;
+        document.head.appendChild(style);
+
         // #region 1.1 Element constructors ------------------------------------
         function createElement(tag, options = {}, styles = {}) {
             const element = document.createElement(tag);
@@ -16,13 +25,15 @@
 
         function createContainer() {
             return createElement('div', {}, {
-                position: 'absolute',
-                right: '10px',
-                gap: '10px',
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                padding: '5px',
-                borderRadius: '5px',
-                boxShadow: '0 0 5px rgba(0, 0, 0, 0.2)'
+                padding: '8px 20px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                border: 'none',
+                borderRadius: '6px',
+                background: 'linear-gradient(145deg, #f0f0f0, #ffffff)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.2s'
             });
         }
 
@@ -31,7 +42,12 @@
                 padding: '5px 15px',
                 fontSize: '14px',
                 fontWeight: 'bold',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                ':hover': {
+                    transform: 'translateY(-1px)',
+                    background: '0 4px 8px rgba(0,0,0,0.15)'
+                }
             });
         }
 
@@ -55,12 +71,41 @@
             textBlock.append(textBlockHeader, textBlockContent);
             return [textBlock, textBlockContent];
         }
+
+        function createCollapsibleSection(title, defaultOpen = true) {
+            const header = createElement('div', { 
+                className: 'section-header',
+                innerHTML: `<span>${title}</span><div class="toggle-icon"><svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" /></svg></div>` 
+            }, {
+                display: 'flex',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                padding: '8px 0',
+                borderBottom: '1px solid #eee',
+                'font-family': 'Arial, Helvetica, sans-serif'
+            });
+        
+            const content = createElement('div', { 
+                className: 'section-content' 
+            }, {
+                padding: '8px 0',
+                display: defaultOpen ? 'block' : 'none'
+            });
+        
+            header.addEventListener('click', () => {
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                header.querySelector('.toggle-icon').innerHTML = 
+                    content.style.display === 'none' ? '<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" /></svg>' : '<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" /></svg>';
+            });
+        
+            return [header, content];
+        }
         //#endregion
         
         // #region 1.2 Creating canvas -----------------------------------------
         const lightGraph = document.getElementById("lightGraph");
         Object.assign(lightGraph.style, {
-            height: '800px', position: 'relative'});
+            height: '800px', position: 'relative', overflow: 'hidden'});
         const canvas = createElement("canvas", {
             id: "lightGraphCanvas", 
             width: lightGraph.clientWidth, 
@@ -71,65 +116,136 @@
 
         // #region 1.3 Additional visual elements ------------------------------
         // 1.3.1 Control and search panel 
-        const controlContainer = createContainer();
-        Object.assign(controlContainer.style, {display: 'flex', top: '10px'});
+        const mainControlBar = createElement('div', { id: 'mainBar' }, {
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            display: 'flex',
+            gap: '8px',
+            zIndex: 1000,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '8px',
+            padding: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(8px)'
+        });
+
+        const sceneSidebar = createElement('div', { id: 'sceneSidebar' }, {
+            position: 'absolute',
+            top: '60px',  
+            right: '-350px', 
+            width: '330px',
+            transition: 'right 0.3s ease',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '8px',
+            padding: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(6px)'
+        });
+
+        // # Main Control Bar
         const toggleButton = createButton({
             id: 'toggleButton',
-            title: 'Click to switch between selection and zoom modes',
-            htmlContent: '<span style="color:lightgray;">Select</span> / <span style="font-weight:bold; color:black;">Zoom</span>'
+            title: 'Switch between Zoom and Selection modes',
+            htmlContent: `
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="zoom-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15.75-2.489-2.489m0 0a3.375 3.375 0 1 0-4.773-4.773 3.375 3.375 0 0 0 4.774 4.774ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <svg width="18" height="24" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="select-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+            `
         });
+        const searchBox = createInput({ 
+            id: 'searchBox',
+            placeholder: 'Search Node...'
+        });
+        searchBox.style.width = '180px';
+        
+        const sidebarToggle = createButton({
+            id: 'sidebarToggle',
+            title: 'Display More Tools',
+            htmlContent: '<svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>'  
+        });
+
         const arrowToggleButton = createButton({
             id: 'arrowToggleButton',
             title: 'Click to toggle arrows on edges',
             htmlContent: '<span style="color:lightgray;">Arrows</span>'
         });
-        const searchBox = createInput({
-            id: 'searchBox',
-            placeholder: 'Search node...'});
+        
+        // Add control panel to the page
+        lightGraph.append(mainControlBar, sceneSidebar);
+        mainControlBar.append(toggleButton, searchBox, sidebarToggle);
+        const [viewHeader, viewContent] = createCollapsibleSection('Display Settings');
+        viewContent.append(arrowToggleButton);
+        sceneSidebar.append(viewHeader, viewContent);
 
-        // 1.3.2 Cluster/selected node panel
-        const groupPanel = createContainer();
-        Object.assign(groupPanel.style, {
-            width: '240px', maxHeight: '200px', 
-            overflowY: 'auto', top: '60px' });
-        const [existingGroupBlock, existingGroupBlockContent] = createTextBlock({
-            id: "existingGroups", 
-            header: "Clusters: ", 
-            content: "None"
-        });
-        const [selectedNodesBlock, selectedNodesBlockContent] = createTextBlock({
-            id: "selectedNodes", 
-            header: "Selected: ", 
-            content: "None",
+
+        const floatingInput = createElement('div', { id: 'floatingLabelInput' }, {
+            position: 'absolute',
+            display: 'none',
+            background: 'white',
+            padding: '8px',
+            borderRadius: '6px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         });
         const groupInputBox = createInput({
-            id: 'groupLabelInput',
-            placeholder: 'Enter label'
+                id: 'groupLabelInput',
+                placeholder: 'Enter label'
         });
-        groupInputBox.style.width = '80px';
-        groupInputBox.disabled = true;
+        groupInputBox.style.width = '160px';
         const groupButton = createButton({
             id: 'groupLabelButton',
             title: 'Click to assign group to selected nodes',
-            htmlContent: 'Add',
-        })
-        groupButton.disabled = true;
+            htmlContent: '✓'
+        });
         const clearGroupButton = createButton({
             id: 'clearGroupLabelButton',
             title: 'Click to clear labels on selected nodes',
             htmlContent: 'Clear',
         })
-        clearGroupButton.disabled = true;
-        //#endregion
+        
+        floatingInput.append(groupInputBox, groupButton, clearGroupButton);
+        lightGraph.appendChild(floatingInput);
 
-        // #region 1.4 Element assemble ----------------------------------------
-        lightGraph.append(controlContainer, groupPanel);
-        controlContainer.append(toggleButton, arrowToggleButton, searchBox);
-        groupPanel.append(
-            existingGroupBlock, 
-            groupInputBox, groupButton, clearGroupButton,
-            selectedNodesBlock
-        );
+
+        
+        // const groupPanel = createContainer();
+        // Object.assign(groupPanel.style, {
+        //     width: '240px', maxHeight: '200px', 
+        //     overflowY: 'auto', top: '60px' });
+        // const [existingGroupBlock, existingGroupBlockContent] = createTextBlock({
+        //     id: "existingGroups", 
+        //     header: "Clusters: ", 
+        //     content: "None"
+        // });
+        // const [selectedNodesBlock, selectedNodesBlockContent] = createTextBlock({
+        //     id: "selectedNodes", 
+        //     header: "Selected: ", 
+        //     content: "None",
+        // });
+        // const groupInputBox = createInput({
+        //     id: 'groupLabelInput',
+        //     placeholder: 'Enter label'
+        // });
+        // groupInputBox.style.width = '80px';
+        // groupInputBox.disabled = true;
+        // const groupButton = createButton({
+        //     id: 'groupLabelButton',
+        //     title: 'Click to assign group to selected nodes',
+        //     htmlContent: 'Add',
+        // })
+        // groupButton.disabled = true;
+        // const clearGroupButton = createButton({
+        //     id: 'clearGroupLabelButton',
+        //     title: 'Click to clear labels on selected nodes',
+        //     htmlContent: 'Clear',
+        // })
+        // clearGroupButton.disabled = true;
 
         // #endregion
 
@@ -173,21 +289,30 @@
             addToSelection(nodes);
         }
 
+        function showFloatingInput(x, y) {
+            floatingInput.style.display = 'flex';
+            floatingInput.style.left = `${x + 15}px`; 
+            floatingInput.style.top = `${y - 30}px`;
+            groupInputBox.focus();
+        }
+        function hideFloatingInput(x, y) {
+            floatingInput.style.display = 'none';
+        }
         function updateGroupPanel() {
-            const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
-            existingGroupBlockContent.innerHTML = groups.length ? '' : 'None';
-            groups.sort().forEach(group => {
-                const groupLabel = createElement(
-                    'span', { innerHTML: `${group}, ` }, {
-                    color: groupColorScale(group), cursor: 'pointer'
-                });
-                groupLabel.addEventListener('click', () => {
-                    newSelection(nodes.filter(node => node.group === group));
-                    printSelectedNodes();
-                    ticked();
-                });
-                existingGroupBlockContent.appendChild(groupLabel);
-            });
+            // const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
+            // existingGroupBlockContent.innerHTML = groups.length ? '' : 'None';
+            // groups.sort().forEach(group => {
+            //     const groupLabel = createElement(
+            //         'span', { innerHTML: `${group}, ` }, {
+            //         color: groupColorScale(group), cursor: 'pointer'
+            //     });
+            //     groupLabel.addEventListener('click', () => {
+            //         newSelection(nodes.filter(node => node.group === group));
+            //         printSelectedNodes();
+            //         ticked();
+            //     });
+            //     existingGroupBlockContent.appendChild(groupLabel);
+            // });
         }
 
         function ticked() {
@@ -207,19 +332,23 @@
         }
         function updateSelectionBox() {
             if (selectionBox) {
+                context.setLineDash([5, 3]); 
+                context.fillStyle = "rgba(100, 200, 255, 0.1)"; 
                 context.strokeStyle = "#55c667";
-                context.strokeRect(
-                    selectionBox.x, selectionBox.y,
-                    selectionBox.width, selectionBox.height
-                );
+                context.strokeRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
+                context.fillRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
             }
         }
 
         function printSelectedNodes() {
-            selectedNodeArray = Array.from(selectedNodes);
-            selectedNodesBlockContent.innerText = selectedNodeArray.length ? selectedNodeArray.map(node => node.id).sort().join(', ') : "None";
-            const enableControls = selectedNodeArray.length > 0;
-            [groupInputBox, groupButton, clearGroupButton].forEach(el => el.disabled = !enableControls);
+            // selectedNodeArray = Array.from(selectedNodes);
+            // // selectedNodesBlockContent.innerText = selectedNodeArray.length ? selectedNodeArray.map(node => node.id).sort().join(', ') : "None";
+            // const enableControls = selectedNodeArray.length > 0;
+            // if (enableControls) {
+            //     showFloatingInput(x, y);
+            // } else {
+            //     showFloatingInput(x, y);
+            // }
         }
 
         function drawEdge(d) {
@@ -396,7 +525,9 @@
                 console.log('nodesData:', nodes);
                 console.log('edgesData:', edges);
 
-                toggleButton.innerHTML = '<span style="color:lightgray;">Select</span> / <span style="font-weight:bold; color:black;">Zoom</span>';
+                toggleButton.classList.add('active-mode');
+                toggleButton.querySelector('.zoom-icon').style.opacity = 1.0;
+                toggleButton.querySelector('.select-icon').style.opacity = 0.3;
                 recalculateForce();
             } catch (error) {
                 console.error('Error reloading data:', error);
@@ -404,14 +535,21 @@
         }
         function recalculateForce() {
             try {
-                simulationForce = 4000 / nodes.length;
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2;
+                const simParams = document.getElementById('simulationParams');
+
+                if (simParams) {
+                    simParams_ = JSON.parse(simParams.textContent)
+                    simulationForce = simParams_.totalForce / nodes.length;
+                    linkDistance = simParams_.linkDistance;
+                } else {
+                    simulationForce = 4000 / nodes.length;
+                    linkDistance = 100
+                }                
 
                 simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(edges).id(d => d.id).distance(100))
+                    .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistance))
                     .force("charge", d3.forceManyBody().strength(-simulationForce))
-                    .force("center", d3.forceCenter(centerX, centerY))
+                    .force("center", d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2))
                     .on("tick", ticked);
 
                 d3.select(canvas).call(zoom);
@@ -423,22 +561,25 @@
         // #endregion
 
         // 2.3 Interactions ----------------------------------------------------
+        sidebarToggle.addEventListener('click', () => {
+            const currentRight = parseFloat(sceneSidebar.style.right);
+            sceneSidebar.style.right = currentRight < 0 ? '12px' : '-350px';
+        });
         canvas.addEventListener("mousedown", (event) => {
             console.log('Mouse down event triggered');
+            hideFloatingInput();
             if (selectionMode) {
+                const shiftKey = event.shiftKey;
+
                 const [mouseX, mouseY] = d3.pointer(event);
                 const transformedMouseX = (mouseX - transform.x) / transform.k;
                 const transformedMouseY = (mouseY - transform.y) / transform.k;
                 const onNode = getNodeAtCoordinates(transformedMouseX, transformedMouseY);
 
                 if (onNode) {
-                    if (event.shiftKey) {
+                    if (shiftKey) {
                         // Shift-click to add or remove node from selected nodes
-                        if (selectedNodes.has(onNode)) {
-                            selectedNodes.delete(onNode);
-                        } else {
-                            selectedNodes.add(onNode);
-                        }
+                        selectedNodes.has(onNode) ? selectedNodes.delete(onNode) : selectedNodes.add(onNode);
                     } else {
                         draggingNode = onNode;
                         dragOffsetX = onNode.x - transformedMouseX;
@@ -449,13 +590,13 @@
                     }
 
                 } else {
-                    if (!event.shiftKey) {
+                    if (!shiftKey) {
                         clearSelection();
                     }
                     selectionBox = { x: transformedMouseX, y: transformedMouseY, width: 0, height: 0 };
                 }
                 ticked();
-                printSelectedNodes();
+                // printSelectedNodes();
             }
         });
 
@@ -498,7 +639,11 @@
                 } else if (selectionBox) {
                     console.log('Final selection box:', selectionBox);
                     addToSelection(nodes.filter(node => isNodeInSelection(node, selectionBox)));
-                    printSelectedNodes();
+                    selectedLength = Array.from(selectedNodes).length;
+                    if (selectedLength > 0) {
+                        const [mouseX, mouseY] = d3.pointer(event);
+                        showFloatingInput(mouseX, mouseY);
+                    } 
                     selectionBox = null;
                 }
                 ticked();
@@ -507,15 +652,32 @@
 
         toggleButton.addEventListener('click', () => {
                 selectionMode = !selectionMode;
-                toggleButton.innerHTML = selectionMode 
-                    ? '<span style="font-weight:bold; color:black;">Select</span> / <span style="color:lightgray;">Zoom</span>' 
-                    : '<span style="color:lightgray;">Select</span> / <span style="font-weight:bold; color:black;">Zoom</span>';
                 if (selectionMode) {
+                    toggleButton.classList.add('active-mode');
+                    toggleButton.querySelector('.select-icon').style.opacity = 1.0;
+                    toggleButton.querySelector('.zoom-icon').style.opacity = 0.3;
                     d3.select(canvas).on("mousedown.zoom", null).on("mousemove.zoom", null).on("mouseup.zoom", null);
                 } else {
+                    toggleButton.classList.remove('active-mode');
+                    toggleButton.querySelector('.select-icon').style.opacity = 0.3;
+                    toggleButton.querySelector('.zoom-icon').style.opacity = 1.0;
                     d3.select(canvas).call(zoom);
                 }
             });
+        // document.addEventListener('keydown', (event) => {
+        //     const activeElement = document.activeElement;
+        //     const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+        
+        //     if (!isInputFocused) {
+        //         if (event.key === 's' || event.key === 'S') {
+        //             if (!selectionMode) toggleButton.click();
+        //             event.preventDefault();
+        //         } else if (event.key === 'z' || event.key === 'Z') {
+        //             if (selectionMode) toggleButton.click();
+        //             event.preventDefault();
+        //         }
+        //     }
+        // });
         arrowToggleButton.addEventListener('click', () => {
                 showArrows = !showArrows;
                 arrowToggleButton.innerHTML = showArrows ? '<span style="font-weight:bold; color:black;">Arrows</span>' : '<span style="color:lightgray;">Arrows</span>';
@@ -537,6 +699,8 @@
                 ticked();
             };
             groupInputBox.value = "";
+            hideFloatingInput();
+            clearSelection();
         });
         clearGroupButton.addEventListener('click', () => {
             if (selectedNodes.size > 0) {
@@ -545,19 +709,17 @@
                 ticked();
             }
             groupInputBox.value = "";
+            hideFloatingInput();
+            clearSelection();
         });
         
         reloadData();
 
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                const { width, height } = entry.contentRect;
-                canvas.width = width;
-                canvas.height = height;
-                recalculateForce(); 
-            }
+        window.addEventListener('resize', () => {
+            canvas.width = lightGraph.clientWidth;
+            canvas.height = lightGraph.clientHeight;
+            recalculateForce(); 
         });
-        resizeObserver.observe(lightGraph);
 
         const observer = new MutationObserver((mutationsList, observer) => {
             setTimeout(() => {
