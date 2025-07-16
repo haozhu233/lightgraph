@@ -1,0 +1,9 @@
+{"libName": "cytoscape", "numNodes": 100, "numEdges": 0, "loadTime": 30, "avgFps": 56.5, "memory": 11.348724365234375}
+{"libName": "cytoscape", "numNodes": 500, "numEdges": 0, "loadTime": 180.19999998807907, "avgFps": 7, "memory": 45.20416259765625}
+{"libName": "cytoscape", "numNodes": 1000, "numEdges": 0, "loadTime": 638.3000000119209, "avgFps": 2, "memory": 35.572052001953125}
+{"libName": "cytoscape", "numNodes": 100, "numEdges": 0, "loadTime": 28.399999976158142, "avgFps": 56, "memory": 12.77923583984375}
+{"libName": "cytoscape", "numNodes": 500, "numEdges": 0, "loadTime": 180, "avgFps": 7, "memory": 42.629241943359375}
+{"libName": "cytoscape", "numNodes": 1000, "numEdges": 0, "loadTime": 645.8999999761581, "avgFps": 2, "memory": 54.168701171875}
+{"libName": "cytoscape", "numNodes": 100, "numEdges": 0, "loadTime": 25.5, "avgFps": 55, "memory": 9.5367431640625}
+{"libName": "cytoscape", "numNodes": 500, "numEdges": 0, "loadTime": 183.80000001192093, "avgFps": 7, "memory": 61.03515625}
+{"libName": "cytoscape", "numNodes": 1000, "numEdges": 0, "loadTime": 631.4000000357628, "avgFps": 2, "memory": 37.7655029296875}

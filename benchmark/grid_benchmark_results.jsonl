@@ -1,0 +1,15 @@
+{"libName": "cytoscape", "numNodes": 100, "numEdges": 0, "loadTime": 38.30000001192093, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "cytoscape", "numNodes": 500, "numEdges": 0, "loadTime": 45.30000001192093, "avgFps": 60.5, "memory": 13.637542724609375}
+{"libName": "cytoscape", "numNodes": 1000, "numEdges": 0, "loadTime": 72.39999997615814, "avgFps": 60, "memory": 24.7955322265625}
+{"libName": "cytoscape", "numNodes": 5000, "numEdges": 0, "loadTime": 289.19999998807907, "avgFps": 50.5, "memory": 87.45193481445312}
+{"libName": "cytoscape", "numNodes": 10000, "numEdges": 0, "loadTime": 467, "avgFps": 0.5, "memory": 141.143798828125}
+{"libName": "cytoscape", "numNodes": 100, "numEdges": 0, "loadTime": 21.5, "avgFps": 61, "memory": 9.5367431640625}
+{"libName": "cytoscape", "numNodes": 500, "numEdges": 0, "loadTime": 47.59999996423721, "avgFps": 60.5, "memory": 13.637542724609375}
+{"libName": "cytoscape", "numNodes": 1000, "numEdges": 0, "loadTime": 78.89999997615814, "avgFps": 60, "memory": 18.405914306640625}
+{"libName": "cytoscape", "numNodes": 5000, "numEdges": 0, "loadTime": 343, "avgFps": 40.5, "memory": 117.30194091796875}
+{"libName": "cytoscape", "numNodes": 10000, "numEdges": 0, "loadTime": 564.7999999523163, "avgFps": 0.5, "memory": 141.143798828125}
+{"libName": "cytoscape", "numNodes": 100, "numEdges": 0, "loadTime": 20.80000001192093, "avgFps": 61, "memory": 9.5367431640625}
+{"libName": "cytoscape", "numNodes": 500, "numEdges": 0, "loadTime": 44.19999998807907, "avgFps": 60.5, "memory": 13.637542724609375}
+{"libName": "cytoscape", "numNodes": 1000, "numEdges": 0, "loadTime": 74, "avgFps": 59.5, "memory": 24.7955322265625}
+{"libName": "cytoscape", "numNodes": 5000, "numEdges": 0, "loadTime": 249.10000002384186, "avgFps": 46.5, "memory": 98.22845458984375}
+{"libName": "cytoscape", "numNodes": 10000, "numEdges": 0, "loadTime": 618.4000000357628, "avgFps": 0.5, "memory": 179.290771484375}

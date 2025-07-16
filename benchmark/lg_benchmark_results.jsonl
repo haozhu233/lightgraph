@@ -1,0 +1,15 @@
+{"libName": "lightgraph", "numNodes": 100, "numEdges": 198, "loadTime": 1, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 500, "numEdges": 998, "loadTime": 0.699999988079071, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 1000, "numEdges": 1999, "loadTime": 0.8999999761581421, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 5000, "numEdges": 9998, "loadTime": 2.099999964237213, "avgFps": 27.5, "memory": 15.354156494140625}
+{"libName": "lightgraph", "numNodes": 10000, "numEdges": 19999, "loadTime": 2.899999976158142, "avgFps": 15, "memory": 12.77923583984375}
+{"libName": "lightgraph", "numNodes": 100, "numEdges": 198, "loadTime": 0.9000000357627869, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 500, "numEdges": 998, "loadTime": 0.800000011920929, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 1000, "numEdges": 1999, "loadTime": 1.300000011920929, "avgFps": 60, "memory": 12.77923583984375}
+{"libName": "lightgraph", "numNodes": 5000, "numEdges": 9998, "loadTime": 2.5, "avgFps": 27.5, "memory": 37.7655029296875}
+{"libName": "lightgraph", "numNodes": 10000, "numEdges": 19999, "loadTime": 2.900000035762787, "avgFps": 15, "memory": 13.637542724609375}
+{"libName": "lightgraph", "numNodes": 100, "numEdges": 198, "loadTime": 0.6000000238418579, "avgFps": 60.5, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 500, "numEdges": 998, "loadTime": 0.800000011920929, "avgFps": 61, "memory": 9.5367431640625}
+{"libName": "lightgraph", "numNodes": 1000, "numEdges": 1999, "loadTime": 0.800000011920929, "avgFps": 61, "memory": 10.68115234375}
+{"libName": "lightgraph", "numNodes": 5000, "numEdges": 9998, "loadTime": 2.400000035762787, "avgFps": 27.5, "memory": 24.7955322265625}
+{"libName": "lightgraph", "numNodes": 10000, "numEdges": 19999, "loadTime": 3.200000047683716, "avgFps": 15, "memory": 12.77923583984375}
