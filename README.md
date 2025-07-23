@@ -1,3 +1,5 @@
+> This project is still work in progress. The API are not stable and are subject to change. Currently there are also limited documentations available. 
+
 # lightgraph
 
 `lightgraph` is a high-performance HTML canvas-based network visualization tool. 
