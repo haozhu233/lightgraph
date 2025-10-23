@@ -18,6 +18,7 @@ net_vis
 ~~~~~~~
 
 .. autofunction:: lightgraph.network.net_vis
+   :no-index:
 
 Parameters
 ^^^^^^^^^^
