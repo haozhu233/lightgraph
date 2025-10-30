@@ -133,6 +133,7 @@ class TestNetVis:
 
     def test_large_network(self):
         """Test with a larger network."""
+        np.random.seed(42)  # Set seed for reproducible tests
         size = 10
         adj_matrix = np.random.rand(size, size)
         adj_matrix[adj_matrix < 0.7] = 0  # Sparse matrix
