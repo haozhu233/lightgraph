@@ -1,0 +1,37 @@
+{
+  "name": "lightgraph",
+  "version": "0.2.0",
+  "description": "A high-performance HTML canvas-based network visualization tool",
+  "main": "lightgraph.js",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haozhu233/lightgraph.git"
+  },
+  "keywords": [
+    "visualization",
+    "network",
+    "graph",
+    "canvas",
+    "d3"
+  ],
+  "author": "Hao Zhu",
+  "license": "MIT",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "lightgraph.js"
+    ]
+  }
+}
