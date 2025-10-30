@@ -16,6 +16,9 @@ homepage = "https://github.com/haozhu233/lightgraph"
 requires-python = ">=3.6"
 dependencies = ["numpy", "IPython"]
 
+[project.optional-dependencies]
+test = ["pytest>=7.0", "pytest-cov>=4.0"]
+
 # [tool.flit.scripts]
 # lightgraph = "lightgraph.visualize:visualize_network_lightGraph"
 
