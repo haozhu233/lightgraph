@@ -8,8 +8,21 @@
 
 ## Installation
 
+### Python
+
 For python binding, you can install from pypi.
 
-```
+```bash
 pip install lightgraph
 ```
+
+### R
+
+For R binding, you can install from GitHub:
+
+```r
+# install.packages("devtools")
+devtools::install_github("haozhu233/lightgraph", subdir = "R")
+```
+
+See the [R package README](R/README.md) for more details and usage examples.
