@@ -104,8 +104,13 @@
         
         // #region 1.2 Creating canvas -----------------------------------------
         const lightGraph = document.getElementById("lightGraph");
-        Object.assign(lightGraph.style, {
-            height: '800px', position: 'relative', overflow: 'hidden'});
+        // If the container doesn't already have a height provided by CSS or inline styles,
+        // set a sensible responsive fallback. Do not override user-defined heights.
+        if (!lightGraph.style.height) {
+            // Use viewport-relative height so the graph adapts to different screen sizes.
+            lightGraph.style.height = '70vh';
+        }
+        Object.assign(lightGraph.style, { position: 'relative', overflow: 'hidden' });
         const canvas = createElement("canvas", {
             id: "lightGraphCanvas", 
             width: lightGraph.clientWidth, 

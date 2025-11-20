@@ -1,4 +1,10 @@
-(function() {
+
+    <div style="position: relative; width: 100%; height: 800px; overflow: hidden;">
+    <div id="lightGraph" style="width: 100%; height: 100%;"></div>
+    <script type="application/json" id="nodesData">[{"id": "A"}, {"id": "B"}, {"id": "C"}]</script>
+    <script type="application/json" id="edgesData">[{"source": "A", "target": "B", "weight": 1.0}, {"source": "B", "target": "C", "weight": 1.0}]</script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>(function() {
     window.lightGraph = window.lightGraph || {};
 
     window.lightGraph.initializeVisualization = () => {
@@ -104,13 +110,8 @@
         
         // #region 1.2 Creating canvas -----------------------------------------
         const lightGraph = document.getElementById("lightGraph");
-        // If the container doesn't already have a height provided by CSS or inline styles,
-        // set a sensible responsive fallback. Do not override user-defined heights.
-        if (!lightGraph.style.height) {
-            // Use viewport-relative height so the graph adapts to different screen sizes.
-            lightGraph.style.height = '70vh';
-        }
-        Object.assign(lightGraph.style, { position: 'relative', overflow: 'hidden' });
+        Object.assign(lightGraph.style, {
+            height: '800px', position: 'relative', overflow: 'hidden'});
         const canvas = createElement("canvas", {
             id: "lightGraphCanvas", 
             width: lightGraph.clientWidth, 
@@ -206,7 +207,7 @@
         const groupButton = createButton({
             id: 'groupLabelButton',
             title: 'Click to assign group to selected nodes',
-            htmlContent: '✓'
+            htmlContent: 'âœ“'
         });
         const clearGroupButton = createButton({
             id: 'clearGroupLabelButton',
@@ -743,4 +744,6 @@
             window.lightGraph.initializeVisualization();
         }
     }, 100);
-})();
+})();</script>
+    <div>
+    
