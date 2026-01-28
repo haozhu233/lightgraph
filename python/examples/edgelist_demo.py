@@ -18,8 +18,8 @@ edges = [
     ('David', 'Alice')
 ]
 html1 = lg.net_vis_edgelist(edges, save_as='example1_simple.html')
-print(f"✓ Created visualization with {len(edges)} edges")
-print(f"✓ Saved to: example1_simple.html\n")
+print(f"[OK] Created visualization with {len(edges)} edges")
+print(f"[OK] Saved to: example1_simple.html\n")
 
 
 # Example 2: Edge list with weights
@@ -33,8 +33,8 @@ edges = [
     ('Gene1', 'Gene3', 0.65)
 ]
 html2 = lg.net_vis_edgelist(edges, save_as='example2_weighted.html')
-print(f"✓ Created weighted network visualization")
-print(f"✓ Saved to: example2_weighted.html\n")
+print(f"[OK] Created weighted network visualization")
+print(f"[OK] Saved to: example2_weighted.html\n")
 
 
 # Example 3: Dictionary format (most explicit)
@@ -47,8 +47,8 @@ edges = [
     {'source': 'Server1', 'target': 'Server4', 'weight': 0.9}
 ]
 html3 = lg.net_vis_edgelist(edges, save_as='example3_dict.html')
-print(f"✓ Created visualization from dictionary format")
-print(f"✓ Saved to: example3_dict.html\n")
+print(f"[OK] Created visualization from dictionary format")
+print(f"[OK] Saved to: example3_dict.html\n")
 
 
 # Example 4: With node groups/communities
@@ -64,8 +64,8 @@ node_groups = {
     'D': 'Community2', 'E': 'Community2', 'F': 'Community2'
 }
 html4 = lg.net_vis_edgelist(edges, node_groups=node_groups, save_as='example4_groups.html')
-print(f"✓ Created visualization with 2 communities")
-print(f"✓ Saved to: example4_groups.html\n")
+print(f"[OK] Created visualization with 2 communities")
+print(f"[OK] Saved to: example4_groups.html\n")
 
 
 # Example 5: Including isolated nodes
@@ -76,9 +76,9 @@ edges = [
 ]
 nodes = [1, 2, 3, 4, 5, 6]  # 5 and 6 are isolated
 html5 = lg.net_vis_edgelist(edges, nodes=nodes, save_as='example5_isolated.html')
-print(f"✓ Created visualization with isolated nodes")
-print(f"✓ Total nodes: {len(nodes)}, Connected nodes: 4, Isolated nodes: 2")
-print(f"✓ Saved to: example5_isolated.html\n")
+print(f"[OK] Created visualization with isolated nodes")
+print(f"[OK] Total nodes: {len(nodes)}, Connected nodes: 4, Isolated nodes: 2")
+print(f"[OK] Saved to: example5_isolated.html\n")
 
 
 # Example 6: Removing isolated nodes
@@ -90,9 +90,9 @@ edges = [
 nodes = [1, 2, 3, 4, 5, 6]  # 5 and 6 will be removed
 html6 = lg.net_vis_edgelist(edges, nodes=nodes, remove_isolated=True, 
                              save_as='example6_no_isolated.html')
-print(f"✓ Created visualization with isolated nodes removed")
-print(f"✓ Original nodes: {len(nodes)}, After removal: 4")
-print(f"✓ Saved to: example6_no_isolated.html\n")
+print(f"[OK] Created visualization with isolated nodes removed")
+print(f"[OK] Original nodes: {len(nodes)}, After removal: 4")
+print(f"[OK] Saved to: example6_no_isolated.html\n")
 
 
 # Example 7: Social network (realistic use case)
@@ -108,8 +108,8 @@ friendships = [
     ('Eve', 'Frank', 7)
 ]
 html7 = lg.net_vis_edgelist(friendships, save_as='example7_social.html')
-print(f"✓ Created social network with {len(friendships)} friendships")
-print(f"✓ Saved to: example7_social.html\n")
+print(f"[OK] Created social network with {len(friendships)} friendships")
+print(f"[OK] Saved to: example7_social.html\n")
 
 
 # Example 8: Directed graph
@@ -124,8 +124,8 @@ citations = [
     ('Paper3', 'Paper5', 1)
 ]
 html8 = lg.net_vis_edgelist(citations, save_as='example8_directed.html')
-print(f"✓ Created directed citation network")
-print(f"✓ Saved to: example8_directed.html\n")
+print(f"[OK] Created directed citation network")
+print(f"[OK] Saved to: example8_directed.html\n")
 
 
 # Example 9: Large network (demonstrating efficiency)
@@ -146,8 +146,8 @@ for i in range(100):
             large_edges.append((f'Node_{i}', f'Node_{target}', weight))
 
 html9 = lg.net_vis_edgelist(large_edges, save_as='example9_large.html')
-print(f"✓ Created large network with {len(large_edges)} edges")
-print(f"✓ Saved to: example9_large.html\n")
+print(f"[OK] Created large network with {len(large_edges)} edges")
+print(f"[OK] Saved to: example9_large.html\n")
 
 
 
@@ -158,7 +158,7 @@ sample_edges = [('X', 'Y'), ('Y', 'Z'), ('Z', 'X')]
 # Pass `container_height` directly. You can use any valid CSS height value like '60vh', '500px', '100%'.
 html10 = lg.net_vis_edgelist(sample_edges, save_as='example10_wrapper_height.html',
                              container_height='500px')
-print('✓ Created example10_wrapper_height.html with container_height=500px')
+print('[OK] Created example10_wrapper_height.html with container_height=500px')
 
 print("=" * 50)
 print("All examples completed successfully!")

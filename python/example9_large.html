@@ -1,0 +1,754 @@
+
+    <div style="position: relative; width: 100%; height: 800px; overflow: hidden;">
+    <div id="lightGraph" style="width: 100%; height: 100%;"></div>
+    <script type="application/json" id="nodesData">[{"id": "Node_0"}, {"id": "Node_1"}, {"id": "Node_10"}, {"id": "Node_11"}, {"id": "Node_12"}, {"id": "Node_13"}, {"id": "Node_14"}, {"id": "Node_15"}, {"id": "Node_16"}, {"id": "Node_17"}, {"id": "Node_18"}, {"id": "Node_19"}, {"id": "Node_2"}, {"id": "Node_20"}, {"id": "Node_21"}, {"id": "Node_22"}, {"id": "Node_23"}, {"id": "Node_24"}, {"id": "Node_25"}, {"id": "Node_26"}, {"id": "Node_27"}, {"id": "Node_28"}, {"id": "Node_29"}, {"id": "Node_3"}, {"id": "Node_30"}, {"id": "Node_31"}, {"id": "Node_32"}, {"id": "Node_33"}, {"id": "Node_34"}, {"id": "Node_35"}, {"id": "Node_36"}, {"id": "Node_37"}, {"id": "Node_38"}, {"id": "Node_39"}, {"id": "Node_4"}, {"id": "Node_40"}, {"id": "Node_41"}, {"id": "Node_42"}, {"id": "Node_43"}, {"id": "Node_44"}, {"id": "Node_45"}, {"id": "Node_46"}, {"id": "Node_47"}, {"id": "Node_48"}, {"id": "Node_49"}, {"id": "Node_5"}, {"id": "Node_50"}, {"id": "Node_51"}, {"id": "Node_52"}, {"id": "Node_53"}, {"id": "Node_54"}, {"id": "Node_55"}, {"id": "Node_56"}, {"id": "Node_57"}, {"id": "Node_58"}, {"id": "Node_59"}, {"id": "Node_6"}, {"id": "Node_60"}, {"id": "Node_61"}, {"id": "Node_62"}, {"id": "Node_63"}, {"id": "Node_64"}, {"id": "Node_65"}, {"id": "Node_66"}, {"id": "Node_67"}, {"id": "Node_68"}, {"id": "Node_69"}, {"id": "Node_7"}, {"id": "Node_70"}, {"id": "Node_71"}, {"id": "Node_72"}, {"id": "Node_73"}, {"id": "Node_74"}, {"id": "Node_75"}, {"id": "Node_76"}, {"id": "Node_77"}, {"id": "Node_78"}, {"id": "Node_79"}, {"id": "Node_8"}, {"id": "Node_80"}, {"id": "Node_81"}, {"id": "Node_82"}, {"id": "Node_83"}, {"id": "Node_84"}, {"id": "Node_85"}, {"id": "Node_86"}, {"id": "Node_87"}, {"id": "Node_88"}, {"id": "Node_89"}, {"id": "Node_9"}, {"id": "Node_90"}, {"id": "Node_91"}, {"id": "Node_92"}, {"id": "Node_93"}, {"id": "Node_94"}, {"id": "Node_95"}, {"id": "Node_96"}, {"id": "Node_97"}, {"id": "Node_98"}, {"id": "Node_99"}]</script>
+    <script type="application/json" id="edgesData">[{"source": "Node_0", "target": "Node_14", "weight": 0.12250967970040025}, {"source": "Node_0", "target": "Node_35", "weight": 0.3204026684231286}, {"source": "Node_0", "target": "Node_17", "weight": 0.7628240927476112}, {"source": "Node_0", "target": "Node_86", "weight": 0.7666009702009082}, {"source": "Node_1", "target": "Node_11", "weight": 0.6314432612041357}, {"source": "Node_1", "target": "Node_4", "weight": 0.12681749749426333}, {"source": "Node_1", "target": "Node_27", "weight": 0.30939480405166564}, {"source": "Node_1", "target": "Node_77", "weight": 0.12388237271547727}, {"source": "Node_2", "target": "Node_91", "weight": 0.6848959940015709}, {"source": "Node_2", "target": "Node_69", "weight": 0.4775678388654929}, {"source": "Node_3", "target": "Node_75", "weight": 0.35037163740759647}, {"source": "Node_3", "target": "Node_0", "weight": 0.7829266304167906}, {"source": "Node_3", "target": "Node_20", "weight": 0.7283254554894042}, {"source": "Node_4", "target": "Node_35", "weight": 0.2399315498306034}, {"source": "Node_4", "target": "Node_97", "weight": 0.4029350906013641}, {"source": "Node_4", "target": "Node_11", "weight": 0.44193457057360364}, {"source": "Node_5", "target": "Node_44", "weight": 0.6433534282302019}, {"source": "Node_5", "target": "Node_93", "weight": 0.5134823917046583}, {"source": "Node_6", "target": "Node_48", "weight": 0.17092017827061234}, {"source": "Node_6", "target": "Node_37", "weight": 0.8464641978276953}, {"source": "Node_7", "target": "Node_46", "weight": 0.6196169307310858}, {"source": "Node_7", "target": "Node_90", "weight": 0.16259963394136684}, {"source": "Node_7", "target": "Node_84", "weight": 0.30510844808639215}, {"source": "Node_7", "target": "Node_37", "weight": 0.986699368594682}, {"source": "Node_8", "target": "Node_12", "weight": 0.44211360253524956}, {"source": "Node_8", "target": "Node_58", "weight": 0.6721159998379601}, {"source": "Node_9", "target": "Node_20", "weight": 0.4331628704051944}, {"source": "Node_9", "target": "Node_26", "weight": 0.703157656939924}, {"source": "Node_9", "target": "Node_89", "weight": 0.9429891289412445}, {"source": "Node_10", "target": "Node_9", "weight": 0.6482179051002893}, {"source": "Node_10", "target": "Node_21", "weight": 0.5807258893267372}, {"source": "Node_10", "target": "Node_31", "weight": 0.24706224438573557}, {"source": "Node_10", "target": "Node_48", "weight": 0.3429530441058502}, {"source": "Node_11", "target": "Node_88", "weight": 0.6012547693971816}, {"source": "Node_11", "target": "Node_87", "weight": 0.39185446097378973}, {"source": "Node_11", "target": "Node_98", "weight": 0.7983999203916203}, {"source": "Node_11", "target": "Node_29", "weight": 0.8396223346061275}, {"source": "Node_12", "target": "Node_51", "weight": 0.34096678837813243}, {"source": "Node_12", "target": "Node_27", "weight": 0.9218225117669905}, {"source": "Node_12", "target": "Node_72", "weight": 0.888730863825402}, {"source": "Node_13", "target": "Node_27", "weight": 0.6898947987653921}, {"source": "Node_13", "target": "Node_50", "weight": 0.8962148384980322}, {"source": "Node_13", "target": "Node_82", "weight": 0.5129666673286589}, {"source": "Node_14", "target": "Node_17", "weight": 0.32196475692458515}, {"source": "Node_14", "target": "Node_71", "weight": 0.5850795607005614}, {"source": "Node_14", "target": "Node_95", "weight": 0.6261273912011864}, {"source": "Node_15", "target": "Node_51", "weight": 0.4257967993422499}, {"source": "Node_15", "target": "Node_17", "weight": 0.558573664308818}, {"source": "Node_15", "target": "Node_11", "weight": 0.780203941780364}, {"source": "Node_15", "target": "Node_14", "weight": 0.23755718741343496}, {"source": "Node_16", "target": "Node_87", "weight": 0.4799439701197157}, {"source": "Node_16", "target": "Node_8", "weight": 0.44629058050705006}, {"source": "Node_17", "target": "Node_59", "weight": 0.5762029105892233}, {"source": "Node_17", "target": "Node_70", "weight": 0.8747017320110483}, {"source": "Node_17", "target": "Node_1", "weight": 0.7122550692308667}, {"source": "Node_17", "target": "Node_14", "weight": 0.7135393321239173}, {"source": "Node_18", "target": "Node_96", "weight": 0.3401426709572885}, {"source": "Node_18", "target": "Node_82", "weight": 0.40615792572794074}, {"source": "Node_18", "target": "Node_37", "weight": 0.4912887256021945}, {"source": "Node_18", "target": "Node_58", "weight": 0.10292078449155637}, {"source": "Node_19", "target": "Node_92", "weight": 0.3370501456759817}, {"source": "Node_19", "target": "Node_64", "weight": 0.7857659791468582}, {"source": "Node_19", "target": "Node_64", "weight": 0.9213650554103384}, {"source": "Node_19", "target": "Node_80", "weight": 0.36860031230376966}, {"source": "Node_20", "target": "Node_64", "weight": 0.6480731902943551}, {"source": "Node_20", "target": "Node_19", "weight": 0.43652246733203315}, {"source": "Node_20", "target": "Node_69", "weight": 0.9581497728881525}, {"source": "Node_21", "target": "Node_0", "weight": 0.6390501260142061}, {"source": "Node_21", "target": "Node_62", "weight": 0.11752906814724907}, {"source": "Node_21", "target": "Node_46", "weight": 0.8908496900408658}, {"source": "Node_21", "target": "Node_39", "weight": 0.3155070793042529}, {"source": "Node_22", "target": "Node_72", "weight": 0.9522545007681946}, {"source": "Node_22", "target": "Node_10", "weight": 0.758716835360165}, {"source": "Node_23", "target": "Node_97", "weight": 0.5794355525765641}, {"source": "Node_23", "target": "Node_16", "weight": 0.21555231804978653}, {"source": "Node_24", "target": "Node_70", "weight": 0.24861426307671491}, {"source": "Node_24", "target": "Node_67", "weight": 0.8851897369767316}, {"source": "Node_24", "target": "Node_54", "weight": 0.9679266154067097}, {"source": "Node_25", "target": "Node_96", "weight": 0.7569379621809785}, {"source": "Node_25", "target": "Node_91", "weight": 0.3805446621708055}, {"source": "Node_25", "target": "Node_85", "weight": 0.6848902518755081}, {"source": "Node_26", "target": "Node_66", "weight": 0.5063375272520168}, {"source": "Node_26", "target": "Node_31", "weight": 0.30222760332840165}, {"source": "Node_26", "target": "Node_43", "weight": 0.118930834006353}, {"source": "Node_27", "target": "Node_29", "weight": 0.6295961029693159}, {"source": "Node_27", "target": "Node_0", "weight": 0.16389377740812927}, {"source": "Node_27", "target": "Node_80", "weight": 0.15298639018869106}, {"source": "Node_27", "target": "Node_8", "weight": 0.9148780117055152}, {"source": "Node_28", "target": "Node_9", "weight": 0.5627405078277302}, {"source": "Node_28", "target": "Node_35", "weight": 0.7020800004666525}, {"source": "Node_28", "target": "Node_27", "weight": 0.5853105382552791}, {"source": "Node_29", "target": "Node_73", "weight": 0.6185904847488098}, {"source": "Node_29", "target": "Node_31", "weight": 0.806157481861678}, {"source": "Node_29", "target": "Node_52", "weight": 0.2713689229256899}, {"source": "Node_29", "target": "Node_12", "weight": 0.6930844745631968}, {"source": "Node_30", "target": "Node_54", "weight": 0.4699920484447643}, {"source": "Node_30", "target": "Node_93", "weight": 0.14875406850895348}, {"source": "Node_30", "target": "Node_83", "weight": 0.9857486902293695}, {"source": "Node_31", "target": "Node_7", "weight": 0.46235915389204196}, {"source": "Node_31", "target": "Node_43", "weight": 0.8205332597755289}, {"source": "Node_32", "target": "Node_31", "weight": 0.27243106492748864}, {"source": "Node_32", "target": "Node_68", "weight": 0.5037521930498188}, {"source": "Node_33", "target": "Node_23", "weight": 0.3506906302002465}, {"source": "Node_33", "target": "Node_31", "weight": 0.887037358663522}, {"source": "Node_33", "target": "Node_9", "weight": 0.4988176705481113}, {"source": "Node_34", "target": "Node_12", "weight": 0.1455294965723931}, {"source": "Node_34", "target": "Node_69", "weight": 0.8524248265719567}, {"source": "Node_34", "target": "Node_11", "weight": 0.9337302847073148}, {"source": "Node_34", "target": "Node_30", "weight": 0.24967999954352263}, {"source": "Node_35", "target": "Node_61", "weight": 0.29237256927926353}, {"source": "Node_35", "target": "Node_51", "weight": 0.9121985789594937}, {"source": "Node_35", "target": "Node_21", "weight": 0.44107580707922456}, {"source": "Node_36", "target": "Node_33", "weight": 0.9338662662034}, {"source": "Node_36", "target": "Node_58", "weight": 0.35672430605222827}, {"source": "Node_36", "target": "Node_89", "weight": 0.9615858767737059}, {"source": "Node_37", "target": "Node_84", "weight": 0.7465674477666934}, {"source": "Node_37", "target": "Node_19", "weight": 0.27090808054087345}, {"source": "Node_37", "target": "Node_27", "weight": 0.9718384284722429}, {"source": "Node_37", "target": "Node_74", "weight": 0.7621634609101391}, {"source": "Node_38", "target": "Node_95", "weight": 0.3822443287927564}, {"source": "Node_38", "target": "Node_6", "weight": 0.6257598350130741}, {"source": "Node_39", "target": "Node_67", "weight": 0.24168945514553494}, {"source": "Node_39", "target": "Node_65", "weight": 0.1721003187165282}, {"source": "Node_39", "target": "Node_23", "weight": 0.16166919943341312}, {"source": "Node_39", "target": "Node_8", "weight": 0.7076912982436812}, {"source": "Node_40", "target": "Node_51", "weight": 0.20789795255241178}, {"source": "Node_40", "target": "Node_72", "weight": 0.3215938130097624}, {"source": "Node_41", "target": "Node_5", "weight": 0.6574433592988927}, {"source": "Node_41", "target": "Node_53", "weight": 0.6916358480252702}, {"source": "Node_41", "target": "Node_72", "weight": 0.570504443978763}, {"source": "Node_41", "target": "Node_33", "weight": 0.2838332794811828}, {"source": "Node_42", "target": "Node_40", "weight": 0.3148173573542614}, {"source": "Node_42", "target": "Node_50", "weight": 0.2177904539147108}, {"source": "Node_42", "target": "Node_82", "weight": 0.36999737181888603}, {"source": "Node_42", "target": "Node_40", "weight": 0.9361164985349627}, {"source": "Node_43", "target": "Node_1", "weight": 0.5124569703567275}, {"source": "Node_43", "target": "Node_72", "weight": 0.996486803069585}, {"source": "Node_44", "target": "Node_68", "weight": 0.2918388810403364}, {"source": "Node_44", "target": "Node_33", "weight": 0.21921091332982057}, {"source": "Node_45", "target": "Node_8", "weight": 0.8913432182360885}, {"source": "Node_45", "target": "Node_47", "weight": 0.35648865209499103}, {"source": "Node_45", "target": "Node_56", "weight": 0.8503704591758263}, {"source": "Node_46", "target": "Node_38", "weight": 0.6505099891533551}, {"source": "Node_46", "target": "Node_83", "weight": 0.576046623342043}, {"source": "Node_46", "target": "Node_85", "weight": 0.8353937216039155}, {"source": "Node_46", "target": "Node_38", "weight": 0.9385804354924697}, {"source": "Node_47", "target": "Node_17", "weight": 0.33801932933841494}, {"source": "Node_47", "target": "Node_13", "weight": 0.7681750155828988}, {"source": "Node_48", "target": "Node_34", "weight": 0.3535806443121049}, {"source": "Node_48", "target": "Node_26", "weight": 0.7458509684249182}, {"source": "Node_49", "target": "Node_87", "weight": 0.6708141629965717}, {"source": "Node_49", "target": "Node_33", "weight": 0.5548681522881885}, {"source": "Node_50", "target": "Node_6", "weight": 0.1830686209414601}, {"source": "Node_50", "target": "Node_54", "weight": 0.8464132804349973}, {"source": "Node_50", "target": "Node_5", "weight": 0.10319112017900407}, {"source": "Node_51", "target": "Node_81", "weight": 0.9818181584459523}, {"source": "Node_51", "target": "Node_20", "weight": 0.7671078175131377}, {"source": "Node_52", "target": "Node_90", "weight": 0.48491822708261145}, {"source": "Node_52", "target": "Node_1", "weight": 0.2006864925304015}, {"source": "Node_52", "target": "Node_88", "weight": 0.9135357144039038}, {"source": "Node_52", "target": "Node_69", "weight": 0.13242532425474757}, {"source": "Node_53", "target": "Node_74", "weight": 0.5972725870704979}, {"source": "Node_53", "target": "Node_55", "weight": 0.2147009673539249}, {"source": "Node_53", "target": "Node_39", "weight": 0.42818636379453046}, {"source": "Node_54", "target": "Node_45", "weight": 0.2890688845057786}, {"source": "Node_54", "target": "Node_31", "weight": 0.7002400695719887}, {"source": "Node_55", "target": "Node_99", "weight": 0.6038951672294827}, {"source": "Node_55", "target": "Node_52", "weight": 0.9764533203735601}, {"source": "Node_55", "target": "Node_95", "weight": 0.2390980044989842}, {"source": "Node_56", "target": "Node_20", "weight": 0.9785854296378665}, {"source": "Node_56", "target": "Node_22", "weight": 0.8932745841969919}, {"source": "Node_57", "target": "Node_22", "weight": 0.7629080245795739}, {"source": "Node_57", "target": "Node_42", "weight": 0.8041478465328685}, {"source": "Node_58", "target": "Node_85", "weight": 0.8776576255377515}, {"source": "Node_58", "target": "Node_31", "weight": 0.3401251386350248}, {"source": "Node_58", "target": "Node_89", "weight": 0.1972860637626614}, {"source": "Node_59", "target": "Node_60", "weight": 0.300190345791098}, {"source": "Node_59", "target": "Node_58", "weight": 0.41469258200132686}, {"source": "Node_60", "target": "Node_28", "weight": 0.12129799123130637}, {"source": "Node_60", "target": "Node_24", "weight": 0.4586193807083052}, {"source": "Node_61", "target": "Node_8", "weight": 0.970200193643525}, {"source": "Node_61", "target": "Node_35", "weight": 0.416031516174477}, {"source": "Node_61", "target": "Node_65", "weight": 0.4597105459240548}, {"source": "Node_62", "target": "Node_42", "weight": 0.9453134262922441}, {"source": "Node_62", "target": "Node_14", "weight": 0.8893345704180042}, {"source": "Node_62", "target": "Node_33", "weight": 0.26071103455521727}, {"source": "Node_62", "target": "Node_33", "weight": 0.13443147761793645}, {"source": "Node_63", "target": "Node_55", "weight": 0.41111840051182025}, {"source": "Node_63", "target": "Node_40", "weight": 0.4927544954835472}, {"source": "Node_63", "target": "Node_65", "weight": 0.20408120562639742}, {"source": "Node_63", "target": "Node_73", "weight": 0.27107089705206644}, {"source": "Node_64", "target": "Node_90", "weight": 0.4924517639094751}, {"source": "Node_64", "target": "Node_66", "weight": 0.9330176489491744}, {"source": "Node_65", "target": "Node_87", "weight": 0.747486999230361}, {"source": "Node_65", "target": "Node_94", "weight": 0.7633339241412703}, {"source": "Node_65", "target": "Node_25", "weight": 0.42779932460313774}, {"source": "Node_65", "target": "Node_8", "weight": 0.9539870373741829}, {"source": "Node_66", "target": "Node_79", "weight": 0.38252408055252374}, {"source": "Node_66", "target": "Node_15", "weight": 0.7477788367125552}, {"source": "Node_66", "target": "Node_38", "weight": 0.5564102536317422}, {"source": "Node_67", "target": "Node_52", "weight": 0.3935646143716599}, {"source": "Node_67", "target": "Node_89", "weight": 0.36608968227335237}, {"source": "Node_67", "target": "Node_16", "weight": 0.27265608369113276}, {"source": "Node_67", "target": "Node_85", "weight": 0.9463273036571647}, {"source": "Node_68", "target": "Node_95", "weight": 0.9125249911593244}, {"source": "Node_68", "target": "Node_78", "weight": 0.6121947293792284}, {"source": "Node_68", "target": "Node_51", "weight": 0.5931434918221284}, {"source": "Node_68", "target": "Node_0", "weight": 0.3734874543415184}, {"source": "Node_69", "target": "Node_55", "weight": 0.8071829447298221}, {"source": "Node_69", "target": "Node_77", "weight": 0.6892350613327645}, {"source": "Node_70", "target": "Node_56", "weight": 0.49794381937432675}, {"source": "Node_70", "target": "Node_27", "weight": 0.5600565971871284}, {"source": "Node_70", "target": "Node_94", "weight": 0.25272225657824926}, {"source": "Node_71", "target": "Node_36", "weight": 0.5639068089236948}, {"source": "Node_71", "target": "Node_81", "weight": 0.657334724826138}, {"source": "Node_72", "target": "Node_96", "weight": 0.3113817386740156}, {"source": "Node_72", "target": "Node_39", "weight": 0.3021765993975595}, {"source": "Node_73", "target": "Node_18", "weight": 0.12198284895414371}, {"source": "Node_73", "target": "Node_31", "weight": 0.9855424205036662}, {"source": "Node_74", "target": "Node_98", "weight": 0.1655454062661122}, {"source": "Node_74", "target": "Node_53", "weight": 0.8975232181458833}, {"source": "Node_74", "target": "Node_73", "weight": 0.2749917130657384}, {"source": "Node_74", "target": "Node_89", "weight": 0.44558062065347626}, {"source": "Node_75", "target": "Node_31", "weight": 0.2328142105821684}, {"source": "Node_75", "target": "Node_88", "weight": 0.10499033632422859}, {"source": "Node_75", "target": "Node_96", "weight": 0.8743965088802692}, {"source": "Node_76", "target": "Node_99", "weight": 0.48263157454846073}, {"source": "Node_76", "target": "Node_22", "weight": 0.8236988705558287}, {"source": "Node_77", "target": "Node_66", "weight": 0.518094896116827}, {"source": "Node_77", "target": "Node_71", "weight": 0.3242784516939745}, {"source": "Node_77", "target": "Node_15", "weight": 0.5108156429231553}, {"source": "Node_77", "target": "Node_59", "weight": 0.7008199593277178}, {"source": "Node_78", "target": "Node_76", "weight": 0.3855681617188129}, {"source": "Node_78", "target": "Node_96", "weight": 0.9022833332293932}, {"source": "Node_78", "target": "Node_92", "weight": 0.9028182667069162}, {"source": "Node_79", "target": "Node_70", "weight": 0.5013222508690304}, {"source": "Node_79", "target": "Node_20", "weight": 0.7692898979436265}, {"source": "Node_79", "target": "Node_60", "weight": 0.5050627815222173}, {"source": "Node_80", "target": "Node_81", "weight": 0.34958021781766646}, {"source": "Node_80", "target": "Node_99", "weight": 0.5691698315451839}, {"source": "Node_81", "target": "Node_30", "weight": 0.34713770222578444}, {"source": "Node_81", "target": "Node_9", "weight": 0.7421903763499508}, {"source": "Node_81", "target": "Node_30", "weight": 0.34454359637396614}, {"source": "Node_81", "target": "Node_40", "weight": 0.9037241495112851}, {"source": "Node_82", "target": "Node_17", "weight": 0.23574759221177793}, {"source": "Node_82", "target": "Node_49", "weight": 0.7245548310691471}, {"source": "Node_83", "target": "Node_27", "weight": 0.15780596564249028}, {"source": "Node_83", "target": "Node_52", "weight": 0.39779325193427517}, {"source": "Node_83", "target": "Node_59", "weight": 0.47419681069284036}, {"source": "Node_83", "target": "Node_26", "weight": 0.8496020524064389}, {"source": "Node_84", "target": "Node_98", "weight": 0.6256714727838026}, {"source": "Node_84", "target": "Node_89", "weight": 0.11757876106395442}, {"source": "Node_84", "target": "Node_97", "weight": 0.6181213121290722}, {"source": "Node_85", "target": "Node_0", "weight": 0.9484674916906872}, {"source": "Node_85", "target": "Node_38", "weight": 0.7781276125534473}, {"source": "Node_85", "target": "Node_53", "weight": 0.5843985108492084}, {"source": "Node_86", "target": "Node_69", "weight": 0.8198813538471409}, {"source": "Node_86", "target": "Node_28", "weight": 0.5394065297952254}, {"source": "Node_86", "target": "Node_34", "weight": 0.492252378441973}, {"source": "Node_86", "target": "Node_3", "weight": 0.44997148292151523}, {"source": "Node_87", "target": "Node_86", "weight": 0.8183280919781699}, {"source": "Node_87", "target": "Node_92", "weight": 0.24854025808315794}, {"source": "Node_87", "target": "Node_59", "weight": 0.9275874586020784}, {"source": "Node_87", "target": "Node_79", "weight": 0.580711266579254}, {"source": "Node_88", "target": "Node_75", "weight": 0.6079527847222967}, {"source": "Node_88", "target": "Node_3", "weight": 0.1755527159458002}, {"source": "Node_88", "target": "Node_54", "weight": 0.22212953850750783}, {"source": "Node_89", "target": "Node_23", "weight": 0.1452561701397648}, {"source": "Node_89", "target": "Node_48", "weight": 0.39461740024756087}, {"source": "Node_89", "target": "Node_58", "weight": 0.3941612243931777}, {"source": "Node_90", "target": "Node_35", "weight": 0.7768088411993064}, {"source": "Node_90", "target": "Node_53", "weight": 0.32704437860414254}, {"source": "Node_90", "target": "Node_10", "weight": 0.5232761525917422}, {"source": "Node_91", "target": "Node_69", "weight": 0.14687704741892993}, {"source": "Node_91", "target": "Node_44", "weight": 0.30179994914777336}, {"source": "Node_91", "target": "Node_8", "weight": 0.8031097446498054}, {"source": "Node_91", "target": "Node_83", "weight": 0.13623232378668992}, {"source": "Node_92", "target": "Node_31", "weight": 0.2794246141262796}, {"source": "Node_92", "target": "Node_2", "weight": 0.6592020909275421}, {"source": "Node_93", "target": "Node_16", "weight": 0.5262049548515153}, {"source": "Node_93", "target": "Node_14", "weight": 0.6075726237370171}, {"source": "Node_94", "target": "Node_59", "weight": 0.7295184741215357}, {"source": "Node_94", "target": "Node_98", "weight": 0.4320056568906473}, {"source": "Node_95", "target": "Node_77", "weight": 0.9673612696910878}, {"source": "Node_95", "target": "Node_91", "weight": 0.20307958424100792}, {"source": "Node_95", "target": "Node_20", "weight": 0.9682486957306788}, {"source": "Node_95", "target": "Node_13", "weight": 0.6208162592583192}, {"source": "Node_96", "target": "Node_73", "weight": 0.709612558165368}, {"source": "Node_96", "target": "Node_48", "weight": 0.45698899736496457}, {"source": "Node_96", "target": "Node_91", "weight": 0.2784967993825438}, {"source": "Node_97", "target": "Node_88", "weight": 0.8475144704022866}, {"source": "Node_97", "target": "Node_31", "weight": 0.1917111749013789}, {"source": "Node_97", "target": "Node_98", "weight": 0.37142441693890027}, {"source": "Node_97", "target": "Node_87", "weight": 0.6403704533351597}, {"source": "Node_98", "target": "Node_72", "weight": 0.8043718117249177}, {"source": "Node_98", "target": "Node_44", "weight": 0.5794707207794503}, {"source": "Node_99", "target": "Node_47", "weight": 0.16206106286767646}, {"source": "Node_99", "target": "Node_82", "weight": 0.4071080573751549}, {"source": "Node_99", "target": "Node_53", "weight": 0.8400978262810522}, {"source": "Node_99", "target": "Node_13", "weight": 0.4901710611932636}]</script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>(function() {
+    window.lightGraph = window.lightGraph || {};
+
+    window.lightGraph.initializeVisualization = () => {
+        // =====================================================================
+        // 1. Visual Element Section -------------------------------------------
+        // =====================================================================
+
+        const style = document.createElement('style');
+        style.textContent = `
+            .select-icon { color: #666; }
+            .zoom-icon { color: #666; }
+            .active-mode .select-icon { opacity: 0.3; }
+            .active-mode .zoom-icon { opacity: 1; }
+        `;
+        document.head.appendChild(style);
+
+        // #region 1.1 Element constructors ------------------------------------
+        function createElement(tag, options = {}, styles = {}) {
+            const element = document.createElement(tag);
+            Object.assign(element, options);
+            Object.assign(element.style, styles);
+            return element;
+        }
+
+        function createContainer() {
+            return createElement('div', {}, {
+                padding: '8px 20px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                border: 'none',
+                borderRadius: '6px',
+                background: 'linear-gradient(145deg, #f0f0f0, #ffffff)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.2s'
+            });
+        }
+
+        function createButton({ id, title, htmlContent }) {
+            return createElement('button', { id, title, innerHTML: htmlContent }, {
+                padding: '5px 15px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                ':hover': {
+                    transform: 'translateY(-1px)',
+                    background: '0 4px 8px rgba(0,0,0,0.15)'
+                }
+            });
+        }
+
+        function createInput({ id, placeholder }) {
+            return createElement('input', { id, type: 'text', placeholder }, {
+                padding: '5px',
+                fontSize: '14px',
+                borderRadius: '3px',
+                border: '1px solid #ccc',
+                width: '120px'
+            });
+        }
+
+        function createTextBlock({ id, header, content }) {
+            const textBlockHeader = createElement('span', { innerHTML: header }, {
+                fontSize: '14px',
+                fontWeight: 'bold'
+            });
+            const textBlockContent = createElement('span', { id, innerHTML: content });
+            const textBlock = createElement('div');
+            textBlock.append(textBlockHeader, textBlockContent);
+            return [textBlock, textBlockContent];
+        }
+
+        function createCollapsibleSection(title, defaultOpen = true) {
+            const header = createElement('div', { 
+                className: 'section-header',
+                innerHTML: `<span>${title}</span><div class="toggle-icon"><svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" /></svg></div>` 
+            }, {
+                display: 'flex',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                padding: '8px 0',
+                borderBottom: '1px solid #eee',
+                'font-family': 'Arial, Helvetica, sans-serif'
+            });
+        
+            const content = createElement('div', { 
+                className: 'section-content' 
+            }, {
+                padding: '8px 0',
+                display: defaultOpen ? 'block' : 'none'
+            });
+        
+            header.addEventListener('click', () => {
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                header.querySelector('.toggle-icon').innerHTML = 
+                    content.style.display === 'none' ? '<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" /></svg>' : '<svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5" /></svg>';
+            });
+        
+            return [header, content];
+        }
+        //#endregion
+        
+        // #region 1.2 Creating canvas -----------------------------------------
+        const lightGraph = document.getElementById("lightGraph");
+        // If the container doesn't already have a height provided by CSS or inline styles,
+        // set a sensible responsive fallback. Do not override user-defined heights.
+        if (!lightGraph.style.height) {
+            // Use viewport-relative height so the graph adapts to different screen sizes.
+            lightGraph.style.height = '70vh';
+        }
+        Object.assign(lightGraph.style, { position: 'relative', overflow: 'hidden' });
+        const canvas = createElement("canvas", {
+            id: "lightGraphCanvas", 
+            width: lightGraph.clientWidth, 
+            height: lightGraph.clientHeight });
+        const context = canvas.getContext("2d");
+        lightGraph.appendChild(canvas);
+        //#endregion
+
+        // #region 1.3 Additional visual elements ------------------------------
+        // 1.3.1 Control and search panel 
+        const mainControlBar = createElement('div', { id: 'mainBar' }, {
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            display: 'flex',
+            gap: '8px',
+            zIndex: 1000,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '8px',
+            padding: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(8px)'
+        });
+
+        const sceneSidebar = createElement('div', { id: 'sceneSidebar' }, {
+            position: 'absolute',
+            top: '60px',  
+            right: '-350px', 
+            width: '330px',
+            transition: 'right 0.3s ease',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '8px',
+            padding: '16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            backdropFilter: 'blur(6px)'
+        });
+
+        // # Main Control Bar
+        const toggleButton = createButton({
+            id: 'toggleButton',
+            title: 'Switch between Zoom and Selection modes',
+            htmlContent: `
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="zoom-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15.75-2.489-2.489m0 0a3.375 3.375 0 1 0-4.773-4.773 3.375 3.375 0 0 0 4.774 4.774ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <svg width="18" height="24" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="select-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+            `
+        });
+        const searchBox = createInput({ 
+            id: 'searchBox',
+            placeholder: 'Search Node...'
+        });
+        searchBox.style.width = '180px';
+        
+        const sidebarToggle = createButton({
+            id: 'sidebarToggle',
+            title: 'Display More Tools',
+            htmlContent: '<svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>'  
+        });
+
+        const arrowToggleButton = createButton({
+            id: 'arrowToggleButton',
+            title: 'Click to toggle arrows on edges',
+            htmlContent: '<span style="color:lightgray;">Arrows</span>'
+        });
+        
+        // Add control panel to the page
+        lightGraph.append(mainControlBar, sceneSidebar);
+        mainControlBar.append(toggleButton, searchBox, sidebarToggle);
+        const [viewHeader, viewContent] = createCollapsibleSection('Display Settings');
+        viewContent.append(arrowToggleButton);
+        sceneSidebar.append(viewHeader, viewContent);
+
+
+        const floatingInput = createElement('div', { id: 'floatingLabelInput' }, {
+            position: 'absolute',
+            display: 'none',
+            background: 'white',
+            padding: '8px',
+            borderRadius: '6px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        });
+        const groupInputBox = createInput({
+                id: 'groupLabelInput',
+                placeholder: 'Enter label'
+        });
+        groupInputBox.style.width = '160px';
+        const groupButton = createButton({
+            id: 'groupLabelButton',
+            title: 'Click to assign group to selected nodes',
+            htmlContent: 'âœ“'
+        });
+        const clearGroupButton = createButton({
+            id: 'clearGroupLabelButton',
+            title: 'Click to clear labels on selected nodes',
+            htmlContent: 'Clear',
+        })
+        
+        floatingInput.append(groupInputBox, groupButton, clearGroupButton);
+        lightGraph.appendChild(floatingInput);
+
+
+        
+        // const groupPanel = createContainer();
+        // Object.assign(groupPanel.style, {
+        //     width: '240px', maxHeight: '200px', 
+        //     overflowY: 'auto', top: '60px' });
+        // const [existingGroupBlock, existingGroupBlockContent] = createTextBlock({
+        //     id: "existingGroups", 
+        //     header: "Clusters: ", 
+        //     content: "None"
+        // });
+        // const [selectedNodesBlock, selectedNodesBlockContent] = createTextBlock({
+        //     id: "selectedNodes", 
+        //     header: "Selected: ", 
+        //     content: "None",
+        // });
+        // const groupInputBox = createInput({
+        //     id: 'groupLabelInput',
+        //     placeholder: 'Enter label'
+        // });
+        // groupInputBox.style.width = '80px';
+        // groupInputBox.disabled = true;
+        // const groupButton = createButton({
+        //     id: 'groupLabelButton',
+        //     title: 'Click to assign group to selected nodes',
+        //     htmlContent: 'Add',
+        // })
+        // groupButton.disabled = true;
+        // const clearGroupButton = createButton({
+        //     id: 'clearGroupLabelButton',
+        //     title: 'Click to clear labels on selected nodes',
+        //     htmlContent: 'Clear',
+        // })
+        // clearGroupButton.disabled = true;
+
+        // #endregion
+
+        // =====================================================================
+        // 2. UI logics --------------------------------------------------------
+        // =====================================================================
+
+        // #region 2.1 global variables ----------------------------------------
+        let selectionMode = false;
+        let transform = d3.zoomIdentity;
+        let showArrows = false;
+        let nodes = [];
+        let edges = [];
+        let selectedNodes = new Set([]);
+        let selectionBox = null;
+        let draggingNode = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let simulation = d3.forceSimulation([]);
+        const groupColorScale = d3.scaleOrdinal(d3.schemeSet1);
+        let zoom = d3.zoom().scaleExtent([0.1, 5])
+            .on("zoom", (event) => {
+                if (!selectionMode) {
+                    transform = event.transform;
+                    ticked();
+                }
+            });
+        // #endregion
+
+        // #region 2.2 Interaction functions -----------------------------------
+        function clearSelection() {
+            selectedNodes.forEach(node => selectedNodes.delete(node));
+        }
+
+        function addToSelection(nodes) {
+            nodes.forEach(node => selectedNodes.add(node));
+        }
+
+        function newSelection(nodes) {
+            clearSelection();
+            addToSelection(nodes);
+        }
+
+        function showFloatingInput(x, y) {
+            floatingInput.style.display = 'flex';
+            floatingInput.style.left = `${x + 15}px`; 
+            floatingInput.style.top = `${y - 30}px`;
+            groupInputBox.focus();
+        }
+        function hideFloatingInput(x, y) {
+            floatingInput.style.display = 'none';
+        }
+        function updateGroupPanel() {
+            // const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
+            // existingGroupBlockContent.innerHTML = groups.length ? '' : 'None';
+            // groups.sort().forEach(group => {
+            //     const groupLabel = createElement(
+            //         'span', { innerHTML: `${group}, ` }, {
+            //         color: groupColorScale(group), cursor: 'pointer'
+            //     });
+            //     groupLabel.addEventListener('click', () => {
+            //         newSelection(nodes.filter(node => node.group === group));
+            //         printSelectedNodes();
+            //         ticked();
+            //     });
+            //     existingGroupBlockContent.appendChild(groupLabel);
+            // });
+        }
+
+        function ticked() {
+            context.save();
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.translate(transform.x, transform.y);
+            context.scale(transform.k, transform.k);
+
+            drawGroupEllipses(); 
+            edges.forEach(drawEdge);
+            nodes.forEach(drawLabel);
+            nodes.forEach(drawNode);
+
+            updateSelectionBox();
+            updateGroupPanel(); 
+            context.restore();
+        }
+        function updateSelectionBox() {
+            if (selectionBox) {
+                context.setLineDash([5, 3]); 
+                context.fillStyle = "rgba(100, 200, 255, 0.1)"; 
+                context.strokeStyle = "#55c667";
+                context.strokeRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
+                context.fillRect(selectionBox.x, selectionBox.y, selectionBox.width, selectionBox.height);
+            }
+        }
+
+        function printSelectedNodes() {
+            // selectedNodeArray = Array.from(selectedNodes);
+            // // selectedNodesBlockContent.innerText = selectedNodeArray.length ? selectedNodeArray.map(node => node.id).sort().join(', ') : "None";
+            // const enableControls = selectedNodeArray.length > 0;
+            // if (enableControls) {
+            //     showFloatingInput(x, y);
+            // } else {
+            //     showFloatingInput(x, y);
+            // }
+        }
+
+        function drawEdge(d) {
+            context.beginPath();
+            context.moveTo(d.source.x, d.source.y);
+            context.lineTo(d.target.x, d.target.y);
+            
+            const includeEitherEnd = selectedNodes.has(d.source) || selectedNodes.has(d.target)
+            context.strokeStyle = includeEitherEnd ? "#99999911" : "#33333310";
+            context.lineWidth = includeEitherEnd ? 2 : 1;
+            
+            context.stroke();
+            if (showArrows) drawArrow(d);
+        }
+
+        function drawArrow(d) {
+            const arrowLength = 10;
+            const arrowWidth = 5;
+            const dx = d.target.x - d.source.x;
+            const dy = d.target.y - d.source.y;
+            const angle = Math.atan2(dy, dx);
+            const arrowX = d.target.x - arrowLength * Math.cos(angle);
+            const arrowY = d.target.y - arrowLength * Math.sin(angle);
+
+            context.beginPath();
+            context.moveTo(arrowX, arrowY);
+            context.lineTo(arrowX - arrowWidth * Math.cos(angle - Math.PI / 6), arrowY - arrowWidth * Math.sin(angle - Math.PI / 6));
+            context.moveTo(arrowX, arrowY);
+            context.lineTo(arrowX - arrowWidth * Math.cos(angle + Math.PI / 6), arrowY - arrowWidth * Math.sin(angle + Math.PI / 6));
+            context.stroke();
+        }
+
+        function drawNode(d) {
+            const color = d.group ? groupColorScale(d.group) : (d.color || "#548ff0");
+            
+            context.fillStyle = color;
+            context.strokeStyle = selectedNodes.has(d) ? "#000000" : "#FFFFFF";
+            context.lineWidth = selectedNodes.has(d) ? 1 : 1;
+            const size = d.size || 7;
+            nodeSize = selectedNodes.has(d) ? size + 5 : size;
+
+            context.beginPath();
+            context.arc(d.x, d.y, nodeSize / 2, 0, 2 * Math.PI);
+            context.fill();
+            context.stroke();
+        }
+
+        function drawLabel(d) {
+            const size = d.size || 5;
+            const labelFontSize = d.labelFontSize || 5;
+            context.font = `${labelFontSize}px sans-serif`;
+            context.fillStyle = selectedNodes.has(d) ? "#000" : "#555";
+            const textWidth = context.measureText(d.id).width;
+            context.fillText(d.id, d.x - textWidth - 4, d.y + size / 2 + 4);
+        }
+
+        function computeEigen(covMatrix) {
+            const a = covMatrix[0][0];
+            const b = covMatrix[0][1];
+            const d = covMatrix[1][1];
+            
+            const trace = a + d;
+            const determinant = a * d - b * b;
+            const discriminant = Math.sqrt(trace * trace - 4 * determinant);
+            const eigenvalue1 = (trace + discriminant) / 2;
+            const eigenvalue2 = (trace - discriminant) / 2;
+        
+            let eigenvector1, eigenvector2;
+            if (b !== 0) {
+                eigenvector1 = [eigenvalue1 - d, b];
+                eigenvector2 = [eigenvalue2 - d, b];
+            } else {
+                eigenvector1 = [1, 0];
+                eigenvector2 = [0, 1];
+            }
+        
+            const normalize = (v) => {
+                const length = Math.sqrt(v[0] * v[0] + v[1] * v[1]);
+                return [v[0] / length, v[1] / length];
+            };
+            eigenvector1 = normalize(eigenvector1);
+            eigenvector2 = normalize(eigenvector2);
+        
+            return [eigenvalue1, eigenvalue2, eigenvector1, eigenvector2];
+        }
+
+        function drawGroupEllipses() {
+            const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
+            
+            groups.forEach(group => {
+                const groupNodes = nodes.filter(node => node.group === group);
+                
+                if (groupNodes.length > 1) {
+                    // Calculate the centroid of the group
+                    const centroid = {
+                        x: d3.mean(groupNodes, d => d.x),
+                        y: d3.mean(groupNodes, d => d.y)
+                    };
+        
+                    // Calculate the covariance matrix
+                    let sumXX = 0, sumXY = 0, sumYY = 0;
+                    groupNodes.forEach(node => {
+                        const dx = node.x - centroid.x;
+                        const dy = node.y - centroid.y;
+                        sumXX += dx * dx;
+                        sumXY += dx * dy;
+                        sumYY += dy * dy;
+                    });
+        
+                    const covarianceMatrix = [
+                        [sumXX / groupNodes.length, sumXY / groupNodes.length],
+                        [sumXY / groupNodes.length, sumYY / groupNodes.length]
+                    ];
+
+                    const [lambda1, lambda2, v1, v2] = computeEigen(covarianceMatrix);
+        
+                    // Calculate rotation angle of the ellipse
+                    const angle = Math.atan2(v1[1], v1[0]);
+        
+                    // Semi-axis lengths (scaled by a factor for better visual coverage)
+                    const radiusX = Math.sqrt(lambda1) * 2;
+                    const radiusY = Math.sqrt(lambda2) * 2;
+        
+                    // Draw the ellipse
+                    context.save();
+                    context.translate(centroid.x, centroid.y);
+                    context.rotate(angle);
+                    context.beginPath();
+                    context.ellipse(0, 0, radiusX + 5, radiusY + 5, 0, 0, 2 * Math.PI);  // Add padding for better visual coverage
+                    context.fillStyle = `${groupColorScale(group)}20`;  // Fill with group color, alpha = 0.2
+                    context.fill();
+                    context.strokeStyle = groupColorScale(group);
+                    context.lineWidth = 2;
+                    context.stroke();
+                    context.restore();
+                }
+            });
+        }        
+
+        function isNodeInSelection(node, box) {
+            const x0 = Math.min(box.x, box.x + box.width),
+                  x1 = Math.max(box.x, box.x + box.width),
+                  y0 = Math.min(box.y, box.y + box.height),
+                  y1 = Math.max(box.y, box.y + box.height);
+
+            return node.x >= x0 && node.x <= x1 && node.y >= y0 && node.y <= y1;
+        }
+
+        function getNodeAtCoordinates(x, y) {
+            return nodes.find(node => Math.sqrt((node.x - x) ** 2 + (node.y - y) ** 2) < (node.size || 15) / 2);
+        }
+
+        function reloadData() {
+            try {
+                const nodesData = document.getElementById('nodesData');
+                const edgesData = document.getElementById('edgesData');
+                
+                if (!nodesData || !edgesData) {
+                    console.error('nodesData or edgesData element not found');
+                    return;
+                }
+
+                selectionMode = false;
+                transform = d3.zoomIdentity;
+                clearSelection();
+                selectionBox = null;
+                draggingNode = null;
+                dragOffsetX = 0;
+                dragOffsetY = 0;
+
+                nodes = JSON.parse(nodesData.textContent);
+                edges = JSON.parse(edgesData.textContent);
+
+                console.log('nodesData:', nodes);
+                console.log('edgesData:', edges);
+
+                toggleButton.classList.add('active-mode');
+                toggleButton.querySelector('.zoom-icon').style.opacity = 1.0;
+                toggleButton.querySelector('.select-icon').style.opacity = 0.3;
+                recalculateForce();
+            } catch (error) {
+                console.error('Error reloading data:', error);
+            }
+        }
+        function recalculateForce() {
+            try {
+                const simParams = document.getElementById('simulationParams');
+
+                if (simParams) {
+                    simParams_ = JSON.parse(simParams.textContent)
+                    simulationForce = simParams_.totalForce / nodes.length;
+                    linkDistance = simParams_.linkDistance;
+                } else {
+                    simulationForce = 4000 / nodes.length;
+                    linkDistance = 100
+                }                
+
+                simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistance))
+                    .force("charge", d3.forceManyBody().strength(-simulationForce))
+                    .force("center", d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2))
+                    .on("tick", ticked);
+
+                d3.select(canvas).call(zoom);
+
+            } catch (error) {
+                console.error('Error updating visualization:', error);
+            }
+        };
+        // #endregion
+
+        // 2.3 Interactions ----------------------------------------------------
+        sidebarToggle.addEventListener('click', () => {
+            const currentRight = parseFloat(sceneSidebar.style.right);
+            sceneSidebar.style.right = currentRight < 0 ? '12px' : '-350px';
+        });
+        canvas.addEventListener("mousedown", (event) => {
+            console.log('Mouse down event triggered');
+            hideFloatingInput();
+            if (selectionMode) {
+                const shiftKey = event.shiftKey;
+
+                const [mouseX, mouseY] = d3.pointer(event);
+                const transformedMouseX = (mouseX - transform.x) / transform.k;
+                const transformedMouseY = (mouseY - transform.y) / transform.k;
+                const onNode = getNodeAtCoordinates(transformedMouseX, transformedMouseY);
+
+                if (onNode) {
+                    if (shiftKey) {
+                        // Shift-click to add or remove node from selected nodes
+                        selectedNodes.has(onNode) ? selectedNodes.delete(onNode) : selectedNodes.add(onNode);
+                    } else {
+                        draggingNode = onNode;
+                        dragOffsetX = onNode.x - transformedMouseX;
+                        dragOffsetY = onNode.y - transformedMouseY;
+                        if (!selectedNodes.has(onNode)) {
+                            newSelection([onNode]);
+                        }
+                    }
+
+                } else {
+                    if (!shiftKey) {
+                        clearSelection();
+                    }
+                    selectionBox = { x: transformedMouseX, y: transformedMouseY, width: 0, height: 0 };
+                }
+                ticked();
+                // printSelectedNodes();
+            }
+        });
+
+        canvas.addEventListener("mousemove", (event) => {
+            if (selectionMode) {
+                const [mouseX, mouseY] = d3.pointer(event);
+                const transformedMouseX = (mouseX - transform.x) / transform.k;
+                const transformedMouseY = (mouseY - transform.y) / transform.k;
+
+                if (draggingNode) {
+                    const dx = transformedMouseX + dragOffsetX - draggingNode.x;
+                    const dy = transformedMouseY + dragOffsetY - draggingNode.y;
+
+                    if (selectedNodes.size > 0 && selectedNodes.has(draggingNode)) {
+                        selectedNodes.forEach(node => {
+                            node.x += dx;
+                            node.y += dy;
+                        });
+                    } else {
+                        draggingNode.x = transformedMouseX + dragOffsetX;
+                        draggingNode.y = transformedMouseY + dragOffsetY;
+                    }
+                    simulation.alpha(0.1).restart();
+                    ticked();
+                } else if (selectionBox) {
+                    selectionBox.width = transformedMouseX - selectionBox.x;
+                    selectionBox.height = transformedMouseY - selectionBox.y;
+                    ticked();
+                }
+            }
+        });
+
+        canvas.addEventListener("mouseup", (event) => {
+            console.log('Mouse up event listener attached to canvas');
+            if (selectionMode) {
+                console.log('Mouse up event triggered');
+                if (draggingNode) {
+                    console.log('Releasing draggingNode:', draggingNode);
+                    draggingNode = null;
+                } else if (selectionBox) {
+                    console.log('Final selection box:', selectionBox);
+                    addToSelection(nodes.filter(node => isNodeInSelection(node, selectionBox)));
+                    selectedLength = Array.from(selectedNodes).length;
+                    if (selectedLength > 0) {
+                        const [mouseX, mouseY] = d3.pointer(event);
+                        showFloatingInput(mouseX, mouseY);
+                    } 
+                    selectionBox = null;
+                }
+                ticked();
+            }
+        });
+
+        toggleButton.addEventListener('click', () => {
+                selectionMode = !selectionMode;
+                if (selectionMode) {
+                    toggleButton.classList.add('active-mode');
+                    toggleButton.querySelector('.select-icon').style.opacity = 1.0;
+                    toggleButton.querySelector('.zoom-icon').style.opacity = 0.3;
+                    d3.select(canvas).on("mousedown.zoom", null).on("mousemove.zoom", null).on("mouseup.zoom", null);
+                } else {
+                    toggleButton.classList.remove('active-mode');
+                    toggleButton.querySelector('.select-icon').style.opacity = 0.3;
+                    toggleButton.querySelector('.zoom-icon').style.opacity = 1.0;
+                    d3.select(canvas).call(zoom);
+                }
+            });
+        // document.addEventListener('keydown', (event) => {
+        //     const activeElement = document.activeElement;
+        //     const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+        
+        //     if (!isInputFocused) {
+        //         if (event.key === 's' || event.key === 'S') {
+        //             if (!selectionMode) toggleButton.click();
+        //             event.preventDefault();
+        //         } else if (event.key === 'z' || event.key === 'Z') {
+        //             if (selectionMode) toggleButton.click();
+        //             event.preventDefault();
+        //         }
+        //     }
+        // });
+        arrowToggleButton.addEventListener('click', () => {
+                showArrows = !showArrows;
+                arrowToggleButton.innerHTML = showArrows ? '<span style="font-weight:bold; color:black;">Arrows</span>' : '<span style="color:lightgray;">Arrows</span>';
+                ticked();
+            });
+        searchBox.addEventListener('input', () => {
+            const searchTerm = searchBox.value.toLowerCase();
+            newSelection(nodes.filter(node => node.id.toLowerCase().includes(searchTerm)));
+            printSelectedNodes();
+            ticked();
+            }
+        );
+        groupButton.addEventListener('click', () => {
+            const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
+            const groupLabel = groupInputBox.value || `Group ${groups.length+1}`;
+            if (groupLabel && selectedNodes.size > 0) {
+                selectedNodes.forEach(node => node.group = groupLabel);
+                updateGroupPanel(); 
+                ticked();
+            };
+            groupInputBox.value = "";
+            hideFloatingInput();
+            clearSelection();
+        });
+        clearGroupButton.addEventListener('click', () => {
+            if (selectedNodes.size > 0) {
+                selectedNodes.forEach(node => delete node.group);
+                updateGroupPanel(); 
+                ticked();
+            }
+            groupInputBox.value = "";
+            hideFloatingInput();
+            clearSelection();
+        });
+        
+        reloadData();
+
+        window.addEventListener('resize', () => {
+            canvas.width = lightGraph.clientWidth;
+            canvas.height = lightGraph.clientHeight;
+            recalculateForce(); 
+        });
+
+        const observer = new MutationObserver((mutationsList, observer) => {
+            setTimeout(() => {
+                console.log('Mutation detected:', mutationsList);
+                reloadData();
+            }, 500);
+        });
+        observer.observe(
+            document.getElementById('networkData'), 
+            { childList: true, subtree: true, characterData: true });
+    };
+    
+    const checkCanvas = setInterval(() => {
+        if (document.getElementById("lightGraph")) {
+            clearInterval(checkCanvas);
+            window.lightGraph.initializeVisualization();
+        }
+    }, 100);
+})();</script>
+    <div>
+    

@@ -17,7 +17,7 @@ pip install pandas networkx
 
 ## Testing Options
 
-### 🚀 Option 1: Quick Manual Test (Recommended First)
+### Option 1: Quick Manual Test (Recommended First)
 
 **Easiest way to verify everything works:**
 
@@ -27,22 +27,22 @@ python quick_test.py
 ```
 
 This will run 9 quick tests and show you:
-- ✓ What's working
-- ✗ What's broken
-- ⚠ What's skipped
+- [PASS] What's working
+- [FAIL] What's broken
+- [SKIP] What's skipped
 
 **Expected output:**
 ```
-✓ Successfully imported lightgraph
-✓ PASSED: Basic edge list works
-✓ PASSED: Weighted edges work
-✓ PASSED: Dictionary format works
+[PASS] Successfully imported lightgraph
+[PASS] PASSED: Basic edge list works
+[PASS] PASSED: Weighted edges work
+[PASS] PASSED: Dictionary format works
 ...
 ```
 
 ---
 
-### 🧪 Option 2: Full Test Suite (Comprehensive)
+### Option 2: Full Test Suite (Comprehensive)
 
 **Run all 33 edge list tests:**
 
@@ -68,7 +68,7 @@ pytest tests/ -v
 
 ---
 
-### 🎨 Option 3: Visual Examples (Most Fun!)
+### Option 3: Visual Example
 
 **Generate 9 example visualizations:**
 
@@ -92,7 +92,7 @@ python edgelist_demo.py
 
 ---
 
-### 📊 Option 4: Compare Matrix vs Edge List
+### Option 4: Compare Matrix vs Edge List
 
 **See the difference between the two interfaces:**
 
@@ -145,5 +145,3 @@ pytest tests/ -v
 ```
 
 ---
-
-**Happy Testing! 🎉**

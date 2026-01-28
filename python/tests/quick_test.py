@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 try:
     import lightgraph as lg
-    print("✓ Successfully imported lightgraph")
+    print("[PASS] Successfully imported lightgraph")
 except ImportError as e:
-    print(f"✗ Failed to import lightgraph: {e}")
+    print(f"[FAIL] Failed to import lightgraph: {e}")
     sys.exit(1)
 
 # Test 1: Basic edge list
@@ -26,9 +26,9 @@ try:
     html = lg.net_vis_edgelist(edges)
     assert 'lightGraph' in html
     assert '"id": "A"' in html
-    print("✓ PASSED: Basic edge list works")
+    print("[PASS] PASSED: Basic edge list works")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 2: Weighted edges
 print("\n" + "="*60)
@@ -39,9 +39,9 @@ try:
     html = lg.net_vis_edgelist(edges)
     assert '"weight": 0.5' in html
     assert '"weight": 0.8' in html
-    print("✓ PASSED: Weighted edges work")
+    print("[PASS] PASSED: Weighted edges work")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 3: Dictionary format
 print("\n" + "="*60)
@@ -54,9 +54,9 @@ try:
     ]
     html = lg.net_vis_edgelist(edges)
     assert '"id": "X"' in html
-    print("✓ PASSED: Dictionary format works")
+    print("[PASS] PASSED: Dictionary format works")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 4: Node groups
 print("\n" + "="*60)
@@ -68,9 +68,9 @@ try:
     html = lg.net_vis_edgelist(edges, node_groups=groups)
     assert '"group": "group1"' in html
     assert '"group": "group2"' in html
-    print("✓ PASSED: Node groups work")
+    print("[PASS] PASSED: Node groups work")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 5: Save to file
 print("\n" + "="*60)
@@ -86,11 +86,11 @@ try:
             content = f.read()
         assert content == html
         os.remove(filepath)  # Clean up
-        print("✓ PASSED: Save to file works")
+        print("[PASS] PASSED: Save to file works")
     else:
-        print("✗ FAILED: File was not created")
+        print("[FAIL] FAILED: File was not created")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 6: Error handling
 print("\n" + "="*60)
@@ -100,11 +100,11 @@ try:
     # Should raise ValueError for empty edge list
     try:
         lg.net_vis_edgelist([])
-        print("✗ FAILED: Should have raised ValueError for empty list")
+        print("[FAIL] FAILED: Should have raised ValueError for empty list")
     except ValueError as e:
-        print(f"✓ PASSED: Correctly raises ValueError: {e}")
+        print(f"[PASS] PASSED: Correctly raises ValueError: {e}")
 except Exception as e:
-    print(f"✗ FAILED: Unexpected error: {e}")
+    print(f"[FAIL] FAILED: Unexpected error: {e}")
 
 # Test 7: Isolated nodes
 print("\n" + "="*60)
@@ -124,9 +124,9 @@ try:
     assert '"id": "4"' not in html2
     assert '"id": "5"' not in html2
     
-    print("✓ PASSED: Isolated node handling works")
+    print("[PASS] PASSED: Isolated node handling works")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 8: Load benchmark data
 print("\n" + "="*60)
@@ -150,11 +150,11 @@ try:
         
         html = lg.net_vis_edgelist(edges)
         assert 'lightGraph' in html
-        print("✓ PASSED: Works with benchmark data")
+        print("[PASS] PASSED: Works with benchmark data")
     else:
-        print("⚠ SKIPPED: Benchmark file not found")
+        print("[SKIP] SKIPPED: Benchmark file not found")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Test 9: Consistency with net_vis
 print("\n" + "="*60)
@@ -177,18 +177,18 @@ try:
     assert 'id="nodesData"' in html_matrix
     assert 'id="nodesData"' in html_edgelist
     
-    print("✓ PASSED: Consistent with net_vis output")
+    print("[PASS] PASSED: Consistent with net_vis output")
 except ImportError:
-    print("⚠ SKIPPED: NumPy not available")
+    print("[SKIP] SKIPPED: NumPy not available")
 except Exception as e:
-    print(f"✗ FAILED: {e}")
+    print(f"[FAIL] FAILED: {e}")
 
 # Summary
 print("\n" + "="*60)
 print("TESTING COMPLETE")
 print("="*60)
 print("\nAll core functionality has been tested.")
-print("If you see mostly ✓ symbols above, the implementation is working!")
+print("If you see mostly [PASS] symbols above, the implementation is working!")
 print("\nTo run the full test suite with pytest:")
 print("  cd python")
 print("  pytest tests/test_edgelist.py -v")
