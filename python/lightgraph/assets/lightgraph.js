@@ -1,7 +1,82 @@
 (function() {
     window.lightGraph = window.lightGraph || {};
 
+    // =========================================================================
+    // Default Configuration
+    // =========================================================================
+    const DEFAULT_CONFIG = {
+        nodes: {
+            defaultSize: 7,
+            selectedSizeIncrease: 5,
+            defaultColor: '#548ff0',
+            defaultOpacity: 1.0,
+            borderColor: '#ffffff',
+            borderWidth: 1,
+            selectedBorderColor: '#000000'
+        },
+        edges: {
+            defaultColor: '#333333',
+            selectedColor: '#999999',
+            defaultOpacity: 0.1,
+            selectedOpacity: 0.6,
+            defaultWidth: 1,
+            selectedWidth: 2,
+            showArrows: false,
+            arrowSize: 10,
+            arrowWidth: 5
+        },
+        labels: {
+            fontFamily: 'sans-serif',
+            fontSize: 5,
+            color: '#555555',
+            selectedColor: '#000000',
+            visible: true
+        },
+        simulation: {
+            chargeStrength: 4000,
+            linkDistance: 100,
+            centerStrength: 1.0
+        },
+        groups: {
+            fillOpacity: 0.125,
+            strokeWidth: 2,
+            showEllipses: true
+        },
+        canvas: {
+            backgroundColor: '#ffffff',
+            zoomMin: 0.1,
+            zoomMax: 5
+        },
+        ui: {
+            theme: 'light',
+            showLegend: true,
+            showStatistics: false,
+            showTooltips: true
+        },
+        layout: 'force' // 'force' or 'circular'
+    };
+
+    // Deep merge function for config
+    function mergeConfig(defaults, overrides) {
+        const result = { ...defaults };
+        for (const key in overrides) {
+            if (overrides[key] && typeof overrides[key] === 'object' && !Array.isArray(overrides[key])) {
+                result[key] = mergeConfig(defaults[key] || {}, overrides[key]);
+            } else if (overrides[key] !== undefined) {
+                result[key] = overrides[key];
+            }
+        }
+        return result;
+    }
+
     window.lightGraph.initializeVisualization = () => {
+        // =====================================================================
+        // 0. Load Configuration -----------------------------------------------
+        // =====================================================================
+        const configElement = document.getElementById('lightGraphConfig');
+        const userConfig = configElement ? JSON.parse(configElement.textContent) : {};
+        const config = mergeConfig(DEFAULT_CONFIG, userConfig);
+
         // =====================================================================
         // 1. Visual Element Section -------------------------------------------
         // =====================================================================
@@ -38,17 +113,22 @@
         }
 
         function createButton({ id, title, htmlContent }) {
-            return createElement('button', { id, title, innerHTML: htmlContent }, {
+            const button = createElement('button', { id, title, innerHTML: htmlContent }, {
                 padding: '5px 15px',
                 fontSize: '14px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                ':hover': {
-                    transform: 'translateY(-1px)',
-                    background: '0 4px 8px rgba(0,0,0,0.15)'
-                }
+                transition: 'all 0.2s'
             });
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'translateY(-1px)';
+                button.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+            });
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = '';
+                button.style.boxShadow = '';
+            });
+            return button;
         }
 
         function createInput({ id, placeholder }) {
@@ -82,7 +162,7 @@
                 cursor: 'pointer',
                 padding: '8px 0',
                 borderBottom: '1px solid #eee',
-                'font-family': 'Arial, Helvetica, sans-serif'
+                fontFamily: 'Arial, Helvetica, sans-serif'
             });
         
             const content = createElement('div', { 
@@ -180,9 +260,71 @@
         // Add control panel to the page
         lightGraph.append(mainControlBar, sceneSidebar);
         mainControlBar.append(toggleButton, searchBox, sidebarToggle);
+
+        // Display Settings Section
         const [viewHeader, viewContent] = createCollapsibleSection('Display Settings');
-        viewContent.append(arrowToggleButton);
-        sceneSidebar.append(viewHeader, viewContent);
+        const labelsToggleButton = createButton({
+            id: 'labelsToggleButton',
+            title: 'Toggle node labels',
+            htmlContent: config.labels.visible ? '<strong>Labels</strong>' : '<span style="color:lightgray;">Labels</span>'
+        });
+        const ellipsesToggleButton = createButton({
+            id: 'ellipsesToggleButton',
+            title: 'Toggle group ellipses',
+            htmlContent: config.groups.showEllipses ? '<strong>Ellipses</strong>' : '<span style="color:lightgray;">Ellipses</span>'
+        });
+        const legendToggleButton = createButton({
+            id: 'legendToggleButton',
+            title: 'Toggle legend',
+            htmlContent: config.ui.showLegend ? '<strong>Legend</strong>' : '<span style="color:lightgray;">Legend</span>'
+        });
+        const statsToggleButton = createButton({
+            id: 'statsToggleButton',
+            title: 'Toggle statistics panel',
+            htmlContent: config.ui.showStatistics ? '<strong>Stats</strong>' : '<span style="color:lightgray;">Stats</span>'
+        });
+        viewContent.append(arrowToggleButton, labelsToggleButton, ellipsesToggleButton, legendToggleButton, statsToggleButton);
+
+        // Layout Section
+        const [layoutHeader, layoutContent] = createCollapsibleSection('Layout', false);
+        const layoutSelect = createElement('select', { id: 'layoutSelect' }, {
+            padding: '5px',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            width: '100%',
+            marginBottom: '8px'
+        });
+        layoutSelect.innerHTML = `
+            <option value="force" ${config.layout === 'force' ? 'selected' : ''}>Force-Directed</option>
+            <option value="circular" ${config.layout === 'circular' ? 'selected' : ''}>Circular</option>
+        `;
+        const restartButton = createButton({
+            id: 'restartButton',
+            title: 'Restart simulation',
+            htmlContent: 'Restart Layout'
+        });
+        layoutContent.append(layoutSelect, restartButton);
+
+        // Export Section
+        const [exportHeader, exportContent] = createCollapsibleSection('Export', false);
+        const exportPNGButton = createButton({
+            id: 'exportPNG',
+            title: 'Export as PNG image',
+            htmlContent: 'PNG'
+        });
+        const exportSVGButton = createButton({
+            id: 'exportSVG',
+            title: 'Export as SVG (vector)',
+            htmlContent: 'SVG'
+        });
+        const exportJSONButton = createButton({
+            id: 'exportJSON',
+            title: 'Export graph data as JSON',
+            htmlContent: 'JSON'
+        });
+        exportContent.append(exportPNGButton, exportSVGButton, exportJSONButton);
+
+        sceneSidebar.append(viewHeader, viewContent, layoutHeader, layoutContent, exportHeader, exportContent);
 
 
         const floatingInput = createElement('div', { id: 'floatingLabelInput' }, {
@@ -212,8 +354,60 @@
         floatingInput.append(groupInputBox, groupButton, clearGroupButton);
         lightGraph.appendChild(floatingInput);
 
+        // 1.3.3 Legend Panel
+        const legendPanel = createElement('div', { id: 'legendPanel' }, {
+            position: 'absolute',
+            bottom: '20px',
+            left: '20px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '8px',
+            padding: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            fontSize: '12px',
+            display: 'none',
+            minWidth: '120px'
+        });
+        const legendTitle = createElement('div', { innerHTML: '<strong>Groups</strong>' }, {
+            marginBottom: '8px',
+            borderBottom: '1px solid #eee',
+            paddingBottom: '4px'
+        });
+        const legendContent = createElement('div', { id: 'legendContent' });
+        legendPanel.append(legendTitle, legendContent);
+        lightGraph.appendChild(legendPanel);
 
-        
+        // 1.3.4 Statistics Panel
+        const statsPanel = createElement('div', { id: 'statsPanel' }, {
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '8px',
+            padding: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            fontSize: '11px',
+            display: 'none'
+        });
+        lightGraph.appendChild(statsPanel);
+
+        // 1.3.5 Tooltip
+        const tooltip = createElement('div', { id: 'nodeTooltip' }, {
+            position: 'absolute',
+            display: 'none',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            pointerEvents: 'none',
+            zIndex: '1001',
+            maxWidth: '200px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+        });
+        lightGraph.appendChild(tooltip);
+
         // const groupPanel = createContainer();
         // Object.assign(groupPanel.style, {
         //     width: '240px', maxHeight: '200px', 
@@ -265,8 +459,14 @@
         let dragOffsetX = 0;
         let dragOffsetY = 0;
         let simulation = d3.forceSimulation([]);
-        const groupColorScale = d3.scaleOrdinal(d3.schemeSet1);
-        let zoom = d3.zoom().scaleExtent([0.1, 5])
+        // Extended color palette: schemeCategory10 (10) + schemeSet2 (8) + schemeSet3 (12) = 30 colors
+        const extendedColors = [
+            ...d3.schemeCategory10,
+            ...d3.schemeSet2,
+            ...d3.schemeSet3
+        ];
+        const groupColorScale = d3.scaleOrdinal(extendedColors);
+        let zoom = d3.zoom().scaleExtent([config.canvas.zoomMin, config.canvas.zoomMax])
             .on("zoom", (event) => {
                 if (!selectionMode) {
                     transform = event.transform;
@@ -277,7 +477,7 @@
 
         // #region 2.2 Interaction functions -----------------------------------
         function clearSelection() {
-            selectedNodes.forEach(node => selectedNodes.delete(node));
+            selectedNodes.clear();
         }
 
         function addToSelection(nodes) {
@@ -299,35 +499,120 @@
             floatingInput.style.display = 'none';
         }
         function updateGroupPanel() {
-            // const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
-            // existingGroupBlockContent.innerHTML = groups.length ? '' : 'None';
-            // groups.sort().forEach(group => {
-            //     const groupLabel = createElement(
-            //         'span', { innerHTML: `${group}, ` }, {
-            //         color: groupColorScale(group), cursor: 'pointer'
-            //     });
-            //     groupLabel.addEventListener('click', () => {
-            //         newSelection(nodes.filter(node => node.group === group));
-            //         printSelectedNodes();
-            //         ticked();
-            //     });
-            //     existingGroupBlockContent.appendChild(groupLabel);
-            // });
+            // Legacy function - kept for compatibility
+        }
+
+        function updateLegend() {
+            if (!config.ui.showLegend) {
+                legendPanel.style.display = 'none';
+                return;
+            }
+
+            const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))].sort();
+            if (groups.length === 0) {
+                legendPanel.style.display = 'none';
+                return;
+            }
+
+            legendPanel.style.display = 'block';
+            legendContent.innerHTML = '';
+
+            groups.forEach(group => {
+                const count = nodes.filter(n => n.group === group).length;
+                const item = createElement('div', {}, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginTop: '4px',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: '3px'
+                });
+
+                const colorBox = createElement('div', {}, {
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '2px',
+                    backgroundColor: groupColorScale(group),
+                    marginRight: '8px',
+                    flexShrink: '0'
+                });
+
+                const label = createElement('span', {
+                    innerHTML: `${group} (${count})`
+                }, { fontSize: '11px' });
+
+                item.append(colorBox, label);
+                item.addEventListener('mouseenter', () => {
+                    item.style.backgroundColor = 'rgba(0,0,0,0.05)';
+                });
+                item.addEventListener('mouseleave', () => {
+                    item.style.backgroundColor = '';
+                });
+                item.addEventListener('click', () => {
+                    newSelection(nodes.filter(n => n.group === group));
+                    ticked();
+                });
+
+                legendContent.appendChild(item);
+            });
+        }
+
+        function updateStatistics() {
+            if (!config.ui.showStatistics) {
+                statsPanel.style.display = 'none';
+                return;
+            }
+
+            statsPanel.style.display = 'block';
+            const nodeCount = nodes.length;
+            const edgeCount = edges.length;
+            const groupCount = new Set(nodes.map(n => n.group).filter(Boolean)).size;
+            const density = nodeCount > 1 ? (2 * edgeCount) / (nodeCount * (nodeCount - 1)) : 0;
+
+            // Calculate average degree
+            const degrees = {};
+            nodes.forEach(n => degrees[n.id] = 0);
+            edges.forEach(e => {
+                const sourceId = e.source.id || e.source;
+                const targetId = e.target.id || e.target;
+                if (degrees[sourceId] !== undefined) degrees[sourceId]++;
+                if (degrees[targetId] !== undefined) degrees[targetId]++;
+            });
+            const avgDegree = nodeCount > 0 ?
+                Object.values(degrees).reduce((a, b) => a + b, 0) / nodeCount : 0;
+
+            statsPanel.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px;">Statistics</div>
+                <table style="border-collapse: collapse;">
+                    <tr><td style="padding-right: 12px;">Nodes:</td><td style="text-align: right;">${nodeCount}</td></tr>
+                    <tr><td style="padding-right: 12px;">Edges:</td><td style="text-align: right;">${edgeCount}</td></tr>
+                    <tr><td style="padding-right: 12px;">Groups:</td><td style="text-align: right;">${groupCount}</td></tr>
+                    <tr><td style="padding-right: 12px;">Density:</td><td style="text-align: right;">${density.toFixed(4)}</td></tr>
+                    <tr><td style="padding-right: 12px;">Avg Degree:</td><td style="text-align: right;">${avgDegree.toFixed(2)}</td></tr>
+                    <tr><td style="padding-right: 12px;">Selected:</td><td style="text-align: right;">${selectedNodes.size}</td></tr>
+                </table>
+            `;
         }
 
         function ticked() {
             context.save();
-            context.clearRect(0, 0, canvas.width, canvas.height);
+            // Set background color
+            context.fillStyle = config.canvas.backgroundColor;
+            context.fillRect(0, 0, canvas.width, canvas.height);
             context.translate(transform.x, transform.y);
             context.scale(transform.k, transform.k);
 
-            drawGroupEllipses(); 
+            if (config.groups.showEllipses) {
+                drawGroupEllipses();
+            }
             edges.forEach(drawEdge);
             nodes.forEach(drawLabel);
             nodes.forEach(drawNode);
 
             updateSelectionBox();
-            updateGroupPanel(); 
+            updateGroupPanel();
+            updateLegend();
+            updateStatistics();
             context.restore();
         }
         function updateSelectionBox() {
@@ -355,18 +640,22 @@
             context.beginPath();
             context.moveTo(d.source.x, d.source.y);
             context.lineTo(d.target.x, d.target.y);
-            
-            const includeEitherEnd = selectedNodes.has(d.source) || selectedNodes.has(d.target)
-            context.strokeStyle = includeEitherEnd ? "#99999911" : "#33333310";
-            context.lineWidth = includeEitherEnd ? 2 : 1;
-            
+
+            const includeEitherEnd = selectedNodes.has(d.source) || selectedNodes.has(d.target);
+            const edgeColor = d.color || config.edges.defaultColor;
+            const opacity = includeEitherEnd ? config.edges.selectedOpacity : config.edges.defaultOpacity;
+
+            // Convert hex color to rgba with opacity
+            context.strokeStyle = hexToRgba(edgeColor, opacity);
+            context.lineWidth = includeEitherEnd ? config.edges.selectedWidth : config.edges.defaultWidth;
+
             context.stroke();
             if (showArrows) drawArrow(d);
         }
 
         function drawArrow(d) {
-            const arrowLength = 10;
-            const arrowWidth = 5;
+            const arrowLength = config.edges.arrowSize;
+            const arrowWidth = config.edges.arrowWidth;
             const dx = d.target.x - d.source.x;
             const dy = d.target.y - d.source.y;
             const angle = Math.atan2(dy, dx);
@@ -381,26 +670,37 @@
             context.stroke();
         }
 
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
         function drawNode(d) {
-            const color = d.group ? groupColorScale(d.group) : (d.color || "#548ff0");
-            
+            const color = d.group ? groupColorScale(d.group) : (d.color || config.nodes.defaultColor);
+            const isSelected = selectedNodes.has(d);
+
             context.fillStyle = color;
-            context.strokeStyle = selectedNodes.has(d) ? "#000000" : "#FFFFFF";
-            context.lineWidth = selectedNodes.has(d) ? 1 : 1;
-            const size = d.size || 7;
-            nodeSize = selectedNodes.has(d) ? size + 5 : size;
+            context.globalAlpha = d.opacity !== undefined ? d.opacity : config.nodes.defaultOpacity;
+            context.strokeStyle = isSelected ? config.nodes.selectedBorderColor : config.nodes.borderColor;
+            context.lineWidth = config.nodes.borderWidth;
+            const size = d.size || config.nodes.defaultSize;
+            const nodeSize = isSelected ? size + config.nodes.selectedSizeIncrease : size;
 
             context.beginPath();
             context.arc(d.x, d.y, nodeSize / 2, 0, 2 * Math.PI);
             context.fill();
             context.stroke();
+            context.globalAlpha = 1.0;
         }
 
         function drawLabel(d) {
-            const size = d.size || 5;
-            const labelFontSize = d.labelFontSize || 5;
-            context.font = `${labelFontSize}px sans-serif`;
-            context.fillStyle = selectedNodes.has(d) ? "#000" : "#555";
+            if (!config.labels.visible) return;
+            const size = d.size || config.nodes.defaultSize;
+            const labelFontSize = d.labelFontSize || config.labels.fontSize;
+            context.font = `${labelFontSize}px ${config.labels.fontFamily}`;
+            context.fillStyle = selectedNodes.has(d) ? config.labels.selectedColor : config.labels.color;
             const textWidth = context.measureText(d.id).width;
             context.fillText(d.id, d.x - textWidth - 4, d.y + size / 2 + 4);
         }
@@ -477,11 +777,11 @@
                     context.translate(centroid.x, centroid.y);
                     context.rotate(angle);
                     context.beginPath();
-                    context.ellipse(0, 0, radiusX + 5, radiusY + 5, 0, 0, 2 * Math.PI);  // Add padding for better visual coverage
-                    context.fillStyle = `${groupColorScale(group)}20`;  // Fill with group color, alpha = 0.2
+                    context.ellipse(0, 0, radiusX + 5, radiusY + 5, 0, 0, 2 * Math.PI);
+                    context.fillStyle = hexToRgba(groupColorScale(group), config.groups.fillOpacity);
                     context.fill();
                     context.strokeStyle = groupColorScale(group);
-                    context.lineWidth = 2;
+                    context.lineWidth = config.groups.strokeWidth;
                     context.stroke();
                     context.restore();
                 }
@@ -536,28 +836,72 @@
         function recalculateForce() {
             try {
                 const simParams = document.getElementById('simulationParams');
+                let simulationForce, linkDistance;
 
                 if (simParams) {
-                    simParams_ = JSON.parse(simParams.textContent)
+                    const simParams_ = JSON.parse(simParams.textContent);
                     simulationForce = simParams_.totalForce / nodes.length;
                     linkDistance = simParams_.linkDistance;
                 } else {
-                    simulationForce = 4000 / nodes.length;
-                    linkDistance = 100
-                }                
+                    simulationForce = config.simulation.chargeStrength / nodes.length;
+                    linkDistance = config.simulation.linkDistance;
+                }
 
-                simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistance))
-                    .force("charge", d3.forceManyBody().strength(-simulationForce))
-                    .force("center", d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2))
-                    .on("tick", ticked);
+                if (config.layout === 'circular') {
+                    applyCircularLayout();
+                    simulation = d3.forceSimulation(nodes)
+                        .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistance).strength(0.1))
+                        .force("charge", d3.forceManyBody().strength(-simulationForce * 0.1))
+                        .on("tick", ticked);
+                } else {
+                    simulation = d3.forceSimulation(nodes)
+                        .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistance))
+                        .force("charge", d3.forceManyBody().strength(-simulationForce))
+                        .force("center", d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2))
+                        .on("tick", ticked);
+                }
 
                 d3.select(canvas).call(zoom);
 
             } catch (error) {
                 console.error('Error updating visualization:', error);
             }
-        };
+        }
+
+        function applyCircularLayout() {
+            const centerX = lightGraph.clientWidth / 2;
+            const centerY = lightGraph.clientHeight / 2;
+            const radius = Math.min(centerX, centerY) * 0.7;
+
+            // Group nodes by their group property
+            const groups = [...new Set(nodes.map(n => n.group || 'default'))].sort();
+            const groupMap = new Map();
+            groups.forEach((g, i) => groupMap.set(g, i));
+
+            // Sort nodes by group for better visual clustering
+            const sortedNodes = [...nodes].sort((a, b) => {
+                const groupA = a.group || 'default';
+                const groupB = b.group || 'default';
+                return groupMap.get(groupA) - groupMap.get(groupB);
+            });
+
+            // Assign positions in a circle
+            sortedNodes.forEach((node, i) => {
+                const angle = (2 * Math.PI * i) / sortedNodes.length - Math.PI / 2;
+                node.x = centerX + radius * Math.cos(angle);
+                node.y = centerY + radius * Math.sin(angle);
+                node.fx = node.x; // Fix position initially
+                node.fy = node.y;
+            });
+
+            // Unfix after a short delay to allow some movement
+            setTimeout(() => {
+                nodes.forEach(node => {
+                    node.fx = null;
+                    node.fy = null;
+                });
+            }, 100);
+        }
         // #endregion
 
         // 2.3 Interactions ----------------------------------------------------
@@ -601,10 +945,36 @@
         });
 
         canvas.addEventListener("mousemove", (event) => {
+            const [mouseX, mouseY] = d3.pointer(event);
+            const transformedMouseX = (mouseX - transform.x) / transform.k;
+            const transformedMouseY = (mouseY - transform.y) / transform.k;
+
+            // Handle tooltip (always active)
+            if (config.ui.showTooltips && !selectionMode) {
+                const hoveredNode = getNodeAtCoordinates(transformedMouseX, transformedMouseY);
+                if (hoveredNode) {
+                    let tooltipContent = `<strong>${hoveredNode.id}</strong>`;
+                    if (hoveredNode.group) {
+                        tooltipContent += `<br><span style="color: ${groupColorScale(hoveredNode.group)};">● ${hoveredNode.group}</span>`;
+                    }
+                    // Add any custom metadata
+                    if (hoveredNode.metadata) {
+                        for (const [key, value] of Object.entries(hoveredNode.metadata)) {
+                            tooltipContent += `<br>${key}: ${value}`;
+                        }
+                    }
+                    tooltip.innerHTML = tooltipContent;
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = `${mouseX + 15}px`;
+                    tooltip.style.top = `${mouseY + 15}px`;
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            }
+
+            // Handle selection mode interactions
             if (selectionMode) {
-                const [mouseX, mouseY] = d3.pointer(event);
-                const transformedMouseX = (mouseX - transform.x) / transform.k;
-                const transformedMouseY = (mouseY - transform.y) / transform.k;
+                tooltip.style.display = 'none'; // Hide tooltip in selection mode
 
                 if (draggingNode) {
                     const dx = transformedMouseX + dragOffsetX - draggingNode.x;
@@ -629,6 +999,11 @@
             }
         });
 
+        // Hide tooltip when mouse leaves canvas
+        canvas.addEventListener("mouseleave", () => {
+            tooltip.style.display = 'none';
+        });
+
         canvas.addEventListener("mouseup", (event) => {
             console.log('Mouse up event listener attached to canvas');
             if (selectionMode) {
@@ -639,7 +1014,7 @@
                 } else if (selectionBox) {
                     console.log('Final selection box:', selectionBox);
                     addToSelection(nodes.filter(node => isNodeInSelection(node, selectionBox)));
-                    selectedLength = Array.from(selectedNodes).length;
+                    const selectedLength = Array.from(selectedNodes).length;
                     if (selectedLength > 0) {
                         const [mouseX, mouseY] = d3.pointer(event);
                         showFloatingInput(mouseX, mouseY);
@@ -705,14 +1080,147 @@
         clearGroupButton.addEventListener('click', () => {
             if (selectedNodes.size > 0) {
                 selectedNodes.forEach(node => delete node.group);
-                updateGroupPanel(); 
+                updateGroupPanel();
                 ticked();
             }
             groupInputBox.value = "";
             hideFloatingInput();
             clearSelection();
         });
-        
+
+        // Toggle buttons for display settings
+        labelsToggleButton.addEventListener('click', () => {
+            config.labels.visible = !config.labels.visible;
+            labelsToggleButton.innerHTML = config.labels.visible ? '<strong>Labels</strong>' : '<span style="color:lightgray;">Labels</span>';
+            ticked();
+        });
+
+        ellipsesToggleButton.addEventListener('click', () => {
+            config.groups.showEllipses = !config.groups.showEllipses;
+            ellipsesToggleButton.innerHTML = config.groups.showEllipses ? '<strong>Ellipses</strong>' : '<span style="color:lightgray;">Ellipses</span>';
+            ticked();
+        });
+
+        legendToggleButton.addEventListener('click', () => {
+            config.ui.showLegend = !config.ui.showLegend;
+            legendToggleButton.innerHTML = config.ui.showLegend ? '<strong>Legend</strong>' : '<span style="color:lightgray;">Legend</span>';
+            ticked();
+        });
+
+        statsToggleButton.addEventListener('click', () => {
+            config.ui.showStatistics = !config.ui.showStatistics;
+            statsToggleButton.innerHTML = config.ui.showStatistics ? '<strong>Stats</strong>' : '<span style="color:lightgray;">Stats</span>';
+            ticked();
+        });
+
+        // Layout controls
+        layoutSelect.addEventListener('change', () => {
+            config.layout = layoutSelect.value;
+            recalculateForce();
+        });
+
+        restartButton.addEventListener('click', () => {
+            recalculateForce();
+        });
+
+        // Export functions
+        function downloadFile(dataURL, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataURL;
+            link.click();
+        }
+
+        exportPNGButton.addEventListener('click', () => {
+            const dataURL = canvas.toDataURL('image/png');
+            downloadFile(dataURL, 'lightgraph.png');
+        });
+
+        exportSVGButton.addEventListener('click', () => {
+            // Create SVG from current canvas state
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', canvas.width);
+            svg.setAttribute('height', canvas.height);
+            svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+            // Background
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', '100%');
+            bg.setAttribute('height', '100%');
+            bg.setAttribute('fill', config.canvas.backgroundColor);
+            svg.appendChild(bg);
+
+            // Create a group with transform
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('transform', `translate(${transform.x},${transform.y}) scale(${transform.k})`);
+
+            // Draw edges
+            edges.forEach(edge => {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', edge.source.x);
+                line.setAttribute('y1', edge.source.y);
+                line.setAttribute('x2', edge.target.x);
+                line.setAttribute('y2', edge.target.y);
+                line.setAttribute('stroke', config.edges.defaultColor);
+                line.setAttribute('stroke-opacity', config.edges.defaultOpacity);
+                line.setAttribute('stroke-width', config.edges.defaultWidth);
+                g.appendChild(line);
+            });
+
+            // Draw nodes
+            nodes.forEach(node => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', node.x);
+                circle.setAttribute('cy', node.y);
+                circle.setAttribute('r', (node.size || config.nodes.defaultSize) / 2);
+                circle.setAttribute('fill', node.group ? groupColorScale(node.group) : (node.color || config.nodes.defaultColor));
+                circle.setAttribute('stroke', config.nodes.borderColor);
+                circle.setAttribute('stroke-width', config.nodes.borderWidth);
+                g.appendChild(circle);
+
+                // Draw label
+                if (config.labels.visible) {
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', node.x - 4);
+                    text.setAttribute('y', node.y + 4);
+                    text.setAttribute('font-size', node.labelFontSize || config.labels.fontSize);
+                    text.setAttribute('font-family', config.labels.fontFamily);
+                    text.setAttribute('fill', config.labels.color);
+                    text.setAttribute('text-anchor', 'end');
+                    text.textContent = node.id;
+                    g.appendChild(text);
+                }
+            });
+
+            svg.appendChild(g);
+
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svg);
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            downloadFile(URL.createObjectURL(blob), 'lightgraph.svg');
+        });
+
+        exportJSONButton.addEventListener('click', () => {
+            const graphData = {
+                nodes: nodes.map(n => ({
+                    id: n.id,
+                    group: n.group,
+                    x: n.x,
+                    y: n.y,
+                    size: n.size,
+                    color: n.color
+                })),
+                edges: edges.map(e => ({
+                    source: e.source.id || e.source,
+                    target: e.target.id || e.target,
+                    weight: e.weight
+                })),
+                config: config
+            };
+            const blob = new Blob([JSON.stringify(graphData, null, 2)], { type: 'application/json' });
+            downloadFile(URL.createObjectURL(blob), 'lightgraph.json');
+        });
+
         reloadData();
 
         window.addEventListener('resize', () => {

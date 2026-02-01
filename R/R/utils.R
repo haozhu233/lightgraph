@@ -62,26 +62,24 @@ adjacency_to_lightgraph <- function(adj_matrix, node_names, node_groups = NULL,
     }
   }
   
-  # Create edges data frame
-  edges <- data.frame(
-    source = character(),
-    target = character(),
-    weight = numeric(),
-    stringsAsFactors = FALSE
-  )
-  
-  for (i in 1:nrow(adj_matrix)) {
-    for (j in 1:ncol(adj_matrix)) {
-      if (adj_matrix[i, j] > 0) {
-        edges <- rbind(edges, data.frame(
-          source = node_names[i],
-          target = node_names[j],
-          weight = adj_matrix[i, j],
-          stringsAsFactors = FALSE
-        ))
-      }
-    }
+  # Create edges data frame using vectorized operations (O(n) instead of O(n^2))
+  edge_indices <- which(adj_matrix > 0, arr.ind = TRUE)
+
+  if (nrow(edge_indices) > 0) {
+    edges <- data.frame(
+      source = node_names[edge_indices[, 1]],
+      target = node_names[edge_indices[, 2]],
+      weight = adj_matrix[edge_indices],
+      stringsAsFactors = FALSE
+    )
+  } else {
+    edges <- data.frame(
+      source = character(),
+      target = character(),
+      weight = numeric(),
+      stringsAsFactors = FALSE
+    )
   }
-  
+
   list(nodes = nodes, edges = edges)
 }

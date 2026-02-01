@@ -31,13 +31,22 @@ HTMLWidgets.widget({
         nodesScript.id = 'nodesData';
         nodesScript.textContent = JSON.stringify(x.nodes);
         el.appendChild(nodesScript);
-        
+
         var edgesScript = document.createElement('script');
         edgesScript.type = 'application/json';
         edgesScript.id = 'edgesData';
         edgesScript.textContent = JSON.stringify(x.edges);
         el.appendChild(edgesScript);
-        
+
+        // Create script tag for configuration
+        if (x.config) {
+          var configScript = document.createElement('script');
+          configScript.type = 'application/json';
+          configScript.id = 'lightGraphConfig';
+          configScript.textContent = JSON.stringify(x.config);
+          el.appendChild(configScript);
+        }
+
         // Create a container for mutation observer
         var networkDataDiv = document.createElement('div');
         networkDataDiv.id = 'networkData';
