@@ -1,1 +1,1 @@
-from .network import net_vis
+from .network import net_vis, NetworkVisualization

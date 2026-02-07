@@ -4,10 +4,64 @@ LightGraph Network Visualization
 A high-performance, canvas-based network visualization library.
 """
 import json
+import base64
+import uuid
 import numpy as np
-from IPython.display import display, HTML
 import os
 from typing import Optional, Dict, List, Union, Literal
+
+
+class NetworkVisualization:
+    """Wrapper for lightGraph network visualization HTML content.
+
+    Implements Jupyter's rich display protocol via _repr_html_().
+    Uses iframe isolation so multiple visualizations can coexist
+    in a single notebook without element ID collisions.
+    """
+
+    def __init__(self, html_content: str, height: str = '800px'):
+        self._html = html_content
+        self._height = height
+
+    @property
+    def html(self) -> str:
+        """The raw HTML content as a string."""
+        return self._html
+
+    def _repr_html_(self) -> str:
+        """Jupyter rich display: renders in an iframe for DOM isolation."""
+        full_html = (
+            "<!DOCTYPE html><html><head><meta charset='utf-8'></head>"
+            f"<body style='margin:0;padding:0;overflow:hidden;'>{self._html}</body></html>"
+        )
+        b64 = base64.b64encode(full_html.encode('utf-8')).decode('ascii')
+        uid = uuid.uuid4().hex[:8]
+        return (
+            f'<iframe id="lightgraph-{uid}" '
+            f'style="width:100%;height:{self._height};border:none;" '
+            f'sandbox="allow-scripts allow-downloads"></iframe>'
+            f'<script>(function(){{'
+            f'var f=document.getElementById("lightgraph-{uid}");'
+            f'f.srcdoc=atob("{b64}");'
+            f'}})();</script>'
+        )
+
+    def __str__(self) -> str:
+        """Returns raw HTML for backward compatibility."""
+        return self._html
+
+    def __repr__(self) -> str:
+        size_kb = len(self._html) / 1024
+        return f"NetworkVisualization({size_kb:.1f}KB, height='{self._height}')"
+
+    def __contains__(self, item: str) -> bool:
+        """Support 'in' operator for backward compatibility."""
+        return item in self._html
+
+    def save(self, filepath: str) -> None:
+        """Save the visualization as a standalone HTML file."""
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(self._html)
 
 
 def net_vis(
@@ -36,7 +90,7 @@ def net_vis(
     # Output options
     height: str = '800px',
     save_as: Optional[str] = None
-) -> str:
+) -> NetworkVisualization:
     """
     Visualizes a network using lightGraph in Jupyter.
 
@@ -89,8 +143,9 @@ def net_vis(
 
     Returns
     -------
-    str
-        HTML content string that can be displayed or saved.
+    NetworkVisualization
+        Object that auto-displays in Jupyter notebooks.
+        Access raw HTML via str() or .html property.
 
     Examples
     --------
@@ -205,8 +260,9 @@ def net_vis(
     </div>
     """
 
-    if save_as:
-        with open(save_as, 'w', encoding='utf-8') as f:
-            f.write(html_content)
+    result = NetworkVisualization(html_content, height=height)
 
-    return html_content
+    if save_as:
+        result.save(save_as)
+
+    return result
