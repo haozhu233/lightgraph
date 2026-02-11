@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>LightGraph Three.js Test</title>
+</head>
+<body style="margin:0;padding:0;overflow:hidden;">
+    <div style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+    <div id="lightGraph" style="width: 100%; height: 100%;"></div>
+    <script type="application/json" id="nodesData">[
+        {"id":"A","group":"Group 1"},
+        {"id":"B","group":"Group 1"},
+        {"id":"C","group":"Group 1"},
+        {"id":"D","group":"Group 2"},
+        {"id":"E","group":"Group 2"},
+        {"id":"F","group":"Group 2"},
+        {"id":"G","group":"Group 3"},
+        {"id":"H","group":"Group 3"},
+        {"id":"I","group":"Group 3"},
+        {"id":"J"},
+        {"id":"K"},
+        {"id":"L","group":"Group 1"},
+        {"id":"M","group":"Group 2"},
+        {"id":"N","group":"Group 3"},
+        {"id":"O"}
+    ]</script>
+    <script type="application/json" id="edgesData">[
+        {"source":"A","target":"B","weight":1},
+        {"source":"B","target":"C","weight":1},
+        {"source":"A","target":"C","weight":1},
+        {"source":"D","target":"E","weight":1},
+        {"source":"E","target":"F","weight":1},
+        {"source":"D","target":"F","weight":1},
+        {"source":"G","target":"H","weight":1},
+        {"source":"H","target":"I","weight":1},
+        {"source":"G","target":"I","weight":1},
+        {"source":"C","target":"D","weight":1},
+        {"source":"F","target":"G","weight":1},
+        {"source":"J","target":"A","weight":1},
+        {"source":"K","target":"E","weight":1},
+        {"source":"L","target":"B","weight":1},
+        {"source":"M","target":"D","weight":1},
+        {"source":"N","target":"H","weight":1},
+        {"source":"O","target":"J","weight":1},
+        {"source":"O","target":"K","weight":1},
+        {"source":"J","target":"K","weight":1},
+        {"source":"L","target":"M","weight":1},
+        {"source":"N","target":"O","weight":1}
+    ]</script>
+    <script type="application/json" id="lightGraphConfig">{
+        "labels": {"visible": true}
+    }</script>
+    <script src="lightgraph.js"></script>
+    </div>
+</body>
+</html>

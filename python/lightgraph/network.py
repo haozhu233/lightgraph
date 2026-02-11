@@ -1,7 +1,7 @@
 """
 LightGraph Network Visualization
 
-A high-performance, canvas-based network visualization library.
+A high-performance, WebGL-based network visualization library powered by Three.js.
 """
 import json
 import base64
@@ -85,8 +85,9 @@ def net_vis(
     # Styling options
     node_size: float = 7,
     label_font_size: float = 5,
-    edge_opacity: float = 0.1,
-    background_color: str = '#ffffff',
+    edge_opacity: float = None,
+    background_color: str = None,
+    theme: Literal['dark', 'light'] = 'dark',
     # Output options
     height: str = '800px',
     save_as: Optional[str] = None
@@ -132,10 +133,12 @@ def net_vis(
         Default size for nodes.
     label_font_size : float, default 5
         Font size for node labels.
-    edge_opacity : float, default 0.1
-        Opacity for edges (0.0 to 1.0).
-    background_color : str, default '#ffffff'
-        Background color for the canvas (hex color).
+    edge_opacity : float, optional
+        Opacity for edges (0.0 to 1.0). If None, uses theme default.
+    background_color : str, optional
+        Background color (hex color). If None, uses theme default.
+    theme : {'dark', 'light'}, default 'dark'
+        Color theme for the visualization.
     height : str, default '800px'
         Height of the visualization container.
     save_as : str, optional
@@ -215,7 +218,6 @@ def net_vis(
         },
         'edges': {
             'showArrows': show_arrows,
-            'defaultOpacity': edge_opacity,
         },
         'labels': {
             'visible': show_labels,
@@ -228,16 +230,21 @@ def net_vis(
         'groups': {
             'showEllipses': show_ellipses,
         },
-        'canvas': {
-            'backgroundColor': background_color,
-        },
+        'canvas': {},
         'ui': {
+            'theme': theme,
             'showLegend': show_legend,
             'showStatistics': show_statistics,
             'showTooltips': show_tooltips,
         },
         'layout': layout,
     }
+
+    # Only set optional values if explicitly provided
+    if edge_opacity is not None:
+        config['edges']['defaultOpacity'] = edge_opacity
+    if background_color is not None:
+        config['canvas']['backgroundColor'] = background_color
 
     nodes_json = json.dumps(nodes)
     edges_json = json.dumps(edges)
@@ -255,7 +262,6 @@ def net_vis(
     <script type="application/json" id="nodesData">{nodes_json}</script>
     <script type="application/json" id="edgesData">{edges_json}</script>
     <script type="application/json" id="lightGraphConfig">{config_json}</script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>{script_js}</script>
     </div>
     """

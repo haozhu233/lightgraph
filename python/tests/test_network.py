@@ -176,7 +176,7 @@ class TestNetVis:
         assert 'id="lightGraph"' in result
         assert '<script type="application/json" id="nodesData">' in result
         assert '<script type="application/json" id="edgesData">' in result
-        assert 'd3js.org/d3.v7.min.js' in result
+        assert 'id="lightGraphConfig"' in result
 
     def test_json_validity(self):
         """Test that the embedded JSON data is valid."""
