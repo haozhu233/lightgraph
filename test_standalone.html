@@ -8,21 +8,21 @@
     <div style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
     <div id="lightGraph" style="width: 100%; height: 100%;"></div>
     <script type="application/json" id="nodesData">[
-        {"id":"A","group":"Group 1"},
+        {"id":"A","group":"Group 1","size":20},
         {"id":"B","group":"Group 1"},
-        {"id":"C","group":"Group 1"},
-        {"id":"D","group":"Group 2"},
+        {"id":"C","group":"Group 1","size":10},
+        {"id":"D","group":"Group 2","size":25},
         {"id":"E","group":"Group 2"},
         {"id":"F","group":"Group 2"},
         {"id":"G","group":"Group 3"},
-        {"id":"H","group":"Group 3"},
+        {"id":"H","group":"Group 3","size":30},
         {"id":"I","group":"Group 3"},
-        {"id":"J"},
+        {"id":"J","size":8},
         {"id":"K"},
         {"id":"L","group":"Group 1"},
         {"id":"M","group":"Group 2"},
         {"id":"N","group":"Group 3"},
-        {"id":"O"}
+        {"id":"O","size":18}
     ]</script>
     <script type="application/json" id="edgesData">[
         {"source":"A","target":"B","weight":1},
@@ -48,7 +48,8 @@
         {"source":"N","target":"O","weight":1}
     ]</script>
     <script type="application/json" id="lightGraphConfig">{
-        "labels": {"visible": true}
+        "labels": {"visible": true},
+        "nodes": {"defaultSize": 12}
     }</script>
     <script src="lightgraph.js"></script>
     </div>

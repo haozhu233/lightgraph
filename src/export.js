@@ -71,24 +71,15 @@ function drawLabelsToCanvas(ctx) {
         const fontWeight = isSelected ? '600' : 'normal';
         ctx.font = `${fontWeight} ${fontSize}px ${config.labels.fontFamily}`;
         ctx.fillStyle = isSelected ? config.labels.selectedColor : config.labels.color;
-        ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
-        // Text shadow
-        if (state.currentTheme === 'dark') {
-            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-            ctx.shadowBlur = 3;
-            ctx.shadowOffsetY = 1;
+        if (state.labelPosition === 'center') {
+            ctx.textAlign = 'center';
+            ctx.fillText(node.id, screen.x, screen.y);
         } else {
-            ctx.shadowColor = 'rgba(255,255,255,0.8)';
-            ctx.shadowBlur = 2;
-            ctx.shadowOffsetY = 1;
+            ctx.textAlign = 'right';
+            ctx.fillText(node.id, screen.x - scaledGap, screen.y);
         }
-
-        ctx.fillText(node.id, screen.x - scaledGap, screen.y);
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
     });
 }
 
@@ -273,12 +264,20 @@ export function exportSVG() {
 
         if (config.labels.visible) {
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', node.x - 4);
-            text.setAttribute('y', node.y + 4);
-            text.setAttribute('font-size', node.labelFontSize || config.labels.fontSize);
+            const fontSize = node.labelFontSize || config.labels.fontSize;
+            if (state.labelPosition === 'center') {
+                text.setAttribute('x', node.x);
+                text.setAttribute('y', node.y + fontSize / 3);
+                text.setAttribute('text-anchor', 'middle');
+            } else {
+                const nodeSize = node.size || config.nodes.defaultSize;
+                text.setAttribute('x', node.x - nodeSize / 2 - 4);
+                text.setAttribute('y', node.y + fontSize / 3);
+                text.setAttribute('text-anchor', 'end');
+            }
+            text.setAttribute('font-size', fontSize);
             text.setAttribute('font-family', config.labels.fontFamily);
             text.setAttribute('fill', config.labels.color);
-            text.setAttribute('text-anchor', 'end');
             text.textContent = node.id;
             g.appendChild(text);
         }

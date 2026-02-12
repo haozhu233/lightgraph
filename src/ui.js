@@ -214,7 +214,10 @@ export function buildUI(tickFn) {
     const edgeColorToggleButton = createButton({ id: 'edgeColorToggle', title: 'Color edges by group', htmlContent: 'Edge Colors', active: false });
     setButtonActive(edgeColorToggleButton, false);
 
-    viewContent.append(arrowToggleButton, labelsToggleButton, ellipsesToggleButton, legendToggleButton, statsToggleButton, edgeColorToggleButton);
+    const labelPositionButton = createButton({ id: 'labelPositionToggle', title: 'Toggle label position (side / center)', htmlContent: 'Center Labels', active: false });
+    setButtonActive(labelPositionButton, false);
+
+    viewContent.append(arrowToggleButton, labelsToggleButton, labelPositionButton, ellipsesToggleButton, legendToggleButton, statsToggleButton, edgeColorToggleButton);
 
     // Appearance section (sliders for node size and edge opacity)
     const [appearanceHeader, appearanceContent] = createCollapsibleSection('Appearance', true);
@@ -269,7 +272,39 @@ export function buildUI(tickFn) {
     }, { fontSize: '12px', minWidth: '24px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' });
     labelSizeRow.append(labelSizeLabel, labelSizeSlider, labelSizeValue);
 
-    appearanceContent.append(nodeSizeRow, edgeOpacityRow, labelSizeRow);
+    // Edge Color picker
+    const edgeColorRow = createElement('div', {}, {
+        display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+    });
+    const edgeColorLabel = createElement('span', { textContent: 'Edge Color' }, {
+        fontSize: '12px', whiteSpace: 'nowrap', minWidth: '78px',
+    });
+    const edgeColorPicker = createElement('input', {
+        id: 'edgeColorPicker', type: 'color',
+        value: config.edges.defaultColor,
+    }, {
+        width: '32px', height: '24px', border: 'none', padding: '0',
+        cursor: 'pointer', borderRadius: '4px', background: 'none',
+    });
+    edgeColorRow.append(edgeColorLabel, edgeColorPicker);
+
+    // Ungrouped Node Color picker
+    const ungroupedColorRow = createElement('div', {}, {
+        display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+    });
+    const ungroupedColorLabel = createElement('span', { textContent: 'Node Color' }, {
+        fontSize: '12px', whiteSpace: 'nowrap', minWidth: '78px',
+    });
+    const ungroupedColorPicker = createElement('input', {
+        id: 'ungroupedColorPicker', type: 'color',
+        value: config.nodes.defaultColor,
+    }, {
+        width: '32px', height: '24px', border: 'none', padding: '0',
+        cursor: 'pointer', borderRadius: '4px', background: 'none',
+    });
+    ungroupedColorRow.append(ungroupedColorLabel, ungroupedColorPicker);
+
+    appearanceContent.append(nodeSizeRow, edgeOpacityRow, labelSizeRow, edgeColorRow, ungroupedColorRow);
 
     // Layout section
     const [layoutHeader, layoutContent] = createCollapsibleSection('Layout', false);
@@ -496,6 +531,7 @@ export function buildUI(tickFn) {
         legendToggleButton,
         statsToggleButton,
         edgeColorToggleButton,
+        labelPositionButton,
         nodeSizeSlider,
         nodeSizeValue,
         edgeOpacitySlider,
@@ -522,6 +558,8 @@ export function buildUI(tickFn) {
         dataFileInput,
         dataModal,
         dataTextarea,
+        edgeColorPicker,
+        ungroupedColorPicker,
         dataApplyButton,
         dataCancelButton,
     };
@@ -564,7 +602,9 @@ export function updateLegend() {
             transition: 'background 0.1s',
         });
 
-        const colorBox = createElement('div', {}, {
+        const colorBox = createElement('div', {
+            title: 'Click to change color',
+        }, {
             width: '12px',
             height: '12px',
             borderRadius: '3px',
@@ -572,6 +612,18 @@ export function updateLegend() {
             marginRight: '8px',
             flexShrink: '0',
             cursor: 'pointer',
+            border: '2px solid transparent',
+            boxSizing: 'content-box',
+            transition: 'border-color 0.15s ease, transform 0.15s ease',
+        });
+
+        colorBox.addEventListener('mouseenter', () => {
+            colorBox.style.borderColor = getGroupColor(group);
+            colorBox.style.transform = 'scale(1.2)';
+        });
+        colorBox.addEventListener('mouseleave', () => {
+            colorBox.style.borderColor = 'transparent';
+            colorBox.style.transform = '';
         });
 
         // Color picker on swatch click
@@ -595,16 +647,29 @@ export function updateLegend() {
             picker.click();
         });
 
+        const editHint = createElement('span', {
+            textContent: '\u270E',
+        }, {
+            fontSize: '10px',
+            opacity: '0',
+            transition: 'opacity 0.15s ease',
+            marginLeft: '-4px',
+            marginRight: '4px',
+            pointerEvents: 'none',
+        });
+
         const label = createElement('span', {
             innerHTML: `${group} <span style="opacity:0.6">(${count})</span>`
         }, { fontSize: '12px' });
 
-        item.append(colorBox, label);
+        item.append(colorBox, editHint, label);
         item.addEventListener('mouseenter', () => {
             item.style.backgroundColor = theme.legendHoverBg;
+            editHint.style.opacity = '0.5';
         });
         item.addEventListener('mouseleave', () => {
             item.style.backgroundColor = '';
+            editHint.style.opacity = '0';
         });
         item.addEventListener('click', () => {
             newSelection(nodes.filter(n => n.group === group));

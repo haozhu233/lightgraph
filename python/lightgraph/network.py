@@ -172,7 +172,6 @@ def net_vis(
         raise ValueError("node_sizes must be a dictionary.")
     if layout not in ['force', 'circular']:
         raise ValueError("layout must be 'force' or 'circular'.")
-
     # Remove unconnected nodes if requested
     if remove_unconnected:
         connected_nodes = (adj_matrix.sum(0) > 0) + (adj_matrix.sum(1) > 0)

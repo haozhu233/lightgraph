@@ -5,7 +5,6 @@ import { THEMES } from './config.js';
 import { screenToWorld, getNodeAtCoordinates, isNodeInSelection, clearSelection, addToSelection, newSelection, getGroupColor } from './utils.js';
 import { updateCameraFromTransform, render } from './renderer.js';
 import { showFloatingInput, hideFloatingInput, updateSelectionBoxOverlay, setButtonActive } from './ui.js';
-
 // =========================================================================
 // Interaction setup
 // =========================================================================
@@ -203,6 +202,14 @@ export function setupInteractions(tickFn) {
         tickFn();
     });
 
+    // ---- Label position toggle ----
+    state.ui.labelPositionButton.addEventListener('click', () => {
+        state.labelPosition = state.labelPosition === 'side' ? 'center' : 'side';
+        const isCenter = state.labelPosition === 'center';
+        setButtonActive(state.ui.labelPositionButton, isCenter);
+        tickFn();
+    });
+
     // ---- Ellipses toggle ----
     state.ui.ellipsesToggleButton.addEventListener('click', () => {
         config.groups.showEllipses = !config.groups.showEllipses;
@@ -284,6 +291,18 @@ export function setupInteractions(tickFn) {
         state.labelDivs.forEach(div => {
             div.style.fontSize = val + 'px';
         });
+        tickFn();
+    });
+
+    // ---- Edge color picker ----
+    state.ui.edgeColorPicker.addEventListener('input', () => {
+        config.edges.defaultColor = state.ui.edgeColorPicker.value;
+        tickFn();
+    });
+
+    // ---- Ungrouped node color picker ----
+    state.ui.ungroupedColorPicker.addEventListener('input', () => {
+        config.nodes.defaultColor = state.ui.ungroupedColorPicker.value;
         tickFn();
     });
 
@@ -425,6 +444,14 @@ function applyThemeSwitch() {
     state.config.canvas.backgroundColor = theme.background;
     state.config.groups.fillOpacity = theme.groupFillOpacity;
 
+    // Sync color pickers
+    if (state.ui.edgeColorPicker) {
+        state.ui.edgeColorPicker.value = theme.edgeDefault;
+    }
+    if (state.ui.ungroupedColorPicker) {
+        state.ui.ungroupedColorPicker.value = theme.nodeDefault;
+    }
+
     // Update edge materials
     if (state.normalEdgesMesh) {
         state.normalEdgesMesh.material.opacity = state.config.edges.defaultOpacity;
@@ -494,6 +521,37 @@ function applyThemeSwitch() {
     // Update helper text
     if (state.ui.helperText) {
         state.ui.helperText.style.color = theme.panelText;
+    }
+
+    // Update sidebar buttons
+    const sidebar = state.ui.sceneSidebar;
+    if (sidebar) {
+        sidebar.querySelectorAll('button').forEach(btn => {
+            const isActive = btn.dataset.active === 'true';
+            btn.style.color = isActive ? theme.activeButtonText : theme.buttonText;
+            btn.style.border = isActive ? theme.activeButtonBorder : theme.buttonBorder;
+            btn.style.background = isActive ? theme.activeButtonBg : theme.buttonBg;
+        });
+
+        // Update section headers (cursor:pointer divs with borderBottom)
+        sidebar.querySelectorAll('div').forEach(div => {
+            if (div.style.cursor === 'pointer' && div.style.borderBottom) {
+                div.style.color = theme.panelText;
+                div.style.borderBottom = `1px solid ${theme.panelHeaderBorder}`;
+            }
+        });
+
+        // Update select elements
+        sidebar.querySelectorAll('select').forEach(sel => {
+            sel.style.background = theme.inputBg;
+            sel.style.border = theme.inputBorder;
+            sel.style.color = theme.inputText;
+        });
+
+        // Update slider accent colors
+        sidebar.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.style.accentColor = theme.activeButtonText;
+        });
     }
 }
 

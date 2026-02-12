@@ -161,7 +161,7 @@ window.lightGraph.initializeVisualization = () => {
 
             if (!userSetEdgeOpacity && !state.userAdjusted.edgeOpacity) {
                 const density = nodeCount > 1 ? (2 * edgeCount) / (nodeCount * (nodeCount - 1)) : 0;
-                const autoEdgeOpacity = Math.max(0.08, Math.min(0.6, 0.5 / Math.sqrt(Math.max(density * nodeCount, 0.1))));
+                const autoEdgeOpacity = Math.max(0.4, Math.min(1.0, 2.0 / Math.sqrt(Math.max(density * nodeCount, 0.1))));
                 config.edges.defaultOpacity = parseFloat(autoEdgeOpacity.toFixed(2));
                 if (state.ui.edgeOpacitySlider) {
                     state.ui.edgeOpacitySlider.value = String(config.edges.defaultOpacity);

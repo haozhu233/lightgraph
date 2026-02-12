@@ -43,9 +43,6 @@ export function createLabels() {
         div.style.pointerEvents = 'none';
         div.style.userSelect = 'none';
         div.style.willChange = 'transform';
-        div.style.textShadow = state.currentTheme === 'dark'
-            ? '0 1px 3px rgba(0,0,0,0.8)'
-            : '0 1px 2px rgba(255,255,255,0.8)';
         state.labelContainer.appendChild(div);
         state.labelDivs.push(div);
     });
@@ -75,10 +72,16 @@ export function updateLabels() {
         const size = node.size || config.nodes.defaultSize;
         const isSelected = selectedNodes.has(node);
 
-        // Position label to the left of the node, vertically centered
-        // translate(-100%, -50%) uses the label's own dimensions (no layout reflow needed)
-        const gap = (size / 2 + 4) * state.transform.k;
-        div.style.transform = `translate(${screen.x - gap}px, ${screen.y}px) translate(-100%, -50%)`;
+        if (state.labelPosition === 'center') {
+            // Center mode: label centered on node
+            div.style.transform = `translate(${screen.x}px, ${screen.y}px) translate(-50%, -50%)`;
+            div.style.textAlign = 'center';
+        } else {
+            // Side mode: label to the left of the node, vertically centered
+            const gap = (size / 2 + 4) * state.transform.k;
+            div.style.transform = `translate(${screen.x - gap}px, ${screen.y}px) translate(-100%, -50%)`;
+            div.style.textAlign = '';
+        }
         div.style.color = isSelected ? config.labels.selectedColor : config.labels.color;
         div.style.fontWeight = isSelected ? '600' : 'normal';
         div.style.display = '';

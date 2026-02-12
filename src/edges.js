@@ -28,10 +28,13 @@ export function createEdgeMeshes() {
     const { edges, config } = state;
     if (edges.length === 0) return;
 
+    // Each edge = 2 vertices = 6 floats
+    const floatsPerEdge = 6;
+
     // Normal edges
     const normalGeo = new THREE.BufferGeometry();
-    const normalPositions = new Float32Array(edges.length * 6); // 2 verts * 3 components
-    const normalColors = new Float32Array(edges.length * 6);
+    const normalPositions = new Float32Array(edges.length * floatsPerEdge);
+    const normalColors = new Float32Array(edges.length * floatsPerEdge);
     normalGeo.setAttribute('position', new THREE.BufferAttribute(normalPositions, 3));
     normalGeo.setAttribute('color', new THREE.BufferAttribute(normalColors, 3));
     normalGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
@@ -50,10 +53,10 @@ export function createEdgeMeshes() {
     state.scene.add(normalMesh);
     state.normalEdgesMesh = normalMesh;
 
-    // Highlighted edges (same structure, different opacity)
+    // Highlighted edges (same structure, higher opacity)
     const hlGeo = new THREE.BufferGeometry();
-    const hlPositions = new Float32Array(edges.length * 6);
-    const hlColors = new Float32Array(edges.length * 6);
+    const hlPositions = new Float32Array(edges.length * floatsPerEdge);
+    const hlColors = new Float32Array(edges.length * floatsPerEdge);
     hlGeo.setAttribute('position', new THREE.BufferAttribute(hlPositions, 3));
     hlGeo.setAttribute('color', new THREE.BufferAttribute(hlColors, 3));
     hlGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
@@ -82,12 +85,10 @@ export function updateEdgePositions() {
     const hlPositions = highlightedEdgesMesh.geometry.attributes.position.array;
     const hlColors = highlightedEdgesMesh.geometry.attributes.color.array;
 
-    // Reset draw ranges
     let normalCount = 0;
     let hlCount = 0;
 
     const defaultColor = new THREE.Color(config.edges.defaultColor);
-    const selectedColor = new THREE.Color(config.edges.selectedColor);
 
     edges.forEach((edge) => {
         const sx = edge.source.x || 0;
@@ -97,6 +98,11 @@ export function updateEdgePositions() {
 
         const isHighlighted = selectedNodes.has(edge.source) || selectedNodes.has(edge.target);
 
+        // Use same color for both normal and highlighted edges
+        const edgeColor = edge.color ? new THREE.Color(edge.color)
+            : (state.colorEdgesByGroup && edge.source.group) ? new THREE.Color(getGroupColor(edge.source.group))
+            : defaultColor;
+
         if (isHighlighted) {
             const idx = hlCount * 6;
             hlPositions[idx] = sx;
@@ -105,17 +111,12 @@ export function updateEdgePositions() {
             hlPositions[idx + 3] = tx;
             hlPositions[idx + 4] = ty;
             hlPositions[idx + 5] = 0;
-
-            const edgeColor = edge.color ? new THREE.Color(edge.color)
-                : (state.colorEdgesByGroup && edge.source.group) ? new THREE.Color(getGroupColor(edge.source.group))
-                : selectedColor;
             hlColors[idx] = edgeColor.r;
             hlColors[idx + 1] = edgeColor.g;
             hlColors[idx + 2] = edgeColor.b;
             hlColors[idx + 3] = edgeColor.r;
             hlColors[idx + 4] = edgeColor.g;
             hlColors[idx + 5] = edgeColor.b;
-
             hlCount++;
         } else {
             const idx = normalCount * 6;
@@ -125,22 +126,17 @@ export function updateEdgePositions() {
             normalPositions[idx + 3] = tx;
             normalPositions[idx + 4] = ty;
             normalPositions[idx + 5] = 0;
-
-            const edgeColor = edge.color ? new THREE.Color(edge.color)
-                : (state.colorEdgesByGroup && edge.source.group) ? new THREE.Color(getGroupColor(edge.source.group))
-                : defaultColor;
             normalColors[idx] = edgeColor.r;
             normalColors[idx + 1] = edgeColor.g;
             normalColors[idx + 2] = edgeColor.b;
             normalColors[idx + 3] = edgeColor.r;
             normalColors[idx + 4] = edgeColor.g;
             normalColors[idx + 5] = edgeColor.b;
-
             normalCount++;
         }
     });
 
-    // Update draw ranges so we only render filled portions
+    // Update draw ranges
     normalEdgesMesh.geometry.setDrawRange(0, normalCount * 2);
     normalEdgesMesh.geometry.attributes.position.needsUpdate = true;
     normalEdgesMesh.geometry.attributes.color.needsUpdate = true;

@@ -25,7 +25,7 @@ export function createNodeMeshes() {
     const count = state.nodes.length;
     if (count === 0) return;
 
-    // Shared geometry: unit circle
+    // Shared geometry for all nodes
     const circleGeo = new THREE.CircleGeometry(1, 32);
 
     // Fill mesh (transparent so it shares render list with edges for correct renderOrder)

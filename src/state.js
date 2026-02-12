@@ -21,6 +21,7 @@ export const state = {
     showArrows: false,
     colorEdgesByGroup: false,
     groupColorOverrides: {},
+    labelPosition: 'side', // 'side' or 'center'
 
     // D3
     simulation: null,
