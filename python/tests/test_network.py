@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import json
-from lightgraph.network import net_vis
+from lightgraph.network import net_vis, NetworkVisualization
 
 
 class TestNetVis:
@@ -11,11 +11,11 @@ class TestNetVis:
         """Test basic network visualization with valid inputs."""
         adj_matrix = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]])
         node_names = np.array(['A', 'B', 'C'])
-        
+
         result = net_vis(adj_matrix, node_names, remove_unconnected=False)
-        
+
         assert result is not None
-        assert isinstance(result, str)
+        assert isinstance(result, NetworkVisualization)
         assert 'lightGraph' in result
         assert 'nodesData' in result
         assert 'edgesData' in result
@@ -48,7 +48,7 @@ class TestNetVis:
         assert '"id": "A"' in result
         assert '"id": "B"' in result
         # The unconnected node C should be removed
-        assert result.count('"id":') == 2
+        assert result.html.count('"id":') == 2
 
     def test_weighted_edges(self):
         """Test that edge weights are preserved."""
@@ -71,7 +71,7 @@ class TestNetVis:
         assert save_path.exists()
         content = save_path.read_text()
         assert 'lightGraph' in content
-        assert content == result
+        assert content == result.html
 
     def test_invalid_adj_matrix_type(self):
         """Test error handling for invalid adjacency matrix type."""
@@ -142,7 +142,7 @@ class TestNetVis:
         result = net_vis(adj_matrix, node_names, remove_unconnected=False)
         
         assert result is not None
-        assert isinstance(result, str)
+        assert isinstance(result, NetworkVisualization)
         assert 'lightGraph' in result
 
     def test_node_groups_with_remove_unconnected(self):
@@ -176,7 +176,7 @@ class TestNetVis:
         assert 'id="lightGraph"' in result
         assert '<script type="application/json" id="nodesData">' in result
         assert '<script type="application/json" id="edgesData">' in result
-        assert 'd3js.org/d3.v7.min.js' in result
+        assert 'id="lightGraphConfig"' in result
 
     def test_json_validity(self):
         """Test that the embedded JSON data is valid."""
@@ -186,22 +186,72 @@ class TestNetVis:
         result = net_vis(adj_matrix, node_names, remove_unconnected=False)
         
         # Extract and validate nodes JSON
-        nodes_start = result.find('id="nodesData">') + len('id="nodesData">')
-        nodes_end = result.find('</script>', nodes_start)
-        nodes_json = result[nodes_start:nodes_end]
+        html = result.html
+        nodes_start = html.find('id="nodesData">') + len('id="nodesData">')
+        nodes_end = html.find('</script>', nodes_start)
+        nodes_json = html[nodes_start:nodes_end]
         nodes = json.loads(nodes_json)
-        
+
         assert len(nodes) == 2
         assert nodes[0]['id'] in ['A', 'B']
         assert nodes[1]['id'] in ['A', 'B']
-        
+
         # Extract and validate edges JSON
-        edges_start = result.find('id="edgesData">') + len('id="edgesData">')
-        edges_end = result.find('</script>', edges_start)
-        edges_json = result[edges_start:edges_end]
+        edges_start = html.find('id="edgesData">') + len('id="edgesData">')
+        edges_end = html.find('</script>', edges_start)
+        edges_json = html[edges_start:edges_end]
         edges = json.loads(edges_json)
         
         assert len(edges) == 2
         assert all('source' in edge for edge in edges)
         assert all('target' in edge for edge in edges)
         assert all('weight' in edge for edge in edges)
+
+
+class TestNetworkVisualization:
+    """Test suite for the NetworkVisualization wrapper class."""
+
+    def _make_result(self):
+        adj_matrix = np.array([[0, 1], [1, 0]])
+        node_names = np.array(['A', 'B'])
+        return net_vis(adj_matrix, node_names, remove_unconnected=False)
+
+    def test_repr_html_returns_iframe(self):
+        """Test that _repr_html_ returns an iframe for Jupyter display."""
+        result = self._make_result()
+        html = result._repr_html_()
+        assert isinstance(html, str)
+        assert '<iframe' in html
+        assert 'srcdoc' in html
+
+    def test_str_returns_raw_html(self):
+        """Test that str() returns the raw HTML content."""
+        result = self._make_result()
+        assert 'lightGraph' in str(result)
+        assert '<iframe' not in str(result)
+
+    def test_html_property(self):
+        """Test that .html property matches str()."""
+        result = self._make_result()
+        assert result.html == str(result)
+
+    def test_save_method(self, tmp_path):
+        """Test that .save() writes correct content."""
+        result = self._make_result()
+        save_path = tmp_path / "save_test.html"
+        result.save(str(save_path))
+        assert save_path.exists()
+        assert save_path.read_text() == result.html
+
+    def test_repr(self):
+        """Test developer-friendly repr."""
+        result = self._make_result()
+        r = repr(result)
+        assert 'NetworkVisualization(' in r
+        assert 'KB' in r
+
+    def test_contains_operator(self):
+        """Test 'in' operator for backward compatibility."""
+        result = self._make_result()
+        assert 'lightGraph' in result
+        assert 'nonexistent_string_xyz' not in result

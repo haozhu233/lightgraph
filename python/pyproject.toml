@@ -4,10 +4,11 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "lightgraph"
-version = "0.2.0"
+version = "1.0.0"
 description = "A lightweight Python binding for lightGraph network visualization"
 authors = [
     {name = "Hao Zhu", email = "haozhu233@gmail.com"},
+    {name = "Aiden McComiskey", email = "aiden.mccomiskey@tufts.edu"},
     {name = "Donna Slonim", email = "donna.slonim@tufts.edu"}
 ]
 license = {text = "MIT"}
@@ -24,4 +25,4 @@ test = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 # [tool.flit.metadata]
 # module = "lightgraph"
-# include = ["lightgraph/assets/script.js", "lightgraph/assets/d3.v7.min.js"]
+# include = ["lightgraph/assets/script.js"]
