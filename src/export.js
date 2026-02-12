@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { worldToScreen, getGroupColor } from './utils.js';
+import { worldToScreen, worldToScreen3D, getGroupColor } from './utils.js';
 import { THEMES } from './config.js';
 
 // =========================================================================
@@ -61,24 +61,31 @@ function drawLabelsToCanvas(ctx) {
     const theme = THEMES[state.currentTheme] || THEMES.dark;
 
     nodes.forEach(node => {
-        const screen = worldToScreen(node.x || 0, node.y || 0);
-        const size = node.size || config.nodes.defaultSize;
         const isSelected = selectedNodes.has(node);
-        const gap = size / 2 + 4;
-        const scaledGap = gap * state.transform.k;
-
         const fontSize = node.labelFontSize || config.labels.fontSize;
         const fontWeight = isSelected ? '600' : 'normal';
         ctx.font = `${fontWeight} ${fontSize}px ${config.labels.fontFamily}`;
         ctx.fillStyle = isSelected ? config.labels.selectedColor : config.labels.color;
         ctx.textBaseline = 'middle';
 
-        if (state.labelPosition === 'center') {
+        if (state.is3D) {
+            const projected = worldToScreen3D(node.x || 0, node.y || 0, node.z || 0);
+            if (!projected.visible) return;
             ctx.textAlign = 'center';
-            ctx.fillText(node.id, screen.x, screen.y);
+            ctx.fillText(node.id, projected.x, projected.y);
         } else {
-            ctx.textAlign = 'right';
-            ctx.fillText(node.id, screen.x - scaledGap, screen.y);
+            const screen = worldToScreen(node.x || 0, node.y || 0);
+            const size = node.size || config.nodes.defaultSize;
+            const gap = size / 2 + 4;
+            const scaledGap = gap * state.transform.k;
+
+            if (state.labelPosition === 'center') {
+                ctx.textAlign = 'center';
+                ctx.fillText(node.id, screen.x, screen.y);
+            } else {
+                ctx.textAlign = 'right';
+                ctx.fillText(node.id, screen.x - scaledGap, screen.y);
+            }
         }
     });
 }
@@ -214,6 +221,10 @@ function roundRect(ctx, x, y, w, h, r) {
 // =========================================================================
 
 export function exportSVG() {
+    if (state.is3D) {
+        alert('SVG export is not available in 3D mode. Use PNG export instead.');
+        return;
+    }
     const { nodes, edges, config, transform } = state;
     const container = state.container;
     const w = container.clientWidth;
@@ -427,6 +438,7 @@ export function exportJSON() {
             group: n.group,
             x: n.x,
             y: n.y,
+            ...(state.is3D && { z: n.z || 0 }),
             size: n.size,
             color: n.color
         })),

@@ -40,12 +40,13 @@ export function createEdgeMeshes() {
     normalGeo.attributes.position.setUsage(THREE.DynamicDrawUsage);
     normalGeo.attributes.color.setUsage(THREE.DynamicDrawUsage);
 
+    const useDepth = state.is3D;
     const normalMat = new THREE.LineBasicMaterial({
         vertexColors: true,
         transparent: true,
         opacity: config.edges.defaultOpacity,
-        depthTest: false,
-        depthWrite: false,
+        depthTest: useDepth,
+        depthWrite: useDepth,
     });
 
     const normalMesh = new THREE.LineSegments(normalGeo, normalMat);
@@ -66,8 +67,8 @@ export function createEdgeMeshes() {
         vertexColors: true,
         transparent: true,
         opacity: config.edges.selectedOpacity,
-        depthTest: false,
-        depthWrite: false,
+        depthTest: useDepth,
+        depthWrite: useDepth,
     });
 
     const hlMesh = new THREE.LineSegments(hlGeo, hlMat);
@@ -90,11 +91,15 @@ export function updateEdgePositions() {
 
     const defaultColor = new THREE.Color(config.edges.defaultColor);
 
+    const is3D = state.is3D;
+
     edges.forEach((edge) => {
         const sx = edge.source.x || 0;
         const sy = edge.source.y || 0;
+        const sz = is3D ? (edge.source.z || 0) : 0;
         const tx = edge.target.x || 0;
         const ty = edge.target.y || 0;
+        const tz = is3D ? (edge.target.z || 0) : 0;
 
         const isHighlighted = selectedNodes.has(edge.source) || selectedNodes.has(edge.target);
 
@@ -107,10 +112,10 @@ export function updateEdgePositions() {
             const idx = hlCount * 6;
             hlPositions[idx] = sx;
             hlPositions[idx + 1] = sy;
-            hlPositions[idx + 2] = 0;
+            hlPositions[idx + 2] = sz;
             hlPositions[idx + 3] = tx;
             hlPositions[idx + 4] = ty;
-            hlPositions[idx + 5] = 0;
+            hlPositions[idx + 5] = tz;
             hlColors[idx] = edgeColor.r;
             hlColors[idx + 1] = edgeColor.g;
             hlColors[idx + 2] = edgeColor.b;
@@ -122,10 +127,10 @@ export function updateEdgePositions() {
             const idx = normalCount * 6;
             normalPositions[idx] = sx;
             normalPositions[idx + 1] = sy;
-            normalPositions[idx + 2] = 0;
+            normalPositions[idx + 2] = sz;
             normalPositions[idx + 3] = tx;
             normalPositions[idx + 4] = ty;
-            normalPositions[idx + 5] = 0;
+            normalPositions[idx + 5] = tz;
             normalColors[idx] = edgeColor.r;
             normalColors[idx + 1] = edgeColor.g;
             normalColors[idx + 2] = edgeColor.b;
@@ -151,7 +156,7 @@ export function updateEdgePositions() {
 // =========================================================================
 
 export function updateArrows() {
-    if (!state.showArrows) {
+    if (!state.showArrows || state.is3D) {
         if (state.arrowMesh) {
             state.arrowMesh.visible = false;
         }

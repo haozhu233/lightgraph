@@ -2,8 +2,12 @@ import * as d3 from './d3.js';
 import * as THREE from './three.js';
 import { state } from './state.js';
 import { THEMES } from './config.js';
-import { screenToWorld, getNodeAtCoordinates, isNodeInSelection, clearSelection, addToSelection, newSelection, getGroupColor } from './utils.js';
-import { updateCameraFromTransform, render } from './renderer.js';
+import { OrbitControls } from './three.js';
+import { screenToWorld, getNodeAtCoordinates, getNodeAtScreenCoordinates3D, isNodeInSelection, clearSelection, addToSelection, newSelection, getGroupColor } from './utils.js';
+import { updateCameraFromTransform, render, switchTo3D, switchTo2D, startAnimationLoop, stopAnimationLoop } from './renderer.js';
+import { createNodeMeshes } from './nodes.js';
+import { createEdgeMeshes } from './edges.js';
+import { recalculateForce } from './layout.js';
 import { showFloatingInput, hideFloatingInput, updateSelectionBoxOverlay, setButtonActive } from './ui.js';
 // =========================================================================
 // Interaction setup
@@ -37,7 +41,9 @@ export function setupInteractions(tickFn) {
         const shiftKey = event.shiftKey;
         const [mouseX, mouseY] = d3.pointer(event);
         const world = screenToWorld(mouseX, mouseY);
-        const onNode = getNodeAtCoordinates(world.x, world.y);
+        const onNode = state.is3D
+            ? getNodeAtScreenCoordinates3D(mouseX, mouseY)
+            : getNodeAtCoordinates(world.x, world.y);
 
         if (onNode) {
             if (shiftKey) {
@@ -67,7 +73,9 @@ export function setupInteractions(tickFn) {
 
         // Tooltip (zoom mode only)
         if (config.ui.showTooltips && !state.selectionMode) {
-            const hoveredNode = getNodeAtCoordinates(world.x, world.y);
+            const hoveredNode = state.is3D
+                ? getNodeAtScreenCoordinates3D(mouseX, mouseY)
+                : getNodeAtCoordinates(world.x, world.y);
             const tooltip = state.ui.tooltip;
             if (hoveredNode) {
                 let content = `<strong>${hoveredNode.id}</strong>`;
@@ -141,8 +149,13 @@ export function setupInteractions(tickFn) {
         state.selectionMode = false;
         setButtonActive(state.ui.zoomButton, true);
         setButtonActive(state.ui.selectButton, false);
-        d3.select(canvas).call(state.zoom);
-        state.ui.helperText.textContent = 'Scroll to zoom \u00b7 Drag to pan';
+        if (state.is3D) {
+            if (state.orbitControls) state.orbitControls.enabled = true;
+            state.ui.helperText.textContent = 'Drag to rotate \u00b7 Right-click to pan \u00b7 Scroll to zoom';
+        } else {
+            d3.select(canvas).call(state.zoom);
+            state.ui.helperText.textContent = 'Scroll to zoom \u00b7 Drag to pan';
+        }
     });
 
     // ---- Select button ----
@@ -151,13 +164,17 @@ export function setupInteractions(tickFn) {
         state.selectionMode = true;
         setButtonActive(state.ui.selectButton, true);
         setButtonActive(state.ui.zoomButton, false);
-        d3.select(canvas)
-            .on('mousedown.zoom', null)
-            .on('mousemove.zoom', null)
-            .on('mouseup.zoom', null)
-            .on('wheel.zoom', null)
-            .on('dblclick.zoom', null);
-        state.ui.helperText.textContent = 'Drag to select \u00b7 Shift+click to add \u00b7 Drag nodes to move';
+        if (state.is3D) {
+            if (state.orbitControls) state.orbitControls.enabled = false;
+        } else {
+            d3.select(canvas)
+                .on('mousedown.zoom', null)
+                .on('mousemove.zoom', null)
+                .on('mouseup.zoom', null)
+                .on('wheel.zoom', null)
+                .on('dblclick.zoom', null);
+        }
+        state.ui.helperText.textContent = 'Click to select \u00b7 Shift+click to add';
     });
 
     // ---- Sidebar toggle ----
@@ -406,12 +423,100 @@ export function setupInteractions(tickFn) {
         tickFn();
     });
 
+    // ---- 2D/3D Dimension toggle ----
+    state.ui.dimensionToggle.addEventListener('click', () => {
+        const goingTo3D = !state.is3D;
+        state.is3D = goingTo3D;
+
+        if (goingTo3D) {
+            // Disable D3 zoom
+            d3.select(canvas).on('.zoom', null);
+
+            // Switch camera and enable lighting
+            switchTo3D();
+
+            // Setup OrbitControls
+            const cx = state.container.clientWidth / 2;
+            const cy = state.container.clientHeight / 2;
+            state.orbitControls = new OrbitControls(state.camera3D, canvas);
+            state.orbitControls.enableDamping = true;
+            state.orbitControls.dampingFactor = 0.1;
+            state.orbitControls.target.set(cx, cy, 0);
+
+            // Save and disable arrows
+            state._savedShowArrows = state.showArrows;
+            state.showArrows = false;
+
+            // Update button
+            state.ui.dimensionToggle.innerHTML = '2D';
+            setButtonActive(state.ui.dimensionToggle, true);
+
+            // Update helper text
+            if (state.selectionMode) {
+                state.ui.helperText.textContent = 'Click to select \u00b7 Shift+click to add';
+            } else {
+                state.ui.helperText.textContent = 'Drag to rotate \u00b7 Right-click to pan \u00b7 Scroll to zoom';
+            }
+        } else {
+            // Dispose OrbitControls
+            if (state.orbitControls) {
+                state.orbitControls.dispose();
+                state.orbitControls = null;
+            }
+
+            // Stop animation loop
+            stopAnimationLoop();
+
+            // Zero out z positions
+            state.nodes.forEach(n => { n.z = 0; n.vz = 0; });
+
+            // Switch camera back and disable lighting
+            switchTo2D();
+
+            // Restore D3 zoom
+            state.transform = d3.zoomIdentity;
+            d3.select(canvas).call(state.zoom);
+            updateCameraFromTransform();
+
+            // Restore arrows
+            state.showArrows = state._savedShowArrows || false;
+
+            // Update button
+            state.ui.dimensionToggle.innerHTML = '3D';
+            setButtonActive(state.ui.dimensionToggle, false);
+
+            // Update helper text
+            if (state.selectionMode) {
+                state.ui.helperText.textContent = 'Drag to select \u00b7 Shift+click to add \u00b7 Drag nodes to move';
+            } else {
+                state.ui.helperText.textContent = 'Scroll to zoom \u00b7 Drag to pan';
+            }
+        }
+
+        // Rebuild meshes with correct geometry/material
+        createNodeMeshes();
+        createEdgeMeshes();
+
+        // Restart simulation with correct dimensions
+        recalculateForce(tickFn);
+
+        // Start animation loop for 3D (after simulation is set up)
+        if (goingTo3D) {
+            startAnimationLoop(tickFn);
+        }
+    });
+
     // ---- Resize ----
     window.addEventListener('resize', () => {
         const width = state.container.clientWidth;
         const height = state.container.clientHeight;
         state.renderer.setSize(width, height);
-        updateCameraFromTransform();
+        if (state.is3D) {
+            state.camera3D.aspect = width / height;
+            state.camera3D.updateProjectionMatrix();
+        } else {
+            updateCameraFromTransform();
+        }
         tickFn();
     });
 }

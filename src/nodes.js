@@ -21,49 +21,69 @@ export function createNodeMeshes() {
         state.nodesBorderMesh.geometry.dispose();
         state.nodesBorderMesh.material.dispose();
     }
+    state.nodesBorderMesh = null;
 
     const count = state.nodes.length;
     if (count === 0) return;
 
-    // Shared geometry for all nodes
-    const circleGeo = new THREE.CircleGeometry(1, 32);
+    if (state.is3D) {
+        // 3D mode: spheres with lit material
+        const sphereGeo = new THREE.SphereGeometry(1, 16, 12);
+        const fillMaterial = new THREE.MeshStandardMaterial({
+            roughness: 0.6,
+            metalness: 0.1,
+            transparent: true,
+            opacity: 1.0,
+            depthTest: true,
+            depthWrite: true,
+        });
+        const fillMesh = new THREE.InstancedMesh(sphereGeo, fillMaterial, count);
+        fillMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        fillMesh.renderOrder = 5;
+        state.scene.add(fillMesh);
+        state.nodesFillMesh = fillMesh;
 
-    // Fill mesh (transparent so it shares render list with edges for correct renderOrder)
-    const fillMaterial = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 1.0,
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-    });
-    const fillMesh = new THREE.InstancedMesh(circleGeo, fillMaterial, count);
-    fillMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    fillMesh.renderOrder = 5;
-    state.scene.add(fillMesh);
-    state.nodesFillMesh = fillMesh;
+        // No border mesh in 3D — selected nodes use emissive highlight
+    } else {
+        // 2D mode: circles with basic material (original behavior)
+        const circleGeo = new THREE.CircleGeometry(1, 32);
 
-    // Border mesh (slightly larger, rendered behind fills)
-    const borderGeo = new THREE.CircleGeometry(1, 32);
-    const borderMaterial = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 1.0,
-        depthTest: false,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-    });
-    const borderMesh = new THREE.InstancedMesh(borderGeo, borderMaterial, count);
-    borderMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    borderMesh.renderOrder = 4;
-    state.scene.add(borderMesh);
-    state.nodesBorderMesh = borderMesh;
+        const fillMaterial = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 1.0,
+            depthTest: false,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+        });
+        const fillMesh = new THREE.InstancedMesh(circleGeo, fillMaterial, count);
+        fillMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        fillMesh.renderOrder = 5;
+        state.scene.add(fillMesh);
+        state.nodesFillMesh = fillMesh;
+
+        // Border mesh (slightly larger, rendered behind fills)
+        const borderGeo = new THREE.CircleGeometry(1, 32);
+        const borderMaterial = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 1.0,
+            depthTest: false,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+        });
+        const borderMesh = new THREE.InstancedMesh(borderGeo, borderMaterial, count);
+        borderMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        borderMesh.renderOrder = 4;
+        state.scene.add(borderMesh);
+        state.nodesBorderMesh = borderMesh;
+    }
 
     // Initialize colors
     updateNodeInstances();
 }
 
 export function updateNodeInstances() {
-    const { nodes, selectedNodes, config, nodesFillMesh, nodesBorderMesh } = state;
-    if (!nodesFillMesh || !nodesBorderMesh) return;
+    const { nodes, selectedNodes, config, nodesFillMesh, nodesBorderMesh, is3D } = state;
+    if (!nodesFillMesh) return;
 
     const borderWidth = config.nodes.borderWidth;
 
@@ -73,9 +93,17 @@ export function updateNodeInstances() {
         const nodeSize = isSelected ? size + config.nodes.selectedSizeIncrease : size;
         const radius = nodeSize / 2;
 
+        const x = node.x || 0;
+        const y = node.y || 0;
+        const z = is3D ? (node.z || 0) : 0;
+
         // Fill mesh: position and scale
-        _tempMatrix.makeScale(radius, radius, 1);
-        _tempMatrix.setPosition(node.x || 0, node.y || 0, 0);
+        if (is3D) {
+            _tempMatrix.makeScale(radius, radius, radius);
+        } else {
+            _tempMatrix.makeScale(radius, radius, 1);
+        }
+        _tempMatrix.setPosition(x, y, z);
         nodesFillMesh.setMatrixAt(i, _tempMatrix);
 
         // Fill color
@@ -83,20 +111,30 @@ export function updateNodeInstances() {
         _tempColor.set(color);
         nodesFillMesh.setColorAt(i, _tempColor);
 
-        // Border mesh: slightly larger
-        const borderRadius = radius + borderWidth;
-        _tempMatrix.makeScale(borderRadius, borderRadius, 1);
-        _tempMatrix.setPosition(node.x || 0, node.y || 0, 0);
-        nodesBorderMesh.setMatrixAt(i, _tempMatrix);
+        if (is3D) {
+            // 3D selected highlight: emissive glow
+            // InstancedMesh doesn't support per-instance emissive, so we brighten the color
+            if (isSelected) {
+                _tempColor.set(config.nodes.selectedBorderColor);
+                nodesFillMesh.setColorAt(i, _tempColor);
+            }
+        } else if (nodesBorderMesh) {
+            // 2D border mesh
+            const borderRadius = radius + borderWidth;
+            _tempMatrix.makeScale(borderRadius, borderRadius, 1);
+            _tempMatrix.setPosition(x, y, 0);
+            nodesBorderMesh.setMatrixAt(i, _tempMatrix);
 
-        // Border color
-        const borderColor = isSelected ? config.nodes.selectedBorderColor : config.nodes.borderColor;
-        _tempColor.set(borderColor);
-        nodesBorderMesh.setColorAt(i, _tempColor);
+            const borderColor = isSelected ? config.nodes.selectedBorderColor : config.nodes.borderColor;
+            _tempColor.set(borderColor);
+            nodesBorderMesh.setColorAt(i, _tempColor);
+        }
     });
 
     nodesFillMesh.instanceMatrix.needsUpdate = true;
     if (nodesFillMesh.instanceColor) nodesFillMesh.instanceColor.needsUpdate = true;
-    nodesBorderMesh.instanceMatrix.needsUpdate = true;
-    if (nodesBorderMesh.instanceColor) nodesBorderMesh.instanceColor.needsUpdate = true;
+    if (nodesBorderMesh) {
+        nodesBorderMesh.instanceMatrix.needsUpdate = true;
+        if (nodesBorderMesh.instanceColor) nodesBorderMesh.instanceColor.needsUpdate = true;
+    }
 }

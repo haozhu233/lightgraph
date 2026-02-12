@@ -22,22 +22,31 @@ export function recalculateForce(tickFn) {
             linkDistance = config.simulation.linkDistance;
         }
 
+        const numDims = state.is3D ? 3 : 2;
+
         if (config.layout === 'circular') {
             applyCircularLayout();
             state.simulation = d3.forceSimulation(nodes)
+                .numDimensions(numDims)
                 .force('link', d3.forceLink(edges).id(d => d.id).distance(linkDistance).strength(0.1))
                 .force('charge', d3.forceManyBody().strength(-simulationForce * 0.1))
                 .on('tick', tickFn);
         } else {
+            const centerForce = state.is3D
+                ? d3.forceCenter(container.clientWidth / 2, container.clientHeight / 2, 0)
+                : d3.forceCenter(container.clientWidth / 2, container.clientHeight / 2);
             state.simulation = d3.forceSimulation(nodes)
+                .numDimensions(numDims)
                 .force('link', d3.forceLink(edges).id(d => d.id).distance(linkDistance))
                 .force('charge', d3.forceManyBody().strength(-simulationForce))
-                .force('center', d3.forceCenter(container.clientWidth / 2, container.clientHeight / 2))
+                .force('center', centerForce)
                 .on('tick', tickFn);
         }
 
-        // Apply zoom to the canvas
-        d3.select(state.renderer.domElement).call(state.zoom);
+        // Apply zoom to the canvas (only in 2D mode; 3D uses OrbitControls)
+        if (!state.is3D) {
+            d3.select(state.renderer.domElement).call(state.zoom);
+        }
 
     } catch (error) {
         console.error('Error updating visualization:', error);

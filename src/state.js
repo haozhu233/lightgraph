@@ -32,6 +32,16 @@ export const state = {
     config: null,
     currentTheme: 'light',
 
+    // 3D mode
+    is3D: false,
+    camera2D: null,
+    camera3D: null,
+    orbitControls: null,
+    ambientLight: null,
+    directionalLight: null,
+    _savedShowArrows: false,
+    _animationFrameId: null,
+
     // Three.js objects
     scene: null,
     camera: null,

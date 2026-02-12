@@ -18,7 +18,7 @@ export function updateGroupEllipses() {
         if (child.material) child.material.dispose();
     }
 
-    if (!config.groups.showEllipses) return;
+    if (!config.groups.showEllipses || state.is3D) return;
 
     const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))];
 

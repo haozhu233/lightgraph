@@ -1,3 +1,4 @@
+import * as THREE from './three.js';
 import { state } from './state.js';
 
 // =========================================================================
@@ -67,6 +68,50 @@ export function getNodeAtCoordinates(x, y) {
     return state.nodes.find(node =>
         Math.sqrt((node.x - x) ** 2 + (node.y - y) ** 2) < (node.size || defaultSize) / 2
     );
+}
+
+// =========================================================================
+// 3D coordinate transforms
+// =========================================================================
+
+const _vec3 = new THREE.Vector3();
+const _raycaster = new THREE.Raycaster();
+const _mouse = new THREE.Vector2();
+
+export function worldToScreen3D(x, y, z) {
+    _vec3.set(x, y, z);
+    _vec3.project(state.camera);
+    const w = state.container.clientWidth;
+    const h = state.container.clientHeight;
+    return {
+        x: (_vec3.x * 0.5 + 0.5) * w,
+        y: (-_vec3.y * 0.5 + 0.5) * h,
+        visible: _vec3.z < 1 // behind camera check
+    };
+}
+
+export function getNodeAtScreenCoordinates3D(screenX, screenY) {
+    const w = state.container.clientWidth;
+    const h = state.container.clientHeight;
+    _mouse.set((screenX / w) * 2 - 1, -(screenY / h) * 2 + 1);
+    _raycaster.setFromCamera(_mouse, state.camera);
+
+    const ray = _raycaster.ray;
+    let closest = null;
+    let closestDist = Infinity;
+
+    state.nodes.forEach(node => {
+        const nodeSize = node.size || state.config.nodes.defaultSize;
+        const radius = nodeSize / 2;
+        _vec3.set(node.x || 0, node.y || 0, node.z || 0);
+        const dist = ray.distanceToPoint(_vec3);
+        if (dist < radius * 1.5 && dist < closestDist) {
+            closestDist = dist;
+            closest = node;
+        }
+    });
+
+    return closest;
 }
 
 export function hexToRgba(hex, alpha) {

@@ -6,7 +6,7 @@ export {
     forceLink,
     forceManyBody,
     forceCenter,
-} from 'd3-force';
+} from 'd3-force-3d';
 
 export {
     zoom,

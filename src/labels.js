@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { worldToScreen } from './utils.js';
+import { worldToScreen, worldToScreen3D } from './utils.js';
 import { THEMES } from './config.js';
 
 // =========================================================================
@@ -61,6 +61,8 @@ export function updateLabels() {
 
     const theme = THEMES[state.currentTheme] || THEMES.dark;
 
+    const is3D = state.is3D;
+
     labelDivs.forEach((div, i) => {
         if (i >= nodes.length) {
             div.style.display = 'none';
@@ -68,16 +70,26 @@ export function updateLabels() {
         }
 
         const node = nodes[i];
-        const screen = worldToScreen(node.x || 0, node.y || 0);
         const size = node.size || config.nodes.defaultSize;
         const isSelected = selectedNodes.has(node);
 
-        if (state.labelPosition === 'center') {
-            // Center mode: label centered on node
+        if (is3D) {
+            // 3D mode: project world coords through perspective camera
+            const projected = worldToScreen3D(node.x || 0, node.y || 0, node.z || 0);
+            if (!projected.visible) {
+                div.style.display = 'none';
+                return;
+            }
+            div.style.transform = `translate(${projected.x}px, ${projected.y}px) translate(-50%, -50%)`;
+            div.style.textAlign = 'center';
+        } else if (state.labelPosition === 'center') {
+            // 2D center mode: label centered on node
+            const screen = worldToScreen(node.x || 0, node.y || 0);
             div.style.transform = `translate(${screen.x}px, ${screen.y}px) translate(-50%, -50%)`;
             div.style.textAlign = 'center';
         } else {
-            // Side mode: label to the left of the node, vertically centered
+            // 2D side mode: label to the left of the node, vertically centered
+            const screen = worldToScreen(node.x || 0, node.y || 0);
             const gap = (size / 2 + 4) * state.transform.k;
             div.style.transform = `translate(${screen.x - gap}px, ${screen.y}px) translate(-100%, -50%)`;
             div.style.textAlign = '';

@@ -147,6 +147,9 @@ export function buildUI(tickFn) {
     setButtonActive(zoomButton, true);
     setButtonActive(selectButton, false);
 
+    // 2D/3D toggle
+    const dimensionToggle = createButton({ id: 'dimensionToggle', title: 'Toggle 2D/3D view', htmlContent: '3D', active: false });
+
     // Search box
     const searchBox = createInput({ id: 'searchBox', placeholder: 'Search Node...' });
     searchBox.style.width = '160px';
@@ -177,7 +180,7 @@ export function buildUI(tickFn) {
         htmlContent: ICONS.settings
     });
 
-    mainControlBar.append(zoomButton, selectButton, searchBox, themeToggle, sidebarToggle);
+    mainControlBar.append(zoomButton, selectButton, dimensionToggle, searchBox, themeToggle, sidebarToggle);
 
     // ---- Sidebar ----
     const sceneSidebar = createElement('div', { id: 'sceneSidebar' }, {
@@ -521,6 +524,7 @@ export function buildUI(tickFn) {
         mainControlBar,
         zoomButton,
         selectButton,
+        dimensionToggle,
         searchBox,
         themeToggle,
         sidebarToggle,
