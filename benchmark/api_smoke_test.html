@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head><title>lightgraph new-API smoke test</title></head>
+<body>
+<!-- No legacy #lightGraph element: auto-init must stay dormant. -->
+<div id="graphA" style="width: 600px; height: 400px;"></div>
+<div id="graphB" style="width: 600px; height: 400px;"></div>
+
+<script>
+    const capturedErrors = [];
+    window.onerror = (msg, src, line) => { capturedErrors.push(`${msg} (${src}:${line})`); };
+    const origError = console.error;
+    console.error = (...args) => { capturedErrors.push(args.join(' ')); origError(...args); };
+</script>
+<script src="d3.v7.min.js"></script>
+<script src="../lightgraph.js"></script>
+
+<script>
+    const { LightGraph } = window.lightGraph;
+    const events = { dataLoad: 0, selectionChange: 0 };
+
+    const graphA = new LightGraph(document.getElementById('graphA'), {
+        nodes: [{ id: 'a1', group: 'x' }, { id: 'a2', group: 'x' }, { id: 'a3', group: 'y' }],
+        edges: [{ source: 'a1', target: 'a2' }, { source: 'a2', target: 'a3' }],
+        config: { ui: { showStatistics: true } }
+    });
+    graphA.on('dataLoad', () => events.dataLoad++);
+    graphA.on('selectionChange', () => events.selectionChange++);
+
+    // graphB exercises weight->width/opacity mapping
+    const graphB = new LightGraph(document.getElementById('graphB'), {
+        nodes: [{ id: 'b1' }, { id: 'b2' }, { id: 'b3' }],
+        edges: [{ source: 'b1', target: 'b2', weight: 1 },
+                { source: 'b2', target: 'b3', weight: 10 }],
+        config: { edges: { weightToWidth: true, weightToOpacity: true } }
+    });
+
+    function countDrawnPixels(container) {
+        const canvas = container.querySelector('canvas');
+        if (!canvas) return -1;
+        const img = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+        let n = 0;
+        for (let i = 0; i < img.length; i += 4) {
+            if (img[i + 3] > 0 && (img[i] !== 255 || img[i + 1] !== 255 || img[i + 2] !== 255)) n++;
+        }
+        return n;
+    }
+
+    setTimeout(() => {
+        const results = { test: 'api-smoke', errors: capturedErrors, checks: {} };
+
+        results.checks.twoCanvases = document.querySelectorAll('canvas').length === 2;
+        results.checks.pixelsA = countDrawnPixels(document.getElementById('graphA'));
+        results.checks.pixelsB = countDrawnPixels(document.getElementById('graphB'));
+
+        // Programmatic selection + events (also drives neighbor highlighting:
+        // selection non-empty -> non-neighbors fade)
+        graphA.selectNodes(['a1', 'a2']);
+        results.checks.selectionSize = graphA.getSelection().length === 2;
+        results.checks.selectionChangeFired = events.selectionChange > 0;
+        results.checks.dataLoadFired = events.dataLoad === 0; // registered after construction
+
+        // setData replaces the graph and fires dataLoad
+        graphA.setData({
+            nodes: [{ id: 'n1' }, { id: 'n2' }, { id: 'n3' }, { id: 'n4' }],
+            edges: [{ source: 'n1', target: 'n2' }, { source: 'n3', target: 'n4' }]
+        });
+        results.checks.dataLoadAfterSetData = events.dataLoad === 1;
+        results.checks.selectionClearedOnLoad = graphA.getSelection().length === 0;
+
+        // updateConfig + zoomToFit run without throwing
+        graphA.updateConfig({ labels: { visible: false }, edges: { showArrows: true } });
+        graphA.zoomToFit();
+
+        // Ego filter: n1-n2 and n3-n4 are separate components, so a 1-hop
+        // ego view from n1 shows exactly 2 of the 4 nodes.
+        graphA.egoFilter('n1');
+        results.checks.egoVisible = graphA.getVisibleNodes().length === 2;
+        graphA.clearEgoFilter();
+        results.checks.egoCleared = graphA.getVisibleNodes().length === 4;
+
+        // Modeless gestures on graphB: shift-drag box-select, then
+        // click-empty to clear.
+        const canvasB = document.getElementById('graphB').querySelector('canvas');
+        const rectB = canvasB.getBoundingClientRect();
+        function mouseOnB(type, x, y, opts = {}) {
+            const target = type === 'mouseup' ? window : canvasB;
+            target.dispatchEvent(new MouseEvent(type, {
+                bubbles: true, button: 0,
+                clientX: rectB.left + x, clientY: rectB.top + y, ...opts
+            }));
+        }
+        mouseOnB('mousedown', 5, 5, { shiftKey: true });
+        mouseOnB('mousemove', 590, 390, { shiftKey: true, buttons: 1 });
+        mouseOnB('mouseup', 590, 390, { shiftKey: true });
+        results.checks.boxSelected = graphB.getSelection().length === 3;
+
+        mouseOnB('click', 590, 390, { shiftKey: true });  // swallowed (post-drag)
+        mouseOnB('click', 15, 15);                        // empty space: deselect
+        results.checks.clickCleared = graphB.getSelection().length === 0;
+
+        // destroy graphB: its DOM is removed, graphA keeps working
+        graphB.destroy();
+        results.checks.canvasRemovedOnDestroy = document.querySelectorAll('canvas').length === 1;
+        window.dispatchEvent(new Event('resize')); // must not throw for destroyed instance
+
+        setTimeout(() => {
+            results.checks.noErrorsAtEnd = capturedErrors.length === 0;
+            results.pass = results.checks.noErrorsAtEnd
+                && results.checks.twoCanvases
+                && results.checks.pixelsA > 200 && results.checks.pixelsB > 100
+                && results.checks.selectionSize && results.checks.selectionChangeFired
+                && results.checks.dataLoadAfterSetData && results.checks.selectionClearedOnLoad
+                && results.checks.egoVisible && results.checks.egoCleared
+                && results.checks.boxSelected && results.checks.clickCleared
+                && results.checks.canvasRemovedOnDestroy;
+            fetch('http://localhost:8000/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(results)
+            }).then(() => { document.title = 'API_SMOKE_DONE'; });
+        }, 500);
+    }, 3000);
+</script>
+</body>
+</html>

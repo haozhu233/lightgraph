@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head><title>lightgraph R htmlwidget smoke test</title></head>
+<body>
+<div id="widget" style="width: 600px; height: 400px;"></div>
+
+<script>
+    const capturedErrors = [];
+    window.onerror = (msg, src, line) => { capturedErrors.push(`${msg} (${src}:${line})`); };
+    const origError = console.error;
+    console.error = (...args) => { capturedErrors.push(args.join(' ')); origError(...args); };
+
+    // Minimal HTMLWidgets stub: capture the widget definition.
+    window.HTMLWidgets = { widget: def => { window.__widgetDef = def; } };
+</script>
+<script src="d3.v7.min.js"></script>
+<script src="../lightgraph.js"></script>
+<script src="../../R/inst/htmlwidgets/lightgraph.js"></script>
+
+<script>
+    const el = document.getElementById('widget');
+    const binding = window.__widgetDef.factory(el, 600, 400);
+
+    // First render
+    binding.renderValue({
+        nodes: [{ id: 'A', group: 'g1' }, { id: 'B', group: 'g1' }, { id: 'C', group: 'g2' }],
+        edges: [{ source: 'A', target: 'B', weight: 1 }, { source: 'B', target: 'C', weight: 1 }],
+        config: { ui: { showStatistics: true } }
+    });
+
+    // Second render (Shiny reactivity path): previous instance must be
+    // destroyed, leaving exactly one canvas.
+    binding.renderValue({
+        nodes: [{ id: 'X' }, { id: 'Y' }],
+        edges: [{ source: 'X', target: 'Y', weight: 1 }]
+    });
+    binding.resize(500, 300);
+
+    setTimeout(() => {
+        const results = { test: 'r-widget-smoke', errors: capturedErrors, checks: {} };
+        const canvases = el.querySelectorAll('canvas');
+        results.checks.singleCanvas = canvases.length === 1;
+        if (canvases.length === 1) {
+            const img = canvases[0].getContext('2d')
+                .getImageData(0, 0, canvases[0].width, canvases[0].height).data;
+            let n = 0;
+            for (let i = 0; i < img.length; i += 4) {
+                if (img[i + 3] > 0 && (img[i] !== 255 || img[i + 1] !== 255 || img[i + 2] !== 255)) n++;
+            }
+            results.checks.pixelsDrawn = n;
+        }
+        results.checks.noErrors = capturedErrors.length === 0;
+        results.pass = results.checks.singleCanvas && results.checks.noErrors
+            && results.checks.pixelsDrawn > 50;
+        fetch('http://localhost:8000/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(results)
+        }).then(() => { document.title = 'R_WIDGET_SMOKE_DONE'; });
+    }, 3000);
+</script>
+</body>
+</html>

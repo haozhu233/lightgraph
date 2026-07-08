@@ -176,7 +176,10 @@ class TestNetVis:
         assert 'id="lightGraph"' in result
         assert '<script type="application/json" id="nodesData">' in result
         assert '<script type="application/json" id="edgesData">' in result
-        assert 'd3js.org/d3.v7.min.js' in result
+        # d3 and lightgraph.js are inlined so the HTML is standalone/offline
+        assert 'src="https://d3js.org' not in result
+        assert 'zoomIdentity' in result
+        assert 'LightGraph' in result
 
     def test_json_validity(self):
         """Test that the embedded JSON data is valid."""
@@ -201,11 +204,144 @@ class TestNetVis:
         edges_end = html.find('</script>', edges_start)
         edges_json = html[edges_start:edges_end]
         edges = json.loads(edges_json)
-        
-        assert len(edges) == 2
+
+        # The symmetric matrix describes one undirected edge; it is emitted
+        # once, not once per direction.
+        assert len(edges) == 1
         assert all('source' in edge for edge in edges)
         assert all('target' in edge for edge in edges)
         assert all('weight' in edge for edge in edges)
+
+
+class TestDataInputs:
+    """Edge-list, sparse-matrix, and symmetric-dedup input paths."""
+
+    def _extract_edges(self, result):
+        html = result.html
+        start = html.find('id="edgesData">') + len('id="edgesData">')
+        return json.loads(html[start:html.find('</script>', start)])
+
+    def _extract_nodes(self, result):
+        html = result.html
+        start = html.find('id="nodesData">') + len('id="nodesData">')
+        return json.loads(html[start:html.find('</script>', start)])
+
+    def test_edge_list_tuples(self):
+        result = net_vis(edges=[('A', 'B'), ('B', 'C', 2.5)])
+        edges = self._extract_edges(result)
+        nodes = self._extract_nodes(result)
+        assert [n['id'] for n in nodes] == ['A', 'B', 'C']
+        assert len(edges) == 2
+        assert edges[1]['weight'] == 2.5
+
+    def test_edge_list_dicts(self):
+        result = net_vis(edges=[
+            {'source': 'X', 'target': 'Y', 'weight': 3},
+            {'source': 'Y', 'target': 'Z'},
+        ])
+        edges = self._extract_edges(result)
+        assert edges[0]['weight'] == 3.0
+        assert edges[1]['weight'] == 1.0
+
+    def test_edge_list_with_explicit_nodes(self):
+        # Unconnected node kept when remove_unconnected=False
+        result = net_vis(edges=[('A', 'B')], node_names=['A', 'B', 'lonely'],
+                         remove_unconnected=False)
+        assert [n['id'] for n in self._extract_nodes(result)] == ['A', 'B', 'lonely']
+
+        result = net_vis(edges=[('A', 'B')], node_names=['A', 'B', 'lonely'])
+        assert [n['id'] for n in self._extract_nodes(result)] == ['A', 'B']
+
+    def test_requires_exactly_one_input(self):
+        with pytest.raises(ValueError, match="exactly one"):
+            net_vis()
+        with pytest.raises(ValueError, match="exactly one"):
+            net_vis(adj_matrix=np.array([[0, 1], [1, 0]]),
+                    node_names=np.array(['A', 'B']),
+                    edges=[('A', 'B')])
+
+    def test_symmetric_dedup_keeps_directed(self):
+        # Asymmetric matrix: every nonzero entry is its own directed edge.
+        adj = np.array([[0, 1], [0, 0]])
+        result = net_vis(adj, np.array(['A', 'B']), remove_unconnected=False)
+        assert len(self._extract_edges(result)) == 1
+
+        # Symmetric with arrows on: both directions are kept.
+        adj = np.array([[0, 1], [1, 0]])
+        result = net_vis(adj, np.array(['A', 'B']), show_arrows=True,
+                         remove_unconnected=False)
+        assert len(self._extract_edges(result)) == 2
+
+    def test_node_metric_size_mapping(self):
+        result = net_vis(edges=[('A', 'B'), ('B', 'C')],
+                         node_metric={'A': 0.0, 'B': 5.0, 'C': 10.0},
+                         metric_size_range=(4, 20))
+        nodes = {n['id']: n for n in self._extract_nodes(result)}
+        assert nodes['A']['size'] == 4.0
+        assert nodes['B']['size'] == 12.0
+        assert nodes['C']['size'] == 20.0
+
+    def test_node_metric_color_mapping(self):
+        result = net_vis(edges=[('A', 'B')],
+                         node_metric={'A': 0, 'B': 1},
+                         metric_map='color',
+                         metric_colors=('#000000', '#ffffff'))
+        nodes = {n['id']: n for n in self._extract_nodes(result)}
+        assert nodes['A']['color'] == '#000000'
+        assert nodes['B']['color'] == '#ffffff'
+
+    def test_node_metric_respects_explicit_values(self):
+        result = net_vis(edges=[('A', 'B')],
+                         node_metric={'A': 0, 'B': 1},
+                         node_sizes={'A': 99})
+        nodes = {n['id']: n for n in self._extract_nodes(result)}
+        assert nodes['A']['size'] == 99.0   # explicit wins
+        assert nodes['B']['size'] == 20.0   # metric-derived
+
+    def test_weight_mapping_config(self):
+        result = net_vis(edges=[('A', 'B')],
+                         edge_weight_to_width=True,
+                         edge_weight_to_opacity=True,
+                         highlight_neighbors=False)
+        html = result.html
+        start = html.find('id="lightGraphConfig">') + len('id="lightGraphConfig">')
+        config = json.loads(html[start:html.find('</script>', start)])
+        assert config['edges']['weightToWidth'] is True
+        assert config['edges']['weightToOpacity'] is True
+        assert config['highlight']['enabled'] is False
+
+    def test_auto_community_detection(self):
+        # Two triangles joined by nothing: must split into two groups.
+        triangles = [('A', 'B'), ('B', 'C'), ('A', 'C'),
+                     ('X', 'Y'), ('Y', 'Z'), ('X', 'Z')]
+        result = net_vis(edges=triangles, node_groups='auto')
+        nodes = {n['id']: n.get('group') for n in self._extract_nodes(result)}
+        assert all(g is not None for g in nodes.values())
+        assert nodes['A'] == nodes['B'] == nodes['C']
+        assert nodes['X'] == nodes['Y'] == nodes['Z']
+        assert nodes['A'] != nodes['X']
+
+    def test_auto_community_isolated_nodes_ungrouped(self):
+        result = net_vis(edges=[('A', 'B'), ('B', 'C'), ('A', 'C')],
+                         node_names=['A', 'B', 'C', 'loner'],
+                         node_groups='auto',
+                         remove_unconnected=False)
+        nodes = {n['id']: n.get('group') for n in self._extract_nodes(result)}
+        assert nodes['A'] is not None
+        assert nodes['loner'] is None
+
+    def test_node_groups_rejects_other_strings(self):
+        with pytest.raises(ValueError, match="dictionary or 'auto'"):
+            net_vis(edges=[('A', 'B')], node_groups='louvain')
+
+    def test_sparse_matrix(self):
+        scipy_sparse = pytest.importorskip('scipy.sparse')
+        adj = scipy_sparse.csr_matrix(np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]]))
+        result = net_vis(adj, np.array(['A', 'B', 'C']))
+        edges = self._extract_edges(result)
+        assert len(edges) == 2  # symmetric -> deduped
+        pairs = {(e['source'], e['target']) for e in edges}
+        assert pairs == {('A', 'B'), ('B', 'C')}
 
 
 class TestNetworkVisualization:

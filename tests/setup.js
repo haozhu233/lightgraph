@@ -46,8 +46,10 @@ global.d3 = {
     force: jest.fn().mockReturnThis(),
     nodes: jest.fn().mockReturnThis(),
     on: jest.fn().mockReturnThis(),
+    alpha: jest.fn().mockReturnThis(),
     alphaTarget: jest.fn().mockReturnThis(),
     restart: jest.fn().mockReturnThis(),
+    stop: jest.fn().mockReturnThis(),
   })),
   forceLink: jest.fn(() => ({
     id: jest.fn().mockReturnThis(),

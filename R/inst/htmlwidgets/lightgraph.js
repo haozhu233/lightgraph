@@ -6,65 +6,34 @@ HTMLWidgets.widget({
 
   factory: function(el, width, height) {
 
+    var instance = null;
+
     return {
 
       renderValue: function(x) {
-        // Clear any existing content
+        // Shiny re-renders call this repeatedly; tear down the previous
+        // instance so listeners and simulations do not accumulate.
+        if (instance) {
+          instance.destroy();
+          instance = null;
+        }
         el.innerHTML = '';
-        
-        // Set up the container structure
-        el.style.position = 'relative';
-        el.style.width = '100%';
-        el.style.height = height || '800px';
-        el.style.overflow = 'hidden';
-        
-        // Create the lightGraph div
-        var lightGraphDiv = document.createElement('div');
-        lightGraphDiv.id = 'lightGraph';
-        lightGraphDiv.style.width = '100%';
-        lightGraphDiv.style.height = '100%';
-        el.appendChild(lightGraphDiv);
-        
-        // Create script tags for data
-        var nodesScript = document.createElement('script');
-        nodesScript.type = 'application/json';
-        nodesScript.id = 'nodesData';
-        nodesScript.textContent = JSON.stringify(x.nodes);
-        el.appendChild(nodesScript);
 
-        var edgesScript = document.createElement('script');
-        edgesScript.type = 'application/json';
-        edgesScript.id = 'edgesData';
-        edgesScript.textContent = JSON.stringify(x.edges);
-        el.appendChild(edgesScript);
-
-        // Create script tag for configuration
-        if (x.config) {
-          var configScript = document.createElement('script');
-          configScript.type = 'application/json';
-          configScript.id = 'lightGraphConfig';
-          configScript.textContent = JSON.stringify(x.config);
-          el.appendChild(configScript);
-        }
-
-        // Create a container for mutation observer
-        var networkDataDiv = document.createElement('div');
-        networkDataDiv.id = 'networkData';
-        networkDataDiv.style.display = 'none';
-        el.appendChild(networkDataDiv);
-        
-        // Initialize the visualization if lightGraph is available
-        if (window.lightGraph && window.lightGraph.initializeVisualization) {
-          window.lightGraph.initializeVisualization();
-        } else {
+        if (!(window.lightGraph && window.lightGraph.LightGraph)) {
           console.error('lightGraph library not loaded');
+          return;
         }
+
+        instance = new window.lightGraph.LightGraph(el, {
+          nodes: x.nodes || [],
+          edges: x.edges || [],
+          config: x.config || {}
+        });
       },
 
       resize: function(width, height) {
-        // Handle resize if needed
-        if (window.lightGraph && window.lightGraph.resize) {
-          window.lightGraph.resize(width, height);
+        if (instance) {
+          instance.resize();
         }
       }
 
