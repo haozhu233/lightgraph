@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>lightgraph smoke test</title>
+</head>
+<body>
+<!-- Mimics the Python wrapper embedding: config element present, NO #networkData -->
+<div style="position: relative; width: 100%; height: 500px; overflow: hidden;">
+<div id="lightGraph" style="width: 100%; height: 100%;"></div>
+<script type="application/json" id="nodesData">[
+    {"id": "A", "group": "g1"}, {"id": "B", "group": "g1"}, {"id": "C", "group": "g2"},
+    {"id": "D", "group": "g2"}, {"id": "E", "color": "#ff0000", "size": 14},
+    {"id": "F"}, {"id": "G", "opacity": 0.5}
+]</script>
+<script type="application/json" id="edgesData">[
+    {"source": "A", "target": "B", "weight": 1},
+    {"source": "B", "target": "C", "weight": 1},
+    {"source": "C", "target": "D", "weight": 2},
+    {"source": "D", "target": "E", "weight": 1},
+    {"source": "E", "target": "F", "weight": 1},
+    {"source": "F", "target": "G", "weight": 1}
+]</script>
+<script type="application/json" id="lightGraphConfig">{
+    "edges": {"showArrows": true},
+    "ui": {"showStatistics": true},
+    "layout": "force"
+}</script>
+<script>
+    const capturedErrors = [];
+    window.onerror = (msg, src, line) => { capturedErrors.push(`${msg} (${src}:${line})`); };
+    const origError = console.error;
+    console.error = (...args) => { capturedErrors.push(args.join(' ')); origError(...args); };
+</script>
+<script src="d3.v7.min.js"></script>
+<script src="../lightgraph.js"></script>
+</div>
+
+<script>
+    // Give the library time to initialize (100ms poll) and the simulation
+    // time to run several ticks, then inspect the state.
+    setTimeout(() => {
+        const canvas = document.getElementById('lightGraphCanvas');
+        const results = {
+            test: 'smoke',
+            errors: capturedErrors,
+            canvasExists: !!canvas,
+            containerHeightPx: document.getElementById('lightGraph').clientHeight,
+            statsVisible: false,
+            legendVisible: false,
+            arrowsToggleOn: false,
+            pixelsDrawn: 0
+        };
+        const statsPanel = document.getElementById('statsPanel');
+        results.statsVisible = !!statsPanel && statsPanel.style.display !== 'none'
+            && statsPanel.innerHTML.includes('Nodes');
+        const legendPanel = document.getElementById('legendPanel');
+        results.legendVisible = !!legendPanel && legendPanel.style.display !== 'none';
+        const arrowsToggle = document.getElementById('arrowsToggle');
+        results.arrowsToggleOn = !!arrowsToggle && arrowsToggle.checked;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            // Count painted non-white pixels: proof that nodes/edges actually
+            // drew (unpainted canvas is transparent, alpha 0).
+            for (let i = 0; i < img.length; i += 4) {
+                if (img[i + 3] > 0 && (img[i] !== 255 || img[i + 1] !== 255 || img[i + 2] !== 255)) {
+                    results.pixelsDrawn++;
+                }
+            }
+        }
+        fetch('http://localhost:8000/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(results)
+        }).then(() => { document.title = 'SMOKE_DONE'; });
+    }, 3000);
+</script>
+</body>
+</html>

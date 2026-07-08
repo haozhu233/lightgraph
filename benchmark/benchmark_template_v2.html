@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Benchmark v2 - lightgraph</title>
+    <style>
+        #lightGraph {
+            width: 100%;
+            height: 100vh;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    const graphData = {{GRAPH_DATA}};
+
+    // Measurement plan:
+    //   1. Insert data + library scripts, record t0.
+    //   2. Wait for the library to create #lightGraphCanvas (init complete).
+    //   3. Wait 500ms for the simulation to be fully active.
+    //   4. Record frame deltas via rAF for MEASURE_MS, report FPS + frame-time percentiles.
+    const MEASURE_MS = 5000;
+
+    function percentile(sorted, p) {
+        const idx = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
+        return sorted[idx];
+    }
+
+    function runBenchmark() {
+        const results = {
+            libName: 'lightgraph',
+            numNodes: graphData.nodes.length,
+            numEdges: graphData.edges.length,
+            initTimeMs: 0,
+            avgFps: 0,
+            frameP50Ms: 0,
+            frameP95Ms: 0,
+            frameMaxMs: 0,
+            memoryMB: 0
+        };
+
+        const wrapper = document.createElement('div');
+        wrapper.style = 'position: relative; width: 100%; height: 800px; overflow: hidden;';
+
+        const lightGraphDiv = document.createElement('div');
+        lightGraphDiv.id = 'lightGraph';
+        lightGraphDiv.style = 'width: 100%; height: 100%;';
+        wrapper.appendChild(lightGraphDiv);
+
+        const nodesData = document.createElement('script');
+        nodesData.id = 'nodesData';
+        nodesData.type = 'application/json';
+        nodesData.textContent = JSON.stringify(graphData.nodes);
+        wrapper.appendChild(nodesData);
+
+        const edgesData = document.createElement('script');
+        edgesData.id = 'edgesData';
+        edgesData.type = 'application/json';
+        edgesData.textContent = JSON.stringify(graphData.edges);
+        wrapper.appendChild(edgesData);
+
+        // #networkData present so the MutationObserver setup at the end of
+        // initializeVisualization does not throw.
+        const networkData = document.createElement('div');
+        networkData.id = 'networkData';
+        networkData.style.display = 'none';
+        wrapper.appendChild(networkData);
+
+        document.body.appendChild(wrapper);
+
+        const d3script = document.createElement('script');
+        d3script.src = '../d3.v7.min.js';
+        d3script.onload = () => {
+            const t0 = performance.now();
+            const lgscript = document.createElement('script');
+            lgscript.src = '../../lightgraph.js';
+            document.body.appendChild(lgscript);
+
+            // The library polls every 100ms for #lightGraph, then initializes
+            // synchronously (canvas creation -> data parse -> simulation start).
+            const waitForCanvas = setInterval(() => {
+                if (document.getElementById('lightGraphCanvas')) {
+                    clearInterval(waitForCanvas);
+                    results.initTimeMs = performance.now() - t0;
+                    setTimeout(() => measureFrames(results), 500);
+                }
+            }, 20);
+        };
+        document.body.appendChild(d3script);
+    }
+
+    function measureFrames(results) {
+        const deltas = [];
+        let last = performance.now();
+        const start = last;
+
+        function frame() {
+            const now = performance.now();
+            deltas.push(now - last);
+            last = now;
+            if (now - start < MEASURE_MS) {
+                requestAnimationFrame(frame);
+            } else {
+                const elapsed = now - start;
+                results.avgFps = (deltas.length / elapsed) * 1000;
+                const sorted = [...deltas].sort((a, b) => a - b);
+                results.frameP50Ms = percentile(sorted, 0.50);
+                results.frameP95Ms = percentile(sorted, 0.95);
+                results.frameMaxMs = sorted[sorted.length - 1];
+                if (performance.memory) {
+                    results.memoryMB = performance.memory.usedJSHeapSize / (1024 * 1024);
+                }
+                sendResults(results);
+            }
+        }
+        requestAnimationFrame(frame);
+    }
+
+    function sendResults(results) {
+        fetch('http://localhost:8000/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(results),
+        })
+        .then(r => r.text())
+        .then(d => { document.title = 'BENCHMARK_DONE'; console.log('Success:', d); })
+        .catch(e => { document.title = 'BENCHMARK_FAILED'; console.error('Error:', e); });
+    }
+
+    window.onload = runBenchmark;
+</script>
+
+</body>
+</html>

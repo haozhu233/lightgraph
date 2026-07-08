@@ -7,7 +7,9 @@
     "build": "node esbuild.config.js",
     "dev": "node esbuild.config.js --watch",
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "sync-assets": "cp lightgraph.js python/lightgraph/assets/lightgraph.js && cp lightgraph.js R/inst/assets/lightgraph.js",
+    "check-assets": "diff -q lightgraph.js python/lightgraph/assets/lightgraph.js && diff -q lightgraph.js R/inst/assets/lightgraph.js"
   },
   "repository": {
     "type": "git",
