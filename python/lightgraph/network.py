@@ -1,7 +1,7 @@
 """
 LightGraph Network Visualization
 
-A high-performance, canvas-based network visualization library.
+A high-performance, WebGL-based network visualization library powered by Three.js.
 """
 import json
 import base64
@@ -477,6 +477,7 @@ def net_vis(
         },
         'canvas': {},
         'ui': {
+            'theme': theme,
             'showLegend': show_legend,
             'showStatistics': show_statistics,
             'showTooltips': show_tooltips,
@@ -484,6 +485,12 @@ def net_vis(
         },
         'layout': layout,
     }
+    if edge_opacity is not None:
+        config['edges']['defaultOpacity'] = edge_opacity
+    if background_color is not None:
+        config['canvas']['backgroundColor'] = background_color
+
+    # Only set optional values if explicitly provided
     if edge_opacity is not None:
         config['edges']['defaultOpacity'] = edge_opacity
     if background_color is not None:
