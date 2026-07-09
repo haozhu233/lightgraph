@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>lightgraph interactive demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="demo-shell">
+    <section class="graph-stage" aria-label="Live lightgraph visualization">
+      <div class="stage-toolbar">
+        <div>
+          <span class="brand">lightgraph</span>
+          <strong id="stage-title">Erdos-Renyi random graph</strong>
+          <span id="stage-subtitle">Modeless interaction, weighted edges, neighbor highlighting, and ego filtering.</span>
+        </div>
+        <button type="button" id="reset-view">Fit view</button>
+      </div>
+
+      <div id="demo-graph" class="graph-container"></div>
+
+      <div class="interaction-note">
+        <span>Drag to pan</span>
+        <span>Scroll to zoom</span>
+        <span>Click to select</span>
+        <span>Shift-drag to box-select</span>
+        <span>Double-click for ego view</span>
+      </div>
+    </section>
+
+    <section class="control-deck" aria-label="Demo controls">
+      <div class="control-main">
+        <div class="model-control" aria-label="Graph model">
+          <button class="model-button active" type="button" data-model="erdos">Erdos-Renyi</button>
+          <button class="model-button" type="button" data-model="scale">Scale-free</button>
+        </div>
+
+        <label class="range-row">
+          <span>
+            <strong>Nodes</strong>
+            <small id="nodes-value">80</small>
+          </span>
+          <input id="nodes-range" type="range" min="30" max="350" step="10" value="80">
+        </label>
+
+        <label class="range-row">
+          <span>
+            <strong>Edges</strong>
+            <small id="edges-value">140</small>
+          </span>
+          <input id="edges-range" type="range" min="40" max="1000" step="20" value="140">
+        </label>
+
+        <button type="button" id="regenerate">Regenerate</button>
+      </div>
+
+      <div class="control-secondary">
+        <label class="switch-row">
+          <span>Highlight</span>
+          <input type="checkbox" id="toggle-highlight" checked>
+        </label>
+        <label class="switch-row">
+          <span>Weighted edges</span>
+          <input type="checkbox" id="toggle-weights" checked>
+        </label>
+        <label class="switch-row">
+          <span>Groups</span>
+          <input type="checkbox" id="toggle-ellipses" checked>
+        </label>
+        <label class="switch-row">
+          <span>Dark</span>
+          <input type="checkbox" id="toggle-theme">
+        </label>
+      </div>
+
+      <div class="metric-strip" aria-label="Network summary">
+        <div><strong id="metric-nodes">0</strong><span>nodes</span></div>
+        <div><strong id="metric-edges">0</strong><span>edges</span></div>
+        <div><strong id="metric-groups">0</strong><span>groups</span></div>
+        <div><strong id="metric-density">0%</strong><span>density</span></div>
+      </div>
+
+      <details class="demo-notes">
+        <summary>What this demo shows</summary>
+        <div class="note-grid">
+          <p><strong>Current:</strong> modeless navigation, neighbor highlighting, ego filtering, weighted edge rendering, dark theme, and metric-sized nodes.</p>
+          <p><strong>Future:</strong> larger layouts can swap in worker-backed, GPU, or server-side layout engines behind the same JS API.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script src="d3.v7.min.js"></script>
+  <script src="lightgraph.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>

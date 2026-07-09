@@ -44,6 +44,12 @@ toolbar fit button — or the automatic fit when the layout settles — frames
 the graph. Set `edges.weightToWidth` / `edges.weightToOpacity` to render
 edge weights visually.
 
+Rendering follows the display's `devicePixelRatio`, so the canvas stays
+sharp on retina/high-DPI screens (set `canvas.pixelRatio: 1` to trade
+sharpness for speed on very large graphs). PNG export re-renders the scene
+at `canvas.exportScale` (default 2) times the on-screen resolution rather
+than copying the screen bitmap.
+
 The module also loads with `require('lightgraph')` / bundlers; pass
 `options.d3` if d3 is not on `window`. Pages that provide the legacy
 `#lightGraph` + `#nodesData`/`#edgesData` elements (as the Python and R

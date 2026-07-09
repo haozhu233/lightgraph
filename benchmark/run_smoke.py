@@ -38,12 +38,13 @@ class Handler(SimpleHTTPRequestHandler):
         pass
 
 
-def run_page(page):
+def run_page(page, extra_args=()):
     before = len(results)
     profile = tempfile.mkdtemp(prefix='lg-smoke-')
     proc = subprocess.Popen(
         [CHROME, '--headless=new', '--no-first-run', '--disable-extensions',
          f'--user-data-dir={profile}', '--window-size=1200,900',
+         *extra_args,
          f'http://127.0.0.1:8000/benchmark/{page}'],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     deadline = time.time() + 30
@@ -89,6 +90,16 @@ def main():
     else:
         print(json.dumps(r, indent=2))
         print('R WIDGET SMOKE:', 'PASS' if r.get('pass') else 'FAIL')
+        all_ok = all_ok and bool(r.get('pass'))
+
+    # Simulate a retina display to exercise the devicePixelRatio path
+    r = run_page('dpi_smoke_test.html', ('--force-device-scale-factor=2',))
+    if r is None:
+        print('DPI SMOKE: FAIL (no result received)')
+        all_ok = False
+    else:
+        print(json.dumps(r, indent=2))
+        print('DPI SMOKE:', 'PASS' if r.get('pass') else 'FAIL')
         all_ok = all_ok and bool(r.get('pass'))
 
     server.shutdown()

@@ -84,14 +84,7 @@
             zoomMax: 5,
             // Zoom to fit the graph once the layout settles (skipped if the
             // user has already panned/zoomed manually).
-            autoFit: true,
-            // Backing-store resolution multiplier. null = follow the
-            // display's devicePixelRatio (sharp on retina); set to 1 to
-            // trade sharpness for speed on very large graphs.
-            pixelRatio: null,
-            // Resolution multiplier for PNG export, relative to the
-            // on-screen size.
-            exportScale: 2
+            autoFit: true
         },
         ui: {
             theme: 'light',
@@ -463,44 +456,12 @@
         if (!lightGraph.clientHeight) {
             lightGraph.style.height = '800px';
         }
-        const canvas = createElement("canvas", { id: "lightGraphCanvas" });
+        const canvas = createElement("canvas", {
+            id: "lightGraphCanvas",
+            width: lightGraph.clientWidth,
+            height: lightGraph.clientHeight });
         canvas.style.cursor = 'grab';
-        let context = canvas.getContext("2d");
-        // The backing store is scaled by pixelRatio so the canvas stays
-        // sharp on high-DPI displays; all layout math uses the CSS-pixel
-        // view size (viewWidth/viewHeight), never canvas.width/height.
-        let pixelRatio = 1;
-        let viewWidth = 0;
-        let viewHeight = 0;
-        function sizeCanvas() {
-            pixelRatio = config.canvas.pixelRatio ||
-                Math.max(1, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
-            viewWidth = lightGraph.clientWidth;
-            viewHeight = lightGraph.clientHeight;
-            canvas.width = Math.round(viewWidth * pixelRatio);
-            canvas.height = Math.round(viewHeight * pixelRatio);
-            canvas.style.width = viewWidth + 'px';
-            canvas.style.height = viewHeight + 'px';
-            watchPixelRatio();
-        }
-        // Re-resolve the backing store when the display density changes
-        // (window dragged to another monitor, browser zoom). The media
-        // query only matches the current density, so it must be rebuilt
-        // after every change.
-        let dprMedia = null;
-        function handleDprChange() { self.resize(); }
-        function watchPixelRatio() {
-            if (config.canvas.pixelRatio) return; // fixed ratio, nothing to watch
-            if (typeof window === 'undefined' || !window.matchMedia) return;
-            if (dprMedia && dprMedia.removeEventListener) {
-                dprMedia.removeEventListener('change', handleDprChange);
-            }
-            dprMedia = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-            if (dprMedia.addEventListener) {
-                dprMedia.addEventListener('change', handleDprChange);
-            }
-        }
-        sizeCanvas();
+        const context = canvas.getContext("2d");
         lightGraph.appendChild(canvas);
         //#endregion
 
@@ -1061,16 +1022,15 @@
             return {
                 x0: -transform.x / transform.k - pad,
                 y0: -transform.y / transform.k - pad,
-                x1: (viewWidth - transform.x) / transform.k + pad,
-                y1: (viewHeight - transform.y) / transform.k + pad
+                x1: (canvas.width - transform.x) / transform.k + pad,
+                y1: (canvas.height - transform.y) / transform.k + pad
             };
         }
 
         function render() {
             context.save();
-            context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
             context.fillStyle = config.canvas.backgroundColor;
-            context.fillRect(0, 0, viewWidth, viewHeight);
+            context.fillRect(0, 0, canvas.width, canvas.height);
             context.translate(transform.x, transform.y);
             context.scale(transform.k, transform.k);
 
@@ -1383,11 +1343,11 @@
                 if (node.y > y1) y1 = node.y;
             }
             const k = Math.max(config.canvas.zoomMin, Math.min(config.canvas.zoomMax,
-                Math.min((viewWidth - 2 * padding) / Math.max(x1 - x0, 1),
-                         (viewHeight - 2 * padding) / Math.max(y1 - y0, 1))));
+                Math.min((canvas.width - 2 * padding) / Math.max(x1 - x0, 1),
+                         (canvas.height - 2 * padding) / Math.max(y1 - y0, 1))));
             transform = d3.zoomIdentity
-                .translate(viewWidth / 2 - k * (x0 + x1) / 2,
-                           viewHeight / 2 - k * (y0 + y1) / 2)
+                .translate(canvas.width / 2 - k * (x0 + x1) / 2,
+                           canvas.height / 2 - k * (y0 + y1) / 2)
                 .scale(k);
             if (zoom.transform) {
                 d3.select(canvas).call(zoom.transform, transform);
@@ -1689,37 +1649,16 @@
             link.click();
         }
 
-        // Re-render the scene into an offscreen canvas at export resolution
-        // rather than copying the on-screen bitmap, so exports stay sharp
-        // regardless of display DPI.
-        function renderToCanvas(scale) {
-            const exportCanvas = document.createElement('canvas');
-            exportCanvas.width = Math.round(viewWidth * scale);
-            exportCanvas.height = Math.round(viewHeight * scale);
-            const prevContext = context;
-            const prevRatio = pixelRatio;
-            context = exportCanvas.getContext('2d');
-            pixelRatio = scale;
-            try {
-                render();
-            } finally {
-                context = prevContext;
-                pixelRatio = prevRatio;
-            }
-            return exportCanvas;
-        }
-
         exportPNGButton.addEventListener('click', () => {
-            const scale = Math.max(1, config.canvas.exportScale || 1) *
-                Math.max(1, pixelRatio);
-            downloadFile(renderToCanvas(scale).toDataURL('image/png'), 'lightgraph.png');
+            const dataURL = canvas.toDataURL('image/png');
+            downloadFile(dataURL, 'lightgraph.png');
         });
 
         exportSVGButton.addEventListener('click', () => {
             // Create SVG from current canvas state
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', viewWidth);
-            svg.setAttribute('height', viewHeight);
+            svg.setAttribute('width', canvas.width);
+            svg.setAttribute('height', canvas.height);
             svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
             // Background
@@ -1847,9 +1786,6 @@
             if (partial.edges && partial.edges.defaultOpacity !== undefined) {
                 userSetEdgeOpacity = true;
             }
-            if (partial.canvas && 'pixelRatio' in partial.canvas) {
-                sizeCanvas();
-            }
             updateHighlight();
             updateLegend();
             updateStatistics();
@@ -1894,7 +1830,8 @@
         };
 
         this.resize = () => {
-            sizeCanvas();
+            canvas.width = lightGraph.clientWidth;
+            canvas.height = lightGraph.clientHeight;
             if (simulation && simulation.force && simulation.force("center")) {
                 simulation.force("center",
                     d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2));
@@ -1910,9 +1847,6 @@
                 simulation.stop();
             }
             clearTimeout(resizeTimer);
-            if (dprMedia && dprMedia.removeEventListener) {
-                dprMedia.removeEventListener('change', handleDprChange);
-            }
             window.removeEventListener('resize', handleWindowResize);
             window.removeEventListener('mouseup', handleWindowMouseUp);
             document.removeEventListener('keydown', handleKeydown);
