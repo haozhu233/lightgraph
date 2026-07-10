@@ -1,6 +1,11 @@
 (function () {
   'use strict';
 
+  // ?embed=compact trims the demo down to graph + sliders + metrics so it
+  // fits the narrow content column when embedded on the docs front page.
+  const compact = new URLSearchParams(window.location.search).get('embed') === 'compact';
+  if (compact) document.body.classList.add('compact');
+
   const container = document.getElementById('demo-graph');
   const modelButtons = Array.from(document.querySelectorAll('.model-button'));
   const nodesRange = document.getElementById('nodes-range');

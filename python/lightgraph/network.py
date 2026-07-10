@@ -1,14 +1,16 @@
 """
 LightGraph Network Visualization
 
-A high-performance, WebGL-based network visualization library powered by Three.js.
+A high-performance, HTML canvas-based network visualization library.
 """
 import json
 import base64
 import uuid
 import numpy as np
 import os
-from typing import Optional, Dict, List, Union, Literal
+from typing import Optional, Dict, Union, Literal
+
+from .analytics import _normalize_edges, communities as _communities
 
 
 class NetworkVisualization:
@@ -99,65 +101,6 @@ def _is_symmetric(adj_matrix) -> bool:
         adj_matrix, adj_matrix.T)
 
 
-def _label_propagation_communities(edge_dicts, seed=42, max_iter=20):
-    """Dependency-free community detection via seeded label propagation.
-    Returns a list of sets of node names (connected nodes only)."""
-    import random
-    rng = random.Random(seed)
-    adjacency = {}
-    for e in edge_dicts:
-        if e['source'] == e['target']:
-            continue
-        adjacency.setdefault(e['source'], []).append(e['target'])
-        adjacency.setdefault(e['target'], []).append(e['source'])
-
-    labels = {n: n for n in adjacency}
-    order = list(adjacency)
-    for _ in range(max_iter):
-        changed = False
-        rng.shuffle(order)
-        for n in order:
-            counts = {}
-            for m in adjacency[n]:
-                counts[labels[m]] = counts.get(labels[m], 0) + 1
-            best = max(counts.values())
-            candidates = sorted(l for l, c in counts.items() if c == best)
-            new_label = candidates[rng.randrange(len(candidates))]
-            if new_label != labels[n]:
-                labels[n] = new_label
-                changed = True
-        if not changed:
-            break
-
-    communities = {}
-    for n, label in labels.items():
-        communities.setdefault(label, set()).add(n)
-    return list(communities.values())
-
-
-def _detect_communities(edge_dicts):
-    """Community assignment for node_groups='auto': networkx Louvain when
-    installed, else the label-propagation fallback. Returns {name: 'c1'...};
-    singleton communities and isolated nodes stay ungrouped."""
-    try:
-        import networkx as nx
-        graph = nx.Graph()
-        for e in edge_dicts:
-            graph.add_edge(e['source'], e['target'], weight=e.get('weight', 1.0))
-        communities = nx.community.louvain_communities(graph, seed=42)
-    except ImportError:
-        communities = _label_propagation_communities(edge_dicts)
-
-    groups = {}
-    ordered = sorted(
-        (c for c in communities if len(c) >= 2),
-        key=lambda c: (-len(c), min(c)))
-    for idx, community in enumerate(ordered):
-        for name in community:
-            groups[name] = f'c{idx + 1}'
-    return groups
-
-
 def _hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
@@ -168,41 +111,52 @@ def _lerp_hex(rgb0, rgb1, t):
         round(a + (b - a) * t) for a, b in zip(rgb0, rgb1))
 
 
-def _edges_from_edge_list(edges):
-    """Normalize an edge list (tuples, numpy rows, dicts, or a pandas
-    DataFrame with source/target[/weight] columns) into edge dicts."""
-    if hasattr(edges, 'columns'):  # pandas DataFrame, duck-typed
-        weights = edges['weight'] if 'weight' in edges.columns else None
+def _is_missing(value):
+    """None or NaN (a float that is not equal to itself)."""
+    return value is None or (isinstance(value, float) and value != value)
+
+
+def _records_from_nodes(nodes):
+    """Normalize a nodes table (pandas DataFrame with an 'id' column, or a
+    list of dicts) into records, dropping missing attribute values."""
+    if hasattr(nodes, 'columns'):  # pandas DataFrame, duck-typed
+        if 'id' not in nodes.columns:
+            raise ValueError("nodes DataFrame must contain an 'id' column.")
+        columns = {c: list(nodes[c]) for c in nodes.columns}
+        count = len(columns['id'])
         return [
-            {'source': str(s), 'target': str(t),
-             'weight': float(weights.iloc[k]) if weights is not None else 1.0}
-            for k, (s, t) in enumerate(zip(edges['source'], edges['target']))
+            {c: columns[c][i] for c in columns if not _is_missing(columns[c][i])}
+            for i in range(count)
         ]
-    normalized = []
-    for edge in edges:
-        if isinstance(edge, dict):
-            normalized.append({
-                'source': str(edge['source']),
-                'target': str(edge['target']),
-                'weight': float(edge.get('weight', 1.0)),
-            })
+    records = []
+    for record in nodes:
+        if 'id' not in record:
+            raise ValueError("every node dict must contain an 'id' key.")
+        records.append({k: v for k, v in record.items() if not _is_missing(v)})
+    return records
+
+
+def _merge_config(base, overrides):
+    """Deep dict merge; mirrors the JS mergeConfig (overrides win)."""
+    result = dict(base)
+    for key, value in overrides.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = _merge_config(result[key], value)
         else:
-            source, target = edge[0], edge[1]
-            weight = float(edge[2]) if len(edge) > 2 else 1.0
-            normalized.append(
-                {'source': str(source), 'target': str(target), 'weight': weight})
-    return normalized
+            result[key] = value
+    return result
 
 
 def net_vis(
     adj_matrix=None,
     node_names=None,
-    node_groups: Optional[Dict[str, str]] = None,
+    node_groups: Optional[Union[Dict[str, str], str]] = None,
     node_colors: Optional[Dict[str, str]] = None,
     node_sizes: Optional[Dict[str, float]] = None,
     remove_unconnected: bool = True,
     # Alternative data input
     edges=None,
+    nodes=None,
     # Analytics mapping
     node_metric: Optional[Dict[str, float]] = None,
     metric_map: Literal['size', 'color', 'both'] = 'size',
@@ -215,20 +169,37 @@ def net_vis(
     show_legend: bool = True,
     show_statistics: bool = False,
     show_tooltips: bool = True,
+    # Interaction options
+    highlight_neighbors: bool = True,
+    neighbor_fade: float = 0.15,
+    ego_filter: bool = True,
+    ego_depth: int = 1,
     # Layout options
     layout: Literal['force', 'circular'] = 'force',
     simulation_strength: float = 4000,
     link_distance: float = 100,
+    group_attraction: float = 0.3,
+    warmup_ticks: Union[str, int] = 'auto',
     # Styling options
     node_size: float = 7,
+    node_color: Optional[str] = None,
     label_font_size: float = 5,
+    edge_width: Optional[float] = None,
+    edge_color: Optional[str] = None,
     edge_opacity: Optional[float] = None,
     edge_weight_to_width: bool = False,
     edge_weight_to_opacity: bool = False,
-    highlight_neighbors: bool = True,
-    group_attraction: float = 0.3,
+    weight_width_range: tuple = (0.5, 4),
+    weight_opacity_range: tuple = (0.05, 0.6),
     theme: Literal['light', 'dark'] = 'light',
     background_color: Optional[str] = None,
+    # Canvas / viewport options
+    auto_fit: bool = True,
+    zoom_range: tuple = (0.1, 5),
+    pixel_ratio: Optional[float] = None,
+    export_scale: float = 2,
+    # Escape hatch: raw JS config merged over everything above
+    config: Optional[dict] = None,
     # Output options
     height: str = '800px',
     save_as: Optional[str] = None
@@ -255,24 +226,23 @@ def net_vis(
         Edge list alternative to adj_matrix. Accepts (source, target) or
         (source, target, weight) tuples, dicts with source/target/weight
         keys, or a DataFrame with source/target[/weight] columns.
+    nodes : list or pandas.DataFrame, optional
+        Optional node table: dicts (or DataFrame rows) with an 'id' key and
+        optional 'group', 'color', 'size' attributes. Provides node order
+        and per-node styling in one place; the explicit node_groups /
+        node_colors / node_sizes dicts win over table columns.
     node_metric : dict, optional
         Mapping of node name to a numeric value (degree, PageRank, any
-        score). Values are min-max normalized and mapped to node size and/or
-        color per metric_map. Explicit node_sizes/node_colors entries win
-        over metric-derived ones; group colors always win over node colors.
+        score — see lightgraph.analytics). Values are min-max normalized
+        and mapped to node size and/or color per metric_map. Explicit
+        node_sizes/node_colors entries win over metric-derived ones; group
+        colors always win over node colors.
     metric_map : {'size', 'color', 'both'}, default 'size'
         Which visual channel(s) node_metric drives.
     metric_size_range : tuple, default (4, 20)
         Node size range (min, max) for metric-driven sizing.
     metric_colors : tuple, default ('#c6dbef', '#08306b')
         Low/high hex colors for metric-driven coloring.
-    edge_weight_to_width : bool, default False
-        Scale edge width by edge weight.
-    edge_weight_to_opacity : bool, default False
-        Scale edge opacity by edge weight.
-    highlight_neighbors : bool, default True
-        Fade everything outside the 1-hop neighborhood of hovered or
-        selected nodes.
     node_groups : dict or 'auto', optional
         Dictionary mapping node names to group identifiers for coloring.
         Pass 'auto' to detect communities automatically (networkx Louvain
@@ -295,6 +265,16 @@ def net_vis(
         Whether to show the statistics panel.
     show_tooltips : bool, default True
         Whether to show tooltips on hover.
+    highlight_neighbors : bool, default True
+        Fade everything outside the 1-hop neighborhood of hovered or
+        selected nodes.
+    neighbor_fade : float, default 0.15
+        Opacity multiplier applied to faded elements while highlighting.
+    ego_filter : bool, default True
+        Double-clicking a node shows only its k-hop neighborhood
+        (double-click empty space or press Escape to restore).
+    ego_depth : int, default 1
+        Neighborhood depth (hops) for the ego filter.
     layout : {'force', 'circular'}, default 'force'
         Layout algorithm to use.
         - 'force': Force-directed layout using physics simulation.
@@ -303,21 +283,56 @@ def net_vis(
         Repulsion strength for force-directed layout (divided by node count).
     link_distance : float, default 100
         Target distance between connected nodes.
-    node_size : float, default 7
-        Default size for nodes.
-    label_font_size : float, default 5
-        Font size for node labels.
-    edge_opacity : float, optional
-        Opacity for edges (0.0 to 1.0). Defaults to an adaptive value based
-        on edge count (faint for dense graphs, solid for small ones).
     group_attraction : float, default 0.3
         Strength of the pull toward each group's centroid in the force
         layout, which separates groups spatially. 0 disables.
+    warmup_ticks : 'auto' or int, default 'auto'
+        Synchronous layout ticks run before the first paint so the graph
+        appears already untangled. 'auto' spends a roughly fixed time
+        budget; a number forces that tick count; 0 disables.
+    node_size : float, default 7
+        Default size for nodes.
+    node_color : str, optional
+        Default node fill color (hex). Defaults to the theme color.
+    label_font_size : float, default 5
+        Font size for node labels.
+    edge_width : float, optional
+        Base width for edges (JS default 0.3).
+    edge_color : str, optional
+        Default edge color (hex). Defaults to the theme color.
+    edge_opacity : float, optional
+        Opacity for edges (0.0 to 1.0). By default opacity adapts
+        automatically to the on-screen edge density and zoom level, so
+        dense graphs stay readable; setting a value pins it (users can
+        still re-enable auto mode from the settings sidebar).
+    edge_weight_to_width : bool, default False
+        Scale edge width by edge weight.
+    edge_weight_to_opacity : bool, default False
+        Scale edge opacity by edge weight.
+    weight_width_range : tuple, default (0.5, 4)
+        Edge width range (min, max) used by edge_weight_to_width.
+    weight_opacity_range : tuple, default (0.05, 0.6)
+        Edge opacity range (min, max) used by edge_weight_to_opacity.
     theme : {'light', 'dark'}, default 'light'
         UI and canvas color theme.
     background_color : str, optional
         Background color for the canvas (hex color). Defaults to white in
         the light theme and near-black in the dark theme.
+    auto_fit : bool, default True
+        Zoom to fit the graph once the layout settles (skipped if the user
+        already panned/zoomed manually).
+    zoom_range : tuple, default (0.1, 5)
+        Minimum and maximum zoom factors.
+    pixel_ratio : float, optional
+        Backing-store resolution multiplier. Defaults to the display's
+        devicePixelRatio (sharp on retina); set 1 to trade sharpness for
+        speed on very large graphs.
+    export_scale : float, default 2
+        Resolution multiplier for PNG export, relative to on-screen size.
+    config : dict, optional
+        Raw lightGraph config (JS shape, e.g. {'nodes': {'borderWidth': 2}})
+        deep-merged over everything above — full access to any JS option
+        without a dedicated keyword.
     height : str, default '800px'
         Height of the visualization container.
     save_as : str, optional
@@ -337,6 +352,13 @@ def net_vis(
     >>> names = np.array(['A', 'B', 'C'])
     >>> groups = {'A': 'group1', 'B': 'group2', 'C': 'group1'}
     >>> html = net_vis(adj, names, node_groups=groups)
+
+    Using an edge list plus the analytics helpers:
+
+    >>> from lightgraph import net_vis, pagerank, communities
+    >>> edges = [('A', 'B'), ('B', 'C'), ('C', 'A'), ('C', 'D')]
+    >>> html = net_vis(edges=edges, node_metric=pagerank(edges),
+    ...                node_groups=communities(edges))
     """
     # Validate inputs
     if (adj_matrix is None) == (edges is None):
@@ -363,6 +385,23 @@ def net_vis(
     if layout not in ['force', 'circular']:
         raise ValueError("layout must be 'force' or 'circular'.")
 
+    # Fold an optional nodes table into names + attribute dicts. Explicit
+    # node_groups/node_colors/node_sizes entries win over table columns.
+    if nodes is not None:
+        records = _records_from_nodes(nodes)
+        table_names = [str(r['id']) for r in records]
+        table_groups = {str(r['id']): r['group'] for r in records if 'group' in r}
+        table_colors = {str(r['id']): r['color'] for r in records if 'color' in r}
+        table_sizes = {str(r['id']): r['size'] for r in records if 'size' in r}
+        if adj_matrix is None and node_names is None:
+            node_names = table_names
+        if table_groups and node_groups != 'auto':
+            node_groups = {**table_groups, **(node_groups or {})}
+        if table_colors:
+            node_colors = {**table_colors, **(node_colors or {})}
+        if table_sizes:
+            node_sizes = {**table_sizes, **(node_sizes or {})}
+
     # Build the edge list
     if adj_matrix is not None:
         # A symmetric matrix describes an undirected graph: emit each edge
@@ -374,15 +413,21 @@ def net_vis(
         else:
             edge_dicts = _edges_from_dense(adj_matrix, node_names, dedup_symmetric)
     else:
-        edge_dicts = _edges_from_edge_list(edges)
+        edge_dicts = _normalize_edges(edges)
         if node_names is None:
             # Derive node names from the edges, preserving first appearance.
             node_names = list(dict.fromkeys(
                 name for e in edge_dicts for name in (e['source'], e['target'])))
+        else:
+            # A nodes table may omit nodes that appear in edges; keep them.
+            known = {str(n) for n in node_names}
+            extras = [name for e in edge_dicts for name in (e['source'], e['target'])
+                      if name not in known]
+            node_names = list(node_names) + list(dict.fromkeys(extras))
 
     # Resolve automatic community detection into a concrete group mapping
     if isinstance(node_groups, str):
-        node_groups = _detect_communities(edge_dicts)
+        node_groups = _communities(edge_dicts)
 
     # Remove unconnected nodes if requested
     if remove_unconnected:
@@ -435,7 +480,7 @@ def net_vis(
             return mapping[key]
         return mapping.get(str(key))
 
-    nodes = []
+    node_list = []
     for node in node_names:
         node_data = {'id': str(node)}
         group = _lookup(node_groups, node)
@@ -447,11 +492,11 @@ def net_vis(
         size = _lookup(node_sizes, node)
         if size is not None:
             node_data['size'] = float(size)
-        nodes.append(node_data)
+        node_list.append(node_data)
 
     # Build configuration. Omitted keys (rather than nulls) let the JS side
     # apply its adaptive/theme-aware defaults.
-    config = {
+    graph_config = {
         'nodes': {
             'defaultSize': node_size,
         },
@@ -459,9 +504,16 @@ def net_vis(
             'showArrows': show_arrows,
             'weightToWidth': edge_weight_to_width,
             'weightToOpacity': edge_weight_to_opacity,
+            'weightWidthRange': list(weight_width_range),
+            'weightOpacityRange': list(weight_opacity_range),
         },
         'highlight': {
             'enabled': highlight_neighbors,
+            'neighborFade': neighbor_fade,
+        },
+        'egoFilter': {
+            'enabled': ego_filter,
+            'depth': ego_depth,
         },
         'labels': {
             'visible': show_labels,
@@ -471,34 +523,45 @@ def net_vis(
             'chargeStrength': simulation_strength,
             'linkDistance': link_distance,
             'groupAttraction': group_attraction,
+            'warmupTicks': warmup_ticks,
         },
         'groups': {
             'showEllipses': show_ellipses,
         },
-        'canvas': {},
+        'canvas': {
+            'autoFit': auto_fit,
+            'zoomMin': zoom_range[0],
+            'zoomMax': zoom_range[1],
+            'exportScale': export_scale,
+        },
         'ui': {
             'theme': theme,
             'showLegend': show_legend,
             'showStatistics': show_statistics,
             'showTooltips': show_tooltips,
-            'theme': theme,
         },
         'layout': layout,
     }
-    if edge_opacity is not None:
-        config['edges']['defaultOpacity'] = edge_opacity
-    if background_color is not None:
-        config['canvas']['backgroundColor'] = background_color
 
     # Only set optional values if explicitly provided
+    if node_color is not None:
+        graph_config['nodes']['defaultColor'] = node_color
+    if edge_width is not None:
+        graph_config['edges']['defaultWidth'] = edge_width
+    if edge_color is not None:
+        graph_config['edges']['defaultColor'] = edge_color
     if edge_opacity is not None:
-        config['edges']['defaultOpacity'] = edge_opacity
+        graph_config['edges']['defaultOpacity'] = edge_opacity
     if background_color is not None:
-        config['canvas']['backgroundColor'] = background_color
+        graph_config['canvas']['backgroundColor'] = background_color
+    if pixel_ratio is not None:
+        graph_config['canvas']['pixelRatio'] = pixel_ratio
+    if config:
+        graph_config = _merge_config(graph_config, config)
 
-    nodes_json = json.dumps(nodes)
+    nodes_json = json.dumps(node_list)
     edges_json = json.dumps(edge_dicts)
-    config_json = json.dumps(config)
+    config_json = json.dumps(graph_config)
 
     # Inline the vendored JS libraries so the output is fully standalone
     # (works in offline notebooks and saved HTML files).

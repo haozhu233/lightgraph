@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A first graph</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#ffffff}#graph{width:100%;height:100vh}</style>
+</head>
+<body>
+<div id="graph"></div>
+<script type="application/json" id="nodes">[{"id": "Amy"}, {"id": "Ben"}, {"id": "Cat"}, {"id": "Dan"}, {"id": "Eve"}, {"id": "Fay"}]</script>
+<script type="application/json" id="config">{"nodes": {"defaultSize": 7}, "edges": {"showArrows": false, "weightToWidth": false, "weightToOpacity": false, "weightWidthRange": [0.5, 4], "weightOpacityRange": [0.05, 0.6]}, "highlight": {"enabled": true, "neighborFade": 0.15}, "egoFilter": {"enabled": true, "depth": 1}, "labels": {"visible": true, "fontSize": 5}, "simulation": {"chargeStrength": 4000, "linkDistance": 100, "groupAttraction": 0.3, "warmupTicks": "auto"}, "groups": {"showEllipses": true}, "canvas": {"autoFit": true, "zoomMin": 0.1, "zoomMax": 5, "exportScale": 2}, "ui": {"theme": "light", "showLegend": true, "showStatistics": false, "showTooltips": true}, "layout": "force"}</script>
+<script type="application/json" id="edges">[{"source": "Amy", "target": "Ben", "weight": 3.0}, {"source": "Amy", "target": "Cat", "weight": 1.0}, {"source": "Ben", "target": "Cat", "weight": 2.0}, {"source": "Cat", "target": "Dan", "weight": 1.0}, {"source": "Dan", "target": "Eve", "weight": 2.0}, {"source": "Dan", "target": "Fay", "weight": 1.0}, {"source": "Eve", "target": "Fay", "weight": 3.0}]</script>
+<script src="../demo/d3.v7.min.js"></script>
+<script src="../demo/lightgraph.js"></script>
+<script>
+(function () {
+  var nodes = JSON.parse(document.getElementById('nodes').textContent);
+  var config = JSON.parse(document.getElementById('config').textContent);
+  var inline = document.getElementById('edges');
+  var load = inline
+    ? Promise.resolve(JSON.parse(inline.textContent))
+    : fetch('').then(function (r) { return r.json(); });
+  load.then(function (edges) {
+    new window.lightGraph.LightGraph(document.getElementById('graph'), {
+      nodes: nodes, edges: edges, config: config
+    });
+  });
+})();
+</script>
+</body>
+</html>

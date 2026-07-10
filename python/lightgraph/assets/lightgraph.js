@@ -27,15 +27,24 @@
             defaultOpacity: 1.0,
             borderColor: '#ffffff',
             borderWidth: 1,
-            selectedBorderColor: '#000000'
+            selectedBorderColor: '#000000',
+            // Render-time multiplier on all node sizes (UI slider).
+            sizeScale: 1
         },
         edges: {
             defaultColor: '#333333',
             selectedColor: '#999999',
             defaultOpacity: 0.1,
             selectedOpacity: 0.6,
-            defaultWidth: 1,
+            defaultWidth: 0.3,
             selectedWidth: 2,
+            // Scale edge opacity (and, when weight-mapped widths make
+            // strokes thick, edge width) by on-screen ink density so dense
+            // graphs fade into a readable texture instead of a solid block.
+            // Disabled automatically when defaultOpacity is set explicitly.
+            autoOpacity: true,
+            // Render-time multiplier on all edge widths (UI slider).
+            widthScale: 1,
             showArrows: false,
             arrowSize: 10,
             arrowWidth: 5,
@@ -71,7 +80,13 @@
             centerStrength: 1.0,
             // Pull nodes toward their group's centroid so groups separate
             // spatially (makes ellipses tight and meaningful). 0 disables.
-            groupAttraction: 0.3
+            groupAttraction: 0.3,
+            // Synchronous layout ticks run before the first paint so the
+            // graph appears already untangled instead of unfolding from
+            // random positions. 'auto' spends a roughly fixed time budget
+            // (full settle for small graphs, fewer ticks as size grows);
+            // a number forces that tick count; 0 disables.
+            warmupTicks: 'auto'
         },
         groups: {
             fillOpacity: 0.125,
@@ -261,6 +276,8 @@
         // Adaptive defaults apply only where the user did not set a value.
         let userSetEdgeOpacity =
             !!(userConfig.edges && userConfig.edges.defaultOpacity !== undefined);
+        let userSetEdgeWidth =
+            !!(userConfig.edges && userConfig.edges.widthScale !== undefined);
 
         // =====================================================================
         // 1. Visual Element Section -------------------------------------------
@@ -376,6 +393,18 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .lg-switch:checked::after { left: 16px; }
+.lg-panel::-webkit-scrollbar { width: 8px; }
+.lg-panel::-webkit-scrollbar-thumb { background: var(--lg-border); border-radius: 4px; }
+.lg-panel::-webkit-scrollbar-track { background: transparent; }
+.lg-slider-row { padding: 6px 0; }
+.lg-slider-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px;
+}
+.lg-slider-value { color: var(--lg-muted); font-variant-numeric: tabular-nums; }
+.lg-slider {
+    width: 100%; margin: 0; accent-color: var(--lg-accent); cursor: pointer;
+}
 .lg-section-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 0; cursor: pointer; user-select: none;
@@ -427,6 +456,33 @@
             });
             input.addEventListener('change', () => onChange(input.checked));
             row.append(text, input);
+            return [row, input];
+        }
+
+        // A labelled range slider row with a live value readout.
+        function createSliderRow({ id, label, min, max, step = 1, value, format, onInput }) {
+            const row = createElement('div', { className: 'lg-slider-row' });
+            const top = createElement('div', { className: 'lg-slider-label' });
+            const text = createElement('span', { textContent: label });
+            const readout = createElement('span', {
+                className: 'lg-slider-value', textContent: format(value)
+            });
+            top.append(text, readout);
+            const input = createElement('input', { id, type: 'range', className: 'lg-slider' });
+            input.min = min;
+            input.max = max;
+            input.step = step;
+            input.value = value;
+            input.addEventListener('input', () => {
+                readout.textContent = format(Number(input.value));
+                onInput(Number(input.value));
+            });
+            // Called when the value is changed programmatically (auto mode).
+            input.sync = (v) => {
+                input.value = v;
+                readout.textContent = format(Number(input.value));
+            };
+            row.append(top, input);
             return [row, input];
         }
 
@@ -524,7 +580,12 @@
             width: '280px',
             transition: 'right 0.25s ease',
             padding: '4px 16px 12px',
-            zIndex: 999
+            zIndex: 999,
+            // Never taller than the container: scroll on small screens.
+            maxHeight: 'calc(100% - 74px)',
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            boxSizing: 'border-box'
         });
 
         // Search with embedded icon, match count, and clear button
@@ -588,6 +649,64 @@
         });
         viewContent.append(arrowsRow, labelsRow, ellipsesRow, legendRow, statsRow);
 
+        // Style Section: sliders for edge opacity/width and node size.
+        // Moving the opacity slider takes over from the automatic
+        // density-based styling entirely; moving the width slider takes
+        // over just the width half; the switch hands control back.
+        const [styleHeader, styleContent] = createCollapsibleSection('Style', false);
+        const [edgeOpacityRow, edgeOpacitySlider] = createSliderRow({
+            id: 'edgeOpacitySlider', label: 'Edge opacity',
+            min: 1, max: 100, value: Math.round(baseEdgeAlpha() * 100),
+            format: (v) => v + '%',
+            onInput: (v) => {
+                config.edges.autoOpacity = false;
+                autoOpacityToggle.checked = false;
+                edgeAlphaFactor = (v / 100) / Math.max(baseEdgeAlpha(), 0.001);
+                requestRender();
+            }
+        });
+        const [autoOpacityRow, autoOpacityToggle] = createSwitchRow({
+            id: 'autoOpacityToggle', label: 'Auto edge style',
+            checked: autoEdgeAlphaActive(),
+            onChange: (checked) => {
+                config.edges.autoOpacity = checked;
+                if (checked) {
+                    userSetEdgeOpacity = false;
+                    userSetEdgeWidth = false;
+                    updateEdgeAlpha();
+                } else {
+                    edgeAlphaFactor = 1;
+                    edgeWidthFactor = 1;
+                    edgeOpacitySlider.sync(Math.round(baseEdgeAlpha() * 100));
+                    edgeWidthSlider.sync(Math.round(config.edges.widthScale * 100));
+                }
+                requestRender();
+            }
+        });
+        const [edgeWidthRow, edgeWidthSlider] = createSliderRow({
+            id: 'edgeWidthSlider', label: 'Edge width',
+            min: 25, max: 300, value: Math.round(config.edges.widthScale * 100),
+            format: (v) => (v / 100).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'x',
+            onInput: (v) => {
+                config.edges.widthScale = v / 100;
+                userSetEdgeWidth = true;
+                edgeWidthFactor = 1;
+                // Re-budget opacity for the new stroke width.
+                updateEdgeAlpha();
+                requestRender();
+            }
+        });
+        const [nodeSizeRow, nodeSizeSlider] = createSliderRow({
+            id: 'nodeSizeSlider', label: 'Node size',
+            min: 25, max: 300, value: Math.round(config.nodes.sizeScale * 100),
+            format: (v) => (v / 100).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'x',
+            onInput: (v) => {
+                config.nodes.sizeScale = v / 100;
+                requestRender();
+            }
+        });
+        styleContent.append(edgeOpacityRow, autoOpacityRow, edgeWidthRow, nodeSizeRow);
+
         // Layout Section: segmented layout choice + restart
         const [layoutHeader, layoutContent] = createCollapsibleSection('Layout', false);
         const forceLayoutButton = createButton({
@@ -634,7 +753,8 @@
         exportRow.append(exportPNGButton, exportSVGButton, exportJSONButton);
         exportContent.append(exportRow);
 
-        sceneSidebar.append(viewHeader, viewContent, layoutHeader, layoutContent, exportHeader, exportContent);
+        sceneSidebar.append(viewHeader, viewContent, styleHeader, styleContent,
+            layoutHeader, layoutContent, exportHeader, exportContent);
 
 
         const floatingInput = createElement('div', {
@@ -790,6 +910,12 @@
                     userInteracted = true;
                 }
                 transform = event.transform;
+                // Overlap density scales with zoom; refresh the auto edge
+                // alpha once k drifts ~30% from the last computation.
+                if (autoEdgeAlphaActive() &&
+                    (transform.k > edgeAlphaK * 1.3 || transform.k < edgeAlphaK / 1.3)) {
+                    updateEdgeAlpha();
+                }
                 requestRender();
             });
         // #endregion
@@ -985,6 +1111,130 @@
             });
         }
 
+        // ---- Adaptive edge opacity + width (ink budget) ------------------
+        // Overlapping strokes accumulate alpha (N edges at alpha a cover
+        // 1-(1-a)^N), so any fixed opacity turns dense graphs into a solid
+        // block when zoomed out yet looks fine zoomed in. Instead we
+        // estimate how much "ink" the edges deposit per viewport pixel at
+        // the current zoom and scale render-time alpha/width factors to
+        // keep that near a fixed budget. When strokes are thicker than a
+        // hairline (e.g. weightToWidth) the correction is split between
+        // width and alpha — thin-and-visible reads better than
+        // thick-and-invisible; hairline strokes put it all on alpha.
+        // Recomputed on data load, zoom changes (with hysteresis), and
+        // periodically while the layout is moving — never per frame.
+        let edgeAlphaFactor = 1;
+        let edgeWidthFactor = 1;
+        let edgeAlphaK = 0; // transform.k at the last recompute
+        let tickCounter = 0;
+
+        function autoEdgeAlphaActive() {
+            return config.edges.autoOpacity && !userSetEdgeOpacity;
+        }
+
+        function autoEdgeWidthActive() {
+            return autoEdgeAlphaActive() && !userSetEdgeWidth;
+        }
+
+        function baseEdgeAlpha() {
+            if (config.edges.weightToOpacity) {
+                const [lo, hi] = config.edges.weightOpacityRange;
+                return (lo + hi) / 2;
+            }
+            return config.edges.defaultOpacity;
+        }
+
+        // On-screen (CSS px) stroke width: floored at a hairline so edges
+        // never vanish, capped so zooming in doesn't produce ropes. Widths
+        // configured below the hairline are honored as-is.
+        function screenEdgeWidth(width) {
+            const nominal = width * config.edges.widthScale;
+            return Math.max(Math.min(0.5, nominal),
+                Math.min(nominal * transform.k, nominal * 1.5));
+        }
+
+        function updateEdgeAlpha() {
+            if (!autoEdgeAlphaActive() || !edges.length || !nodes.length) return;
+            edgeAlphaK = transform.k;
+            // Mean edge length and node bounding box from a bounded sample,
+            // so this stays O(1)-ish regardless of graph size.
+            const eStride = Math.max(1, Math.floor(edges.length / 400));
+            const useWidth = config.edges.weightToWidth;
+            const weightSpan = weightExtent[1] - weightExtent[0];
+            const [wLo, wHi] = config.edges.weightWidthRange;
+            let totalLen = 0;
+            let totalWidth = 0;
+            let counted = 0;
+            for (let i = 0; i < edges.length; i += eStride) {
+                const e = edges[i];
+                if (typeof e.source !== 'object' || typeof e.target !== 'object') continue;
+                const dx = e.source.x - e.target.x;
+                const dy = e.source.y - e.target.y;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                if (!Number.isFinite(len)) continue;
+                totalLen += len;
+                // Budget for the *mapped* width, not defaultWidth, so
+                // weight-to-width graphs account for their thicker strokes.
+                if (useWidth && weightSpan > 0) {
+                    const w = e.weight !== undefined ? e.weight : weightExtent[0];
+                    const t = Math.max(0, Math.min(1, (w - weightExtent[0]) / weightSpan));
+                    totalWidth += wLo + t * (wHi - wLo);
+                } else {
+                    totalWidth += config.edges.defaultWidth;
+                }
+                counted++;
+            }
+            if (!counted) return;
+            const nStride = Math.max(1, Math.floor(nodes.length / 400));
+            let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            for (let i = 0; i < nodes.length; i += nStride) {
+                const n = nodes[i];
+                if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) continue;
+                if (n.x < x0) x0 = n.x;
+                if (n.x > x1) x1 = n.x;
+                if (n.y < y0) y0 = n.y;
+                if (n.y > y1) y1 = n.y;
+            }
+            if (!(x1 > x0) || !(y1 > y0)) return;
+
+            const k = transform.k;
+            const viewArea = Math.max(viewWidth * viewHeight, 1);
+            // Ink per edge on screen at full alpha, discounted by the share
+            // of the graph actually inside the viewport when zoomed in.
+            const meanScreenLen = (totalLen / counted) * k;
+            const visibleShare = Math.min(1,
+                viewArea / Math.max((x1 - x0) * (y1 - y0) * k * k, 1));
+            const meanScreenWidth = screenEdgeWidth(totalWidth / counted);
+            const coverage = edges.length * meanScreenLen *
+                meanScreenWidth * visibleShare / viewArea;
+            // Aim for ~40% accumulated alpha coverage. Only ever dim: sparse
+            // graphs keep their configured style (factors cap at 1), and
+            // the effective alpha never drops below 0.02.
+            const base = Math.max(baseEdgeAlpha(), 0.001);
+            const ideal = 0.4 / Math.max(coverage, 1e-6);
+            const needed = Math.min(1, ideal / base);
+            // Width absorbs up to half the correction (in log space), but
+            // the mean stroke never shrinks below the 0.5px hairline — so
+            // hairline-width graphs put the whole correction on alpha,
+            // leaving their behavior unchanged.
+            let widthFactor = 1;
+            if (autoEdgeWidthActive()) {
+                widthFactor = Math.max(Math.sqrt(needed),
+                    Math.min(1, 0.5 / Math.max(meanScreenWidth, 1e-6)));
+            }
+            const factor = Math.max(0.02 / base, needed / widthFactor);
+            // Quantize so hexToRgba's cache stays effective.
+            edgeAlphaFactor = Math.round(factor * 200) / 200;
+            edgeWidthFactor = Math.round(widthFactor * 200) / 200;
+            if (edgeOpacitySlider && autoEdgeAlphaActive()) {
+                edgeOpacitySlider.sync(Math.round(base * edgeAlphaFactor * 100));
+            }
+            if (edgeWidthSlider && autoEdgeWidthActive()) {
+                edgeWidthSlider.sync(
+                    Math.round(config.edges.widthScale * edgeWidthFactor * 100));
+            }
+        }
+
         function rebuildRenderBatches() {
             const useWidth = config.edges.weightToWidth;
             const useOpacity = config.edges.weightToOpacity;
@@ -1026,7 +1276,7 @@
                         opacity = lo + tc * (hi - lo);
                     }
                     if (isFaded) opacity *= fade;
-                    batch = { color, width, opacity, items: [] };
+                    batch = { color, width, opacity, selected: isSelected, items: [] };
                     edgeGroups.set(key, batch);
                 }
                 batch.items.push(d);
@@ -1107,8 +1357,16 @@
                     context.lineTo(tx, ty);
                     if (showArrows) appendArrow(d);
                 }
-                context.strokeStyle = hexToRgba(batch.color, batch.opacity);
-                context.lineWidth = batch.width;
+                // Selected edges keep full configured opacity and width so
+                // the selection stays prominent in dense views.
+                const alpha = batch.selected ? batch.opacity
+                    : Math.min(1, Math.round(batch.opacity * edgeAlphaFactor * 100) / 100);
+                context.strokeStyle = hexToRgba(batch.color, alpha);
+                const width = batch.selected ? batch.width
+                    : batch.width * edgeWidthFactor;
+                // lineWidth is in graph units (the context is scaled by k);
+                // divide the clamped screen width back down.
+                context.lineWidth = screenEdgeWidth(width) / transform.k;
                 context.stroke();
             }
         }
@@ -1116,11 +1374,14 @@
         // Adds arrow-head segments to the path currently being built by
         // drawEdges; stroked together with the rest of the batch.
         function appendArrow(d) {
-            const arrowLength = config.edges.arrowSize;
             const arrowWidth = config.edges.arrowWidth;
+            // Place the chevron tip on the target node's border (matching
+            // the drawn radius), not offset from its center.
+            const radius = ((d.target.size || config.nodes.defaultSize)
+                * config.nodes.sizeScale) / 2;
             const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x);
-            const arrowX = d.target.x - arrowLength * Math.cos(angle);
-            const arrowY = d.target.y - arrowLength * Math.sin(angle);
+            const arrowX = d.target.x - radius * Math.cos(angle);
+            const arrowY = d.target.y - radius * Math.sin(angle);
 
             context.moveTo(arrowX, arrowY);
             context.lineTo(arrowX - arrowWidth * Math.cos(angle - Math.PI / 6), arrowY - arrowWidth * Math.sin(angle - Math.PI / 6));
@@ -1129,12 +1390,13 @@
         }
 
         function drawNodes() {
-            const bounds = viewportBounds(maxNodeSize + config.nodes.selectedSizeIncrease);
+            const sizeScale = config.nodes.sizeScale;
+            const bounds = viewportBounds(maxNodeSize * sizeScale + config.nodes.selectedSizeIncrease);
             for (const batch of nodeBatches) {
                 context.beginPath();
                 for (const d of batch.items) {
                     if (d.x < bounds.x0 || d.x > bounds.x1 || d.y < bounds.y0 || d.y > bounds.y1) continue;
-                    const size = d.size || config.nodes.defaultSize;
+                    const size = (d.size || config.nodes.defaultSize) * sizeScale;
                     const radius = (batch.isSelected ? size + config.nodes.selectedSizeIncrease : size) / 2;
                     context.moveTo(d.x + radius, d.y);
                     context.arc(d.x, d.y, radius, 0, 2 * Math.PI);
@@ -1181,7 +1443,7 @@
                     d._labelWidth = context.measureText(d.id).width;
                     d._labelFont = font;
                 }
-                const size = d.size || config.nodes.defaultSize;
+                const size = (d.size || config.nodes.defaultSize) * config.nodes.sizeScale;
                 context.fillText(d.id, d.x - d._labelWidth - 4, d.y + size / 2 + 4);
             }
         }
@@ -1245,7 +1507,7 @@
             const minRadius = 6 / transform.k;
             return nodes.find(node => {
                 if (egoSet && !egoSet.has(node)) return false;
-                const size = node.size || config.nodes.defaultSize;
+                const size = (node.size || config.nodes.defaultSize) * config.nodes.sizeScale;
                 const drawn = (selectedNodes.has(node) ? size + config.nodes.selectedSizeIncrease : size) / 2;
                 const r = Math.max(drawn, minRadius);
                 const dx = node.x - x;
@@ -1270,14 +1532,8 @@
             nodes = newNodes;
             edges = newEdges;
 
-            // Adaptive edge opacity: faint for hairballs, solid for small
-            // graphs — unless the user pinned a value.
-            if (!userSetEdgeOpacity) {
-                config.edges.defaultOpacity = Math.max(
-                    0.05, Math.min(0.5, 60 / Math.max(edges.length, 1)));
-            }
-
             recalculateForce();
+            updateEdgeAlpha();
             updateLegend();
             updateStatistics();
             // Reset d3-zoom's internal state to match the fresh transform;
@@ -1320,7 +1576,7 @@
                     simulation = d3.forceSimulation(nodes)
                         .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistance).strength(0.1))
                         .force("charge", d3.forceManyBody().strength(-simulationForce * 0.1))
-                        .on("tick", requestRender)
+                        .on("tick", handleSimulationTick)
                         .on("end", handleSimulationEnd);
                 } else {
                     const clusterGroups = config.simulation.groupAttraction > 0
@@ -1339,11 +1595,13 @@
                         .force("link", d3.forceLink(edges).id(d => d.id).distance(linkDistanceFor))
                         .force("charge", d3.forceManyBody().strength(-simulationForce))
                         .force("center", d3.forceCenter(lightGraph.clientWidth / 2, lightGraph.clientHeight / 2))
-                        .on("tick", requestRender)
+                        .on("tick", handleSimulationTick)
                         .on("end", handleSimulationEnd);
                     if (clusterGroups) {
                         simulation.force("cluster", forceCluster(config.simulation.groupAttraction));
                     }
+                    const warmup = warmupTickCount();
+                    if (warmup > 0) simulation.tick(warmup);
                 }
 
                 // forceLink has resolved edge endpoints to node objects now;
@@ -1395,9 +1653,35 @@
             requestRender();
         }
 
+        // 'auto' warmup: run the whole layout up front when that is cheap,
+        // and back off toward ~50 ticks (still enough to untangle the
+        // initial random placement) as the per-tick cost grows.
+        function warmupTickCount() {
+            const setting = config.simulation.warmupTicks;
+            if (setting === 'auto') {
+                return Math.max(50, Math.min(300,
+                    Math.round(150000 / Math.max(nodes.length + edges.length, 1))));
+            }
+            return Math.max(0, Math.floor(setting) || 0);
+        }
+
         // Fit the view once the force layout settles, unless the user
         // already navigated somewhere on purpose.
+        function handleSimulationTick() {
+            // Layout motion stretches edges; refresh the auto alpha every
+            // 64 ticks rather than every frame.
+            if ((tickCounter++ & 63) === 0) updateEdgeAlpha();
+            // Track the settling layout with the camera so it stays framed
+            // while it expands; hands off after the first settle or as soon
+            // as the user pans, zooms, or drags a node.
+            if (config.canvas.autoFit && !autoFitDone && !userInteracted) {
+                fitToNodes(egoSet ? nodes.filter(node => egoSet.has(node)) : nodes);
+            }
+            requestRender();
+        }
+
         function handleSimulationEnd() {
+            updateEdgeAlpha();
             if (config.canvas.autoFit && !autoFitDone && !userInteracted) {
                 autoFitDone = true;
                 self.zoomToFit();
@@ -1495,6 +1779,9 @@
                     draggingNode.y = transformedMouseY + dragOffsetY;
                 }
                 dragMoved = true;
+                // A node drag counts as taking over the view: stop the
+                // camera from re-fitting mid-drag.
+                userInteracted = true;
                 if (simulation) {
                     simulation.alpha(0.1).restart();
                 }
@@ -1741,8 +2028,10 @@
                 line.setAttribute('x2', edge.target.x);
                 line.setAttribute('y2', edge.target.y);
                 line.setAttribute('stroke', config.edges.defaultColor);
-                line.setAttribute('stroke-opacity', config.edges.defaultOpacity);
-                line.setAttribute('stroke-width', config.edges.defaultWidth);
+                line.setAttribute('stroke-opacity',
+                    Math.min(1, config.edges.defaultOpacity * edgeAlphaFactor));
+                line.setAttribute('stroke-width',
+                    config.edges.defaultWidth * config.edges.widthScale * edgeWidthFactor);
                 g.appendChild(line);
             });
 
@@ -1751,7 +2040,8 @@
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', node.x);
                 circle.setAttribute('cy', node.y);
-                circle.setAttribute('r', (node.size || config.nodes.defaultSize) / 2);
+                circle.setAttribute('r',
+                    (node.size || config.nodes.defaultSize) * config.nodes.sizeScale / 2);
                 circle.setAttribute('fill', node.group ? groupColorScale(node.group) : (node.color || config.nodes.defaultColor));
                 circle.setAttribute('stroke', config.nodes.borderColor);
                 circle.setAttribute('stroke-width', config.nodes.borderWidth);
@@ -1847,6 +2137,18 @@
             if (partial.edges && partial.edges.defaultOpacity !== undefined) {
                 userSetEdgeOpacity = true;
             }
+            if (partial.edges && partial.edges.widthScale !== undefined) {
+                userSetEdgeWidth = true;
+            }
+            if (!autoEdgeWidthActive()) {
+                edgeWidthFactor = 1;
+            }
+            if (autoEdgeAlphaActive()) {
+                updateEdgeAlpha();
+            } else {
+                edgeAlphaFactor = 1;
+            }
+            autoOpacityToggle.checked = autoEdgeAlphaActive();
             if (partial.canvas && 'pixelRatio' in partial.canvas) {
                 sizeCanvas();
             }
@@ -1890,6 +2192,18 @@
         // neighborhood) fits with the given padding.
         this.zoomToFit = (padding = 40) => {
             fitToNodes(egoSet ? nodes.filter(node => egoSet.has(node)) : nodes, padding);
+            return this;
+        };
+
+        // Run the force layout synchronously (no animation) and render the
+        // settled result — for static exports and headless rendering.
+        this.settle = (ticks = 300) => {
+            if (simulation && simulation.stop && simulation.tick) {
+                simulation.stop();
+                simulation.tick(ticks);
+                handleSimulationEnd();
+            }
+            render();
             return this;
         };
 

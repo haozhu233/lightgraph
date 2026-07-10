@@ -1,45 +1,89 @@
 #' Create a lightgraph network visualization
 #'
 #' This function creates an interactive network visualization using the lightGraph
-#' JavaScript library via htmlwidgets.
+#' JavaScript library via htmlwidgets. Its parameters mirror the Python
+#' binding's \code{net_vis()} one-to-one, and expose the full lightGraph JS
+#' configuration.
 #'
 #' @param nodes A data frame with node information. Must contain an 'id' column.
 #'   Optional columns: 'group' for node grouping, 'color' for custom colors,
-#'   'size' for node sizes.
+#'   'size' for node sizes. May be omitted (NULL) when \code{edges} is given;
+#'   nodes are then derived from the edge list.
 #' @param edges A data frame with edge information. Must contain 'source' and 'target'
 #'   columns. Optional 'weight' column for edge weights.
-#' @param show_arrows Logical, whether to show directional arrows on edges (default: FALSE).
-#' @param show_labels Logical, whether to show node labels (default: TRUE).
-#' @param show_ellipses Logical, whether to show group ellipses (default: TRUE).
-#' @param show_legend Logical, whether to show the group legend (default: TRUE).
-#' @param show_statistics Logical, whether to show the statistics panel (default: FALSE).
-#' @param show_tooltips Logical, whether to show tooltips on hover (default: TRUE).
-#' @param layout Character, layout algorithm: "force" or "circular" (default: "force").
-#' @param simulation_strength Numeric, repulsion strength for force layout (default: 4000).
-#' @param link_distance Numeric, target distance between connected nodes (default: 100).
-#' @param node_size Numeric, default size for nodes (default: 7).
-#' @param label_font_size Numeric, font size for labels (default: 5).
-#' @param edge_opacity Numeric, opacity for edges 0-1. Defaults to an
-#'   adaptive value based on edge count.
-#' @param group_attraction Numeric, strength of the pull toward each group's
-#'   centroid in the force layout (default: 0.3; 0 disables).
-#' @param theme Character, UI/canvas color theme: "light" or "dark"
-#'   (default: "light").
-#' @param edge_weight_to_width Logical, scale edge width by weight (default: FALSE).
-#' @param edge_weight_to_opacity Logical, scale edge opacity by weight (default: FALSE).
-#' @param highlight_neighbors Logical, fade everything outside the 1-hop
-#'   neighborhood of hovered/selected nodes (default: TRUE).
+#' @param node_groups An optional named vector mapping node ids to group
+#'   labels, or the string "auto" to detect communities automatically via
+#'   \code{\link{lg_communities}}. Values given here win over an existing
+#'   'group' column in \code{nodes}.
+#' @param remove_unconnected Logical, whether to remove nodes with no
+#'   connections (default: FALSE; the Python binding defaults to TRUE
+#'   because adjacency-matrix workflows often carry empty rows).
 #' @param node_metric Optional named numeric vector (names = node ids) mapped
-#'   to node size and/or color per metric_map. Explicit size/color columns in
-#'   nodes take precedence.
+#'   to node size and/or color per metric_map — see the lg_* analytics
+#'   functions, e.g. \code{\link{lg_pagerank}}. Explicit size/color columns
+#'   in nodes take precedence.
 #' @param metric_map Character, which channel node_metric drives: "size",
 #'   "color", or "both" (default: "size").
 #' @param metric_size_range Numeric length-2, node size range for
 #'   metric-driven sizing (default: c(4, 20)).
 #' @param metric_colors Character length-2, low/high hex colors for
 #'   metric-driven coloring (default: c("#c6dbef", "#08306b")).
+#' @param show_arrows Logical, whether to show directional arrows on edges (default: FALSE).
+#' @param show_labels Logical, whether to show node labels (default: TRUE).
+#' @param show_ellipses Logical, whether to show group ellipses (default: TRUE).
+#' @param show_legend Logical, whether to show the group legend (default: TRUE).
+#' @param show_statistics Logical, whether to show the statistics panel (default: FALSE).
+#' @param show_tooltips Logical, whether to show tooltips on hover (default: TRUE).
+#' @param highlight_neighbors Logical, fade everything outside the 1-hop
+#'   neighborhood of hovered/selected nodes (default: TRUE).
+#' @param neighbor_fade Numeric, opacity multiplier applied to faded elements
+#'   while highlighting (default: 0.15).
+#' @param ego_filter Logical, double-clicking a node shows only its k-hop
+#'   neighborhood; double-click empty space or press Escape to restore
+#'   (default: TRUE).
+#' @param ego_depth Integer, neighborhood depth in hops for the ego filter
+#'   (default: 1).
+#' @param layout Character, layout algorithm: "force" or "circular" (default: "force").
+#' @param simulation_strength Numeric, repulsion strength for force layout (default: 4000).
+#' @param link_distance Numeric, target distance between connected nodes (default: 100).
+#' @param group_attraction Numeric, strength of the pull toward each group's
+#'   centroid in the force layout (default: 0.3; 0 disables).
+#' @param warmup_ticks "auto" or integer. Synchronous layout ticks run before
+#'   the first paint so the graph appears already untangled. "auto" spends a
+#'   roughly fixed time budget; a number forces that tick count; 0 disables.
+#' @param node_size Numeric, default size for nodes (default: 7).
+#' @param node_color Character, default node fill color (hex). Defaults to
+#'   the theme color.
+#' @param label_font_size Numeric, font size for labels (default: 5).
+#' @param edge_width Numeric, base width for edges (JS default 0.3).
+#' @param edge_color Character, default edge color (hex). Defaults to the
+#'   theme color.
+#' @param edge_opacity Numeric, opacity for edges 0-1. By default opacity
+#'   adapts automatically to the on-screen edge density and zoom level;
+#'   setting a value pins it.
+#' @param edge_weight_to_width Logical, scale edge width by weight (default: FALSE).
+#' @param edge_weight_to_opacity Logical, scale edge opacity by weight (default: FALSE).
+#' @param weight_width_range Numeric length-2, edge width range used by
+#'   edge_weight_to_width (default: c(0.5, 4)).
+#' @param weight_opacity_range Numeric length-2, edge opacity range used by
+#'   edge_weight_to_opacity (default: c(0.05, 0.6)).
+#' @param theme Character, UI/canvas color theme: "light" or "dark"
+#'   (default: "light").
 #' @param background_color Character, background color hex code. Defaults to
 #'   white in the light theme and near-black in the dark theme.
+#' @param auto_fit Logical, zoom to fit the graph once the layout settles;
+#'   skipped if the user already panned/zoomed manually (default: TRUE).
+#' @param zoom_range Numeric length-2, minimum and maximum zoom factors
+#'   (default: c(0.1, 5)).
+#' @param pixel_ratio Numeric, backing-store resolution multiplier. Defaults
+#'   to the display's devicePixelRatio (sharp on retina); set 1 to trade
+#'   sharpness for speed on very large graphs.
+#' @param export_scale Numeric, resolution multiplier for PNG export,
+#'   relative to on-screen size (default: 2).
+#' @param config Optional named list of raw lightGraph config (JS shape,
+#'   e.g. \code{list(nodes = list(borderWidth = 2))}) deep-merged over
+#'   everything above — full access to any JS option without a dedicated
+#'   argument.
 #' @param width Width of the visualization (optional, defaults to automatic sizing).
 #' @param height Height of the visualization (optional, defaults to 800px).
 #' @param elementId An optional element ID for the widget.
@@ -63,6 +107,14 @@
 #' # Create visualization with default settings
 #' lightgraph(nodes, edges)
 #'
+#' # Nodes can be derived from the edge list, with communities detected
+#' # and PageRank mapped to node size:
+#' lightgraph(
+#'   edges = edges,
+#'   node_groups = "auto",
+#'   node_metric = lg_pagerank(edges)
+#' )
+#'
 #' # Create visualization with custom settings
 #' lightgraph(nodes, edges,
 #'   layout = "circular",
@@ -73,51 +125,93 @@
 #'
 #' @import htmlwidgets
 #' @export
-lightgraph <- function(nodes, edges,
+lightgraph <- function(nodes = NULL, edges,
+                       node_groups = NULL,
+                       remove_unconnected = FALSE,
+                       node_metric = NULL,
+                       metric_map = "size",
+                       metric_size_range = c(4, 20),
+                       metric_colors = c("#c6dbef", "#08306b"),
                        show_arrows = FALSE,
                        show_labels = TRUE,
                        show_ellipses = TRUE,
                        show_legend = TRUE,
                        show_statistics = FALSE,
                        show_tooltips = TRUE,
+                       highlight_neighbors = TRUE,
+                       neighbor_fade = 0.15,
+                       ego_filter = TRUE,
+                       ego_depth = 1,
                        layout = "force",
                        simulation_strength = 4000,
                        link_distance = 100,
+                       group_attraction = 0.3,
+                       warmup_ticks = "auto",
                        node_size = 7,
+                       node_color = NULL,
                        label_font_size = 5,
+                       edge_width = NULL,
+                       edge_color = NULL,
                        edge_opacity = NULL,
                        edge_weight_to_width = FALSE,
                        edge_weight_to_opacity = FALSE,
-                       highlight_neighbors = TRUE,
-                       group_attraction = 0.3,
+                       weight_width_range = c(0.5, 4),
+                       weight_opacity_range = c(0.05, 0.6),
                        theme = "light",
-                       node_metric = NULL,
-                       metric_map = "size",
-                       metric_size_range = c(4, 20),
-                       metric_colors = c("#c6dbef", "#08306b"),
                        background_color = NULL,
+                       auto_fit = TRUE,
+                       zoom_range = c(0.1, 5),
+                       pixel_ratio = NULL,
+                       export_scale = 2,
+                       config = NULL,
                        width = NULL,
                        height = "800px",
                        elementId = NULL) {
 
   # Validate inputs
-  if (!is.data.frame(nodes)) {
-    stop("nodes must be a data frame")
-  }
   if (!is.data.frame(edges)) {
     stop("edges must be a data frame")
   }
-  if (!"id" %in% names(nodes)) {
-    stop("nodes data frame must contain an 'id' column")
-  }
   if (!all(c("source", "target") %in% names(edges))) {
     stop("edges data frame must contain 'source' and 'target' columns")
+  }
+  if (is.null(nodes)) {
+    # Derive nodes from the edge list, preserving first appearance.
+    nodes <- data.frame(
+      id = unique(c(as.character(edges$source), as.character(edges$target))),
+      stringsAsFactors = FALSE
+    )
+  }
+  if (!is.data.frame(nodes)) {
+    stop("nodes must be a data frame")
+  }
+  if (!"id" %in% names(nodes)) {
+    stop("nodes data frame must contain an 'id' column")
   }
   if (!layout %in% c("force", "circular")) {
     stop("layout must be 'force' or 'circular'")
   }
   if (!metric_map %in% c("size", "color", "both")) {
     stop("metric_map must be 'size', 'color', or 'both'")
+  }
+
+  # Resolve node_groups ("auto" or a named vector) into the group column.
+  # Values given via node_groups win over an existing column.
+  if (!is.null(node_groups)) {
+    if (identical(node_groups, "auto")) {
+      node_groups <- lg_communities(edges)
+    }
+    resolved <- unlist(node_groups)[as.character(nodes$id)]
+    if (!"group" %in% names(nodes)) {
+      nodes$group <- NA_character_
+    }
+    nodes$group <- ifelse(is.na(resolved), as.character(nodes$group), resolved)
+  }
+
+  # Remove unconnected nodes if requested
+  if (remove_unconnected) {
+    connected <- c(as.character(edges$source), as.character(edges$target))
+    nodes <- nodes[as.character(nodes$id) %in% connected, , drop = FALSE]
   }
 
   # Map node_metric onto size and/or color columns (explicit columns win)
@@ -134,31 +228,31 @@ lightgraph <- function(nodes, edges,
       }
       if (metric_map %in% c("color", "both") && !"color" %in% names(nodes)) {
         ramp <- grDevices::colorRamp(metric_colors)
-        node_color <- rep(NA_character_, nrow(nodes))
+        node_col <- rep(NA_character_, nrow(nodes))
         rgb_vals <- ramp(t[finite])
-        node_color[finite] <- grDevices::rgb(
+        node_col[finite] <- grDevices::rgb(
           rgb_vals[, 1], rgb_vals[, 2], rgb_vals[, 3], maxColorValue = 255)
-        nodes$color <- node_color
+        nodes$color <- node_col
       }
     }
   }
 
   # Convert data frames to lists for JSON serialization
-  nodes_list <- lapply(1:nrow(nodes), function(i) {
+  nodes_list <- lapply(seq_len(nrow(nodes)), function(i) {
     node <- list(id = as.character(nodes$id[i]))
-    if ("group" %in% names(nodes)) {
+    if ("group" %in% names(nodes) && !is.na(nodes$group[i])) {
       node$group <- as.character(nodes$group[i])
     }
-    if ("color" %in% names(nodes)) {
+    if ("color" %in% names(nodes) && !is.na(nodes$color[i])) {
       node$color <- as.character(nodes$color[i])
     }
-    if ("size" %in% names(nodes)) {
+    if ("size" %in% names(nodes) && !is.na(nodes$size[i])) {
       node$size <- as.numeric(nodes$size[i])
     }
     node
   })
 
-  edges_list <- lapply(1:nrow(edges), function(i) {
+  edges_list <- lapply(seq_len(nrow(edges)), function(i) {
     edge <- list(
       source = as.character(edges$source[i]),
       target = as.character(edges$target[i])
@@ -171,18 +265,26 @@ lightgraph <- function(nodes, edges,
     edge
   })
 
-  # Build configuration
-  config <- list(
+  # Build configuration. Omitted keys (rather than nulls) let the JS side
+  # apply its adaptive/theme-aware defaults.
+  graph_config <- list(
     nodes = list(
       defaultSize = node_size
     ),
     edges = list(
       showArrows = show_arrows,
       weightToWidth = edge_weight_to_width,
-      weightToOpacity = edge_weight_to_opacity
+      weightToOpacity = edge_weight_to_opacity,
+      weightWidthRange = weight_width_range,
+      weightOpacityRange = weight_opacity_range
     ),
     highlight = list(
-      enabled = highlight_neighbors
+      enabled = highlight_neighbors,
+      neighborFade = neighbor_fade
+    ),
+    egoFilter = list(
+      enabled = ego_filter,
+      depth = ego_depth
     ),
     labels = list(
       visible = show_labels,
@@ -191,37 +293,54 @@ lightgraph <- function(nodes, edges,
     simulation = list(
       chargeStrength = simulation_strength,
       linkDistance = link_distance,
-      groupAttraction = group_attraction
+      groupAttraction = group_attraction,
+      warmupTicks = warmup_ticks
     ),
     groups = list(
       showEllipses = show_ellipses
     ),
-    canvas = list(),
+    canvas = list(
+      autoFit = auto_fit,
+      zoomMin = zoom_range[1],
+      zoomMax = zoom_range[2],
+      exportScale = export_scale
+    ),
     ui = list(
+      theme = theme,
       showLegend = show_legend,
       showStatistics = show_statistics,
-      showTooltips = show_tooltips,
-      theme = theme
+      showTooltips = show_tooltips
     ),
     layout = layout
   )
-  # Omitted keys let the JS side apply adaptive/theme-aware defaults
+  # Only set optional values if explicitly provided
+  if (!is.null(node_color)) {
+    graph_config$nodes$defaultColor <- node_color
+  }
+  if (!is.null(edge_width)) {
+    graph_config$edges$defaultWidth <- edge_width
+  }
+  if (!is.null(edge_color)) {
+    graph_config$edges$defaultColor <- edge_color
+  }
   if (!is.null(edge_opacity)) {
-    config$edges$defaultOpacity <- edge_opacity
+    graph_config$edges$defaultOpacity <- edge_opacity
   }
   if (!is.null(background_color)) {
-    config$canvas$backgroundColor <- background_color
-  } else {
-    # jsonlite serializes empty lists as [], which the JS config merge
-    # rejects; drop the section entirely instead.
-    config$canvas <- NULL
+    graph_config$canvas$backgroundColor <- background_color
+  }
+  if (!is.null(pixel_ratio)) {
+    graph_config$canvas$pixelRatio <- pixel_ratio
+  }
+  if (!is.null(config)) {
+    graph_config <- utils::modifyList(graph_config, config)
   }
 
   # Create widget data
   x <- list(
     nodes = nodes_list,
     edges = edges_list,
-    config = config
+    config = graph_config
   )
 
   # Create widget

@@ -92,6 +92,15 @@ def main():
         print('R WIDGET SMOKE:', 'PASS' if r.get('pass') else 'FAIL')
         all_ok = all_ok and bool(r.get('pass'))
 
+    r = run_page('density_smoke_test.html')
+    if r is None:
+        print('DENSITY SMOKE: FAIL (no result received)')
+        all_ok = False
+    else:
+        print(json.dumps(r, indent=2))
+        print('DENSITY SMOKE:', 'PASS' if r.get('pass') else 'FAIL')
+        all_ok = all_ok and bool(r.get('pass'))
+
     # Simulate a retina display to exercise the devicePixelRatio path
     r = run_page('dpi_smoke_test.html', ('--force-device-scale-factor=2',))
     if r is None:

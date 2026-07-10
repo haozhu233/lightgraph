@@ -334,6 +334,59 @@ input {
   color: var(--text);
 }
 
+/* Compact embed (?embed=compact): graph + model/regenerate + sliders +
+   metrics only, sized for the ~700px docs content column. */
+body.compact {
+  background: transparent;
+}
+
+body.compact .demo-shell {
+  min-height: auto;
+  padding: 0;
+  gap: 10px;
+  grid-template-rows: minmax(420px, 1fr) auto;
+}
+
+body.compact .graph-stage,
+body.compact .control-deck {
+  box-shadow: none;
+}
+
+body.compact .interaction-note,
+body.compact .control-secondary,
+body.compact .demo-notes,
+body.compact #stage-subtitle {
+  display: none;
+}
+
+body.compact .control-deck {
+  padding: 10px;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+body.compact .control-main {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px 12px;
+  padding: 10px;
+}
+
+body.compact .model-control {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+body.compact #regenerate {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  min-width: 120px;
+}
+
+body.compact .range-row {
+  grid-row: 2;
+}
+
 @media (max-width: 1100px) {
   .control-deck {
     grid-template-columns: 1fr;
@@ -361,5 +414,13 @@ input {
   .stage-toolbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  body.compact .demo-shell {
+    grid-template-rows: minmax(380px, 1fr) auto;
+  }
+
+  body.compact .control-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

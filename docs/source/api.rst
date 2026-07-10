@@ -3,64 +3,77 @@ API Reference
 
 This page provides detailed documentation for the lightgraph API.
 
-Core Functions
+Visualization
+-------------
+
+.. autofunction:: lightgraph.net_vis
+
+.. autoclass:: lightgraph.NetworkVisualization
+   :members:
+
+Analytics
+---------
+
+Dependency-free graph analytics. Every function accepts the same flexible
+edge input as ``net_vis`` (tuples, dicts, or a pandas DataFrame) and
+returns plain dicts keyed by node name, ready to pass back to
+``net_vis(node_metric=..., node_groups=...)``.
+
+.. automodule:: lightgraph.analytics
+   :members: degree, betweenness, closeness, eigenvector, pagerank,
+             communities, components, neighbors, summary, top_nodes
+
+R Interface
+-----------
+
+The R package mirrors the Python interface one-to-one. ``lightgraph(nodes,
+edges, ...)`` accepts the same arguments as ``net_vis`` (in snake_case, as
+in Python), and the analytics functions carry an ``lg_`` prefix:
+
+.. list-table::
+   :header-rows: 1
+
+   * - R function
+     - Python equivalent
+   * - ``lightgraph()``
+     - ``net_vis()``
+   * - ``lg_degree()``
+     - ``lightgraph.degree()``
+   * - ``lg_betweenness()``
+     - ``lightgraph.betweenness()``
+   * - ``lg_closeness()``
+     - ``lightgraph.closeness()``
+   * - ``lg_eigenvector()``
+     - ``lightgraph.eigenvector()``
+   * - ``lg_pagerank()``
+     - ``lightgraph.pagerank()``
+   * - ``lg_communities()``
+     - ``lightgraph.communities()``
+   * - ``lg_components()``
+     - ``lightgraph.components()``
+   * - ``lg_neighbors()``
+     - ``lightgraph.neighbors()``
+   * - ``lg_summary()``
+     - ``lightgraph.summary()``
+   * - ``lg_top_nodes()``
+     - ``lightgraph.top_nodes()``
+   * - ``lightgraphOutput()``
+     - (Shiny output binding)
+   * - ``renderLightgraph()``
+     - (Shiny render function)
+   * - ``adjacency_to_lightgraph()``
+     - (adjacency matrices go straight to ``net_vis`` in Python)
+
+R functions return named vectors instead of dicts; see ``?lg_pagerank``
+etc. in R for the full manual pages, and the :doc:`R vignette
+<vignette_r>` for a worked example.
+
+JavaScript API
 --------------
 
-.. automodule:: lightgraph.network
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Function Details
-----------------
-
-net_vis
-~~~~~~~
-
-.. autofunction:: lightgraph.network.net_vis
-   :no-index:
-
-Parameters
-^^^^^^^^^^
-
-* **adj_matrix** (numpy.ndarray): The adjacency matrix of the network (n x n).
-* **node_names** (list of str): Array of node names corresponding to rows/columns of the matrix.
-* **node_groups** (dict, optional): A dictionary mapping node names to group identifiers. Defaults to None.
-* **remove_unconnected** (bool, optional): Whether to remove unconnected nodes. Defaults to True.
-* **save_as** (str, optional): Path to save the visualization as HTML file. Defaults to None.
-
-Returns
-^^^^^^^
-
-* **str**: HTML content string containing the visualization.
-
-Raises
-^^^^^^
-
-* **ValueError**: If adj_matrix is not a numpy.ndarray or dimensions don't match.
-
-Examples
-^^^^^^^^
-
-Basic usage:
-
-.. code-block:: python
-
-   import numpy as np
-   import lightgraph
-
-   adj_matrix = np.array([[0, 1], [1, 0]])
-   node_names = ['A', 'B']
-   lightgraph.net_vis(adj_matrix, node_names)
-
-With groups:
-
-.. code-block:: python
-
-   import numpy as np
-   import lightgraph
-
-   adj_matrix = np.array([[0, 1], [1, 0]])
-   node_names = ['A', 'B']
-   node_groups = {'A': 'Group1', 'B': 'Group2'}
-   lightgraph.net_vis(adj_matrix, node_names, node_groups=node_groups)
+Both bindings drive the same ``lightgraph.js`` runtime. The ``config``
+argument (Python dict / R named list) is deep-merged over the generated
+configuration, giving access to every option in the JS ``DEFAULT_CONFIG``
+(``nodes``, ``edges``, ``highlight``, ``egoFilter``, ``labels``,
+``simulation``, ``groups``, ``canvas``, ``ui``, ``layout``) without a
+dedicated keyword argument.

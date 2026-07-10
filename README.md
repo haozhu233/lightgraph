@@ -2,7 +2,13 @@
 
 # lightgraph
 
-`lightgraph` is a high-performance HTML canvas-based network visualization tool. 
+`lightgraph` is a high-performance HTML canvas-based network visualization tool
+for the browser, Jupyter notebooks (Python), and R. Batched canvas rendering
+and viewport culling keep graphs with thousands of nodes and edges smooth and
+interactive.
+
+**[Documentation](https://haozhu233.github.io/lightgraph/)** ·
+**[Live interactive demo](https://haozhu233.github.io/lightgraph/demo.html)**
 
 ![](https://raw.githubusercontent.com/haozhu233/lightgraph/refs/heads/main/assets/lg_functions.png)
 
@@ -30,7 +36,8 @@ create an instance per container — multiple graphs can share a page:
 Instance methods: `setData({nodes, edges})`, `updateConfig(partial)`,
 `zoomToFit(padding?)`, `getSelection()`, `selectNodes(ids)`,
 `egoFilter(nodeId, depth?)` / `clearEgoFilter()` / `getVisibleNodes()`,
-`resize()`, `destroy()`, and `on/off(event, cb)` for `nodeClick`,
+`settle(ticks?)` (run the layout synchronously, for static/headless
+rendering), `resize()`, `destroy()`, and `on/off(event, cb)` for `nodeClick`,
 `selectionChange`, `dataLoad`, `egoFilter`, and `destroy` events. See
 `DEFAULT_CONFIG` in `lightgraph.js` for all config options.
 
@@ -41,8 +48,20 @@ selection, click empty space to deselect. Hovering fades everything outside
 the node's 1-hop neighborhood; double-click a node to isolate its k-hop
 neighborhood (double-click empty space or press Escape to restore); the
 toolbar fit button — or the automatic fit when the layout settles — frames
-the graph. Set `edges.weightToWidth` / `edges.weightToOpacity` to render
-edge weights visually.
+the graph. New data loads run part of the layout synchronously before the
+first paint (`simulation.warmupTicks`, default `'auto'`) and the camera
+keeps the settling graph framed until you take over, so graphs appear laid
+out immediately instead of unfolding from random positions. Set
+`edges.weightToWidth` / `edges.weightToOpacity` to render edge weights
+visually.
+
+Edge opacity adapts automatically to on-screen ink density and zoom level,
+so dense graphs render as a readable texture instead of a solid block
+(setting `edges.defaultOpacity` pins a value instead); edge widths are
+clamped in screen space so lines neither vanish when zoomed out nor turn
+into ropes when zoomed in. The settings sidebar has a Style section with
+sliders for edge opacity (plus an auto toggle), edge width, and node size
+(`edges.widthScale` / `nodes.sizeScale`).
 
 Rendering follows the display's `devicePixelRatio`, so the canvas stays
 sharp on retina/high-DPI screens (set `canvas.pixelRatio: 1` to trade
