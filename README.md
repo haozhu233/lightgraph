@@ -1,16 +1,74 @@
-> This project is still work in progress. The API are not stable and are subject to change. Currently there are also limited documentations available. 
-
 # lightgraph
 
 `lightgraph` is a high-performance HTML canvas-based network visualization tool
 for the browser, Jupyter notebooks (Python), and R. Batched canvas rendering
 and viewport culling keep graphs with thousands of nodes and edges smooth and
-interactive.
+interactive, and both bindings ship with a dependency-free graph analytics
+toolkit (centrality, communities, components) that feeds straight back into
+the visuals.
 
 **[Documentation](https://haozhu233.github.io/lightgraph/)** ·
-**[Live interactive demo](https://haozhu233.github.io/lightgraph/demo.html)**
+**[Python vignette](https://haozhu233.github.io/lightgraph/vignette_python.html)** ·
+**[R vignette](https://haozhu233.github.io/lightgraph/vignette_r.html)**
 
-![](https://raw.githubusercontent.com/haozhu233/lightgraph/refs/heads/main/assets/lg_functions.png)
+> The API is still evolving and may change between releases.
+
+## Installation
+
+**Python** (from PyPI):
+
+```bash
+pip install lightgraph
+```
+
+**R** (from GitHub):
+
+```r
+# install.packages("devtools")
+devtools::install_github("haozhu233/lightgraph", subdir = "R")
+```
+
+## Quick start
+
+Both bindings share the same interface: pass an edge table (and optionally a
+node table), tweak behavior with mirrored snake_case arguments, and get an
+interactive widget. Three classic networks are bundled so you can try things
+immediately.
+
+**Python**
+
+```python
+from lightgraph import net_vis, datasets, pagerank
+
+edges = datasets.got()  # A Storm of Swords character network
+net_vis(edges=edges, node_groups='auto',      # auto-detect communities
+        node_metric=pagerank(edges),          # size nodes by PageRank
+        edge_weight_to_width=True)
+```
+
+**R**
+
+```r
+library(lightgraph)
+
+data(got)
+lightgraph(edges = got, node_groups = "auto",
+           node_metric = lg_pagerank(got),
+           edge_weight_to_width = TRUE)
+```
+
+Bundled datasets: `datasets.les_mis()` / `data(les_mis)` (Les Misérables
+co-occurrences), `datasets.got()` / `data(got)` (A Storm of Swords),
+`datasets.football()` / `data(football_edges)` + `data(football_nodes)`
+(American college football, with ground-truth conference groups).
+
+Analytics — identical results in both languages: degree/strength,
+betweenness, closeness, eigenvector, PageRank, community detection,
+connected components, k-hop neighborhoods, graph summaries, and top-node
+helpers (`lightgraph.analytics` in Python, `lg_*` functions in R). See the
+[API reference](https://haozhu233.github.io/lightgraph/api.html) and the
+vignettes linked above for feature-by-feature walkthroughs on a real
+19k-edge flight network.
 
 ## JavaScript usage
 
@@ -74,23 +132,11 @@ The module also loads with `require('lightgraph')` / bundlers; pass
 `#lightGraph` + `#nodesData`/`#edgesData` elements (as the Python and R
 bindings do) initialize automatically.
 
-## Installation
+## Repository layout
 
-### Python
-
-For python binding, you can install from pypi.
-
-```bash
-pip install lightgraph
-```
-
-### R
-
-For R binding, you can install from GitHub:
-
-```r
-# install.packages("devtools")
-devtools::install_github("haozhu233/lightgraph", subdir = "R")
-```
-
-See the [R package README](R/README.md) for more details and usage examples.
+The root `lightgraph.js` is the source of truth for the JavaScript runtime;
+`npm run sync-assets` copies it into the Python package
+(`python/lightgraph/assets/`), the R package (`R/inst/assets/`), and the
+documentation site. The Python binding lives in `python/`, the R binding in
+`R/` (see the [R package README](R/README.md)), and the Sphinx documentation
+in `docs/`.

@@ -6,21 +6,22 @@ for the browser, Jupyter notebooks (Python), and R. It keeps thousands of
 nodes and edges interactive through batched canvas rendering, viewport
 culling, and high-DPI-aware drawing.
 
-Try it live — drag the sliders to change the graph size, switch the
-generation model, and explore (drag to pan, scroll to zoom, click to select,
-double-click a node for its ego network):
+Try it live — the OpenFlights route network, 3,257 airports and 18,930
+routes, colored by continent. Drag to pan, scroll to zoom, hover an
+airport to light up its neighborhood, and double-click a hub to isolate
+its ego network (Escape restores):
 
 .. raw:: html
 
    <div class="full-width">
      <iframe
-       src="_static/demo/index.html?embed=compact"
-       title="lightgraph interactive demo"
+       src="_static/vignettes/py_flights_groups.html"
+       title="World flight network, colored by continent"
        style="width:100%; height:660px; border:0; overflow:hidden;"
        loading="eager"
      ></iframe>
      <p style="text-align:right; margin-top:0.25rem;">
-       <a href="demo.html">Open the full demo with all controls &rarr;</a>
+       <a href="vignette_python.html">See how this figure is built, and much more, in the vignettes &rarr;</a>
      </p>
    </div>
 
@@ -66,22 +67,23 @@ Basic Usage
 
 .. code-block:: python
 
-   import numpy as np
-   import lightgraph
+   from lightgraph import net_vis, datasets, pagerank
 
-   # Create a simple adjacency matrix
-   adj_matrix = np.array([
-       [0, 1, 1, 0],
-       [1, 0, 0, 1],
-       [1, 0, 0, 1],
-       [0, 1, 1, 0]
-   ])
+   edges = datasets.got()  # bundled: A Storm of Swords character network
+   net_vis(edges=edges, node_groups='auto',      # auto-detect communities
+           node_metric=pagerank(edges),          # size nodes by PageRank
+           edge_weight_to_width=True)
 
-   # Define node names
-   node_names = ['A', 'B', 'C', 'D']
+Or the same in R:
 
-   # Visualize the network
-   lightgraph.net_vis(adj_matrix, node_names)
+.. code-block:: r
+
+   library(lightgraph)
+
+   data(got)
+   lightgraph(edges = got, node_groups = "auto",
+              node_metric = lg_pagerank(got),
+              edge_weight_to_width = TRUE)
 
 Contents
 --------
@@ -90,13 +92,12 @@ Contents
    :maxdepth: 2
    :caption: Documentation:
 
-   demo
    installation
-   tutorial
+   examples
    vignette_python
    vignette_r
+   custom_js
    api
-   examples
    contributing
 
 Indices and tables

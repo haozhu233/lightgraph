@@ -268,6 +268,10 @@
             throw new Error('LightGraph: d3 v7 must be loaded (or passed via options.d3)');
         }
         const self = this;
+        // Expose the instance on the container element so embedding hosts
+        // (the R htmlwidget, generated Python/R pages, onRender hooks) can
+        // reach the API without holding the constructor's return value.
+        container.lightgraph = this;
         const userConfig = options.config || {};
         const theme = (userConfig.ui && userConfig.ui.theme) || DEFAULT_CONFIG.ui.theme;
         let config = mergeConfig(
@@ -2235,6 +2239,9 @@
              legendPanel, statsPanel, tooltip].forEach(el => el.remove());
             lightGraph.classList.remove('lg-root');
             lightGraph.removeAttribute('data-lg-theme');
+            if (container.lightgraph === self) {
+                delete container.lightgraph;
+            }
         };
 
         // Initial data load

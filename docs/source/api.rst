@@ -23,6 +23,12 @@ returns plain dicts keyed by node name, ready to pass back to
    :members: degree, betweenness, closeness, eigenvector, pagerank,
              communities, components, neighbors, summary, top_nodes
 
+Datasets
+--------
+
+.. automodule:: lightgraph.datasets
+   :members: les_mis, got, football
+
 R Interface
 -----------
 
@@ -57,6 +63,12 @@ in Python), and the analytics functions carry an ``lg_`` prefix:
      - ``lightgraph.summary()``
    * - ``lg_top_nodes()``
      - ``lightgraph.top_nodes()``
+   * - ``data(les_mis)``
+     - ``lightgraph.datasets.les_mis()``
+   * - ``data(got)``
+     - ``lightgraph.datasets.got()``
+   * - ``data(football_edges)``, ``data(football_nodes)``
+     - ``lightgraph.datasets.football()``
    * - ``lightgraphOutput()``
      - (Shiny output binding)
    * - ``renderLightgraph()``

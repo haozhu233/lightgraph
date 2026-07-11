@@ -59,7 +59,7 @@ When adding new features:
 
 1. Update the API documentation
 2. Add examples to the examples page
-3. Update the tutorial if needed
+3. Update the vignettes if needed
 4. Ensure the documentation builds without errors
 
 Reporting Issues

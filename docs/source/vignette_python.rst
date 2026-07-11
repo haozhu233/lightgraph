@@ -1,5 +1,5 @@
-Create Interactive Networks in Python
-=====================================
+Use lightgraph in Python
+========================
 
 This vignette is a feature-by-feature tour of the Python binding, in the
 spirit of a package manual you can read top to bottom: every option group

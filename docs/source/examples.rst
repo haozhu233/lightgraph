@@ -1,176 +1,110 @@
 Examples
 ========
 
-This page contains various examples demonstrating different use cases of lightgraph.
+lightgraph bundles three classic networks so you can try every feature
+without hunting for data. In Python they live in ``lightgraph.datasets``;
+in R they are lazy-loaded datasets. Each figure below is live — pan,
+zoom, hover, and double-click it.
 
-Social Network Analysis
------------------------
+Les Misérables
+--------------
 
-Example: Small social network with friend groups
-
-.. code-block:: python
-
-   import numpy as np
-   import lightgraph
-
-   # Social network adjacency matrix
-   # Rows/columns represent: Alice, Bob, Charlie, Diana, Eve, Frank
-   adj_matrix = np.array([
-       [0, 1, 1, 0, 1, 0],  # Alice
-       [1, 0, 1, 1, 0, 0],  # Bob
-       [1, 1, 0, 0, 0, 1],  # Charlie
-       [0, 1, 0, 0, 1, 1],  # Diana
-       [1, 0, 0, 1, 0, 0],  # Eve
-       [0, 0, 1, 1, 0, 0]   # Frank
-   ])
-   
-   names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank']
-   
-   # Define friend groups
-   groups = {
-       'Alice': 'Work',
-       'Bob': 'Work',
-       'Charlie': 'College',
-       'Diana': 'College',
-       'Eve': 'Work',
-       'Frank': 'College'
-   }
-   
-   lightgraph.net_vis(adj_matrix, names, node_groups=groups)
-
-Protein Interaction Network
-----------------------------
-
-Example: Protein-protein interaction network with interaction strengths
+Character co-occurrences in Victor Hugo's novel: 77 characters, 254
+weighted edges (the weight counts shared chapters). A perfect size for
+edge-weight styling — every line is legible. Data from D. E. Knuth,
+*The Stanford GraphBase* (1993).
 
 .. code-block:: python
 
-   import numpy as np
-   import lightgraph
+   from lightgraph import net_vis, datasets, degree
 
-   # Protein interaction network with confidence scores
-   adj_matrix = np.array([
-       [0, 0.8, 0.3, 0, 0.2],
-       [0.8, 0, 0, 0.9, 0],
-       [0.3, 0, 0, 0.7, 0.4],
-       [0, 0.9, 0.7, 0, 0.1],
-       [0.2, 0, 0.4, 0.1, 0]
-   ])
-   
-   proteins = ['P53', 'MDM2', 'ATM', 'CHEK2', 'BRCA1']
-   
-   # Protein families
-   families = {
-       'P53': 'Tumor Suppressor',
-       'MDM2': 'E3 Ubiquitin Ligase',
-       'ATM': 'DNA Repair',
-       'CHEK2': 'DNA Repair',
-       'BRCA1': 'DNA Repair'
-   }
-   
-   lightgraph.net_vis(adj_matrix, proteins, node_groups=families)
+   edges = datasets.les_mis()
+   net_vis(edges=edges, edge_weight_to_width=True,
+           edge_weight_to_opacity=True,
+           node_metric=degree(edges, weighted=True),
+           metric_size_range=(4, 18))
 
-Citation Network
+.. code-block:: r
+
+   library(lightgraph)
+
+   data(les_mis)
+   lightgraph(edges = les_mis, edge_weight_to_width = TRUE,
+              edge_weight_to_opacity = TRUE,
+              node_metric = lg_degree(les_mis, weighted = TRUE),
+              metric_size_range = c(4, 18))
+
+.. raw:: html
+
+   <iframe src="./_static/examples/les_mis.html"
+     title="Les Miserables co-occurrence network" loading="lazy"
+     style="width:100%; height:560px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
+
+A Storm of Swords
+-----------------
+
+Character interactions in the third book of *A Song of Ice and Fire*:
+107 characters, 352 weighted edges (co-mentions within 15 words).
+Communities are detected automatically and PageRank drives node size.
+Data from A. Beveridge and J. Shan, "Network of Thrones", *Math
+Horizons* 23(4) (2016).
+
+.. code-block:: python
+
+   from lightgraph import net_vis, datasets, pagerank
+
+   edges = datasets.got()
+   net_vis(edges=edges, node_groups='auto',
+           node_metric=pagerank(edges),
+           edge_weight_to_width=True)
+
+.. code-block:: r
+
+   library(lightgraph)
+
+   data(got)
+   lightgraph(edges = got, node_groups = "auto",
+              node_metric = lg_pagerank(got),
+              edge_weight_to_width = TRUE)
+
+.. raw:: html
+
+   <iframe src="./_static/examples/got.html"
+     title="A Storm of Swords character network" loading="lazy"
+     style="width:100%; height:560px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
+
+College football
 ----------------
 
-Example: Academic citation network
+Games between 115 Division IA teams in the Fall 2000 season, with each
+team's conference as its group — a ground-truth community structure you
+can compare detection algorithms against. Data from M. Girvan and
+M. E. J. Newman, *PNAS* 99 (2002).
 
 .. code-block:: python
 
-   import numpy as np
-   import lightgraph
+   from lightgraph import net_vis, datasets
 
-   # Citation network (papers citing each other)
-   adj_matrix = np.array([
-       [0, 1, 1, 0, 0, 0],
-       [0, 0, 0, 1, 1, 0],
-       [0, 0, 0, 0, 1, 1],
-       [0, 0, 0, 0, 0, 1],
-       [0, 0, 0, 0, 0, 0],
-       [0, 0, 0, 0, 0, 0]
-   ])
-   
-   papers = [
-       'Smith et al. 2020',
-       'Johnson et al. 2021',
-       'Brown et al. 2021',
-       'Davis et al. 2022',
-       'Wilson et al. 2022',
-       'Miller et al. 2023'
-   ]
-   
-   # Research areas
-   areas = {
-       'Smith et al. 2020': 'Machine Learning',
-       'Johnson et al. 2021': 'Machine Learning',
-       'Brown et al. 2021': 'Computer Vision',
-       'Davis et al. 2022': 'Computer Vision',
-       'Wilson et al. 2022': 'Machine Learning',
-       'Miller et al. 2023': 'Computer Vision'
-   }
-   
-   lightgraph.net_vis(adj_matrix, papers, node_groups=areas)
+   nodes, edges = datasets.football()
+   net_vis(edges=edges, nodes=nodes)
 
-Transportation Network
-----------------------
+.. code-block:: r
 
-Example: City transportation network
+   library(lightgraph)
 
-.. code-block:: python
+   data(football_edges); data(football_nodes)
+   lightgraph(nodes = football_nodes, edges = football_edges)
 
-   import numpy as np
-   import lightgraph
+.. raw:: html
 
-   # Transportation network with travel times
-   adj_matrix = np.array([
-       [0, 15, 0, 25, 0],
-       [15, 0, 20, 0, 30],
-       [0, 20, 0, 10, 0],
-       [25, 0, 10, 0, 18],
-       [0, 30, 0, 18, 0]
-   ])
-   
-   cities = ['Downtown', 'Airport', 'Suburb A', 'Suburb B', 'University']
-   
-   # City types
-   types = {
-       'Downtown': 'Commercial',
-       'Airport': 'Transportation',
-       'Suburb A': 'Residential',
-       'Suburb B': 'Residential',
-       'University': 'Educational'
-   }
-   
-   lightgraph.net_vis(adj_matrix, cities, node_groups=types)
+   <iframe src="./_static/examples/football.html"
+     title="American college football, Fall 2000" loading="lazy"
+     style="width:100%; height:560px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
 
-Large Network Example
----------------------
+How well does community detection recover the conferences? Compare
+``communities(edges)`` (Python) or ``lg_communities(football_edges)``
+(R) against the ``group`` column — on this network modularity-based
+methods recover the conference structure almost perfectly.
 
-Example: Handling larger networks with filtering
-
-.. code-block:: python
-
-   import numpy as np
-   import lightgraph
-
-   # Generate a larger random network
-   np.random.seed(42)
-   n_nodes = 50
-   
-   # Create random adjacency matrix
-   adj_matrix = np.random.random((n_nodes, n_nodes))
-   adj_matrix = (adj_matrix + adj_matrix.T) / 2  # Make symmetric
-   adj_matrix[adj_matrix < 0.3] = 0  # Remove weak connections
-   np.fill_diagonal(adj_matrix, 0)  # Remove self-loops
-   
-   # Generate node names
-   node_names = [f'Node_{i:02d}' for i in range(n_nodes)]
-   
-   # Create random groups
-   groups = {}
-   group_names = ['Group A', 'Group B', 'Group C', 'Group D']
-   for i, name in enumerate(node_names):
-       groups[name] = group_names[i % len(group_names)]
-   
-   # Visualize large network
-   lightgraph.net_vis(adj_matrix, node_names, node_groups=groups)
+For a full feature-by-feature tour on a 19k-edge network, continue to
+:doc:`vignette_python` or :doc:`vignette_r`.

@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "lightgraph"
-version = "1.0.0"
+version = "1.1.0"
 description = "A lightweight Python binding for lightGraph network visualization"
 authors = [
     {name = "Hao Zhu", email = "haozhu233@gmail.com"},
@@ -13,9 +13,11 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-homepage = "https://github.com/haozhu233/lightgraph"
 requires-python = ">=3.6"
 dependencies = ["numpy", "IPython"]
+
+[project.urls]
+Homepage = "https://github.com/haozhu233/lightgraph"
 
 [project.optional-dependencies]
 test = ["pytest>=7.0", "pytest-cov>=4.0"]

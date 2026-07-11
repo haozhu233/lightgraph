@@ -108,4 +108,23 @@ check("json ranges are arrays", grepl('"weightWidthRange":\\[1,5\\]', json))
 w3 <- lightgraph(nodes, edges2)
 check("legacy positional call", inherits(w3, "htmlwidget"))
 
+# Bundled datasets (values cross-validated against the Python package)
+data(les_mis); data(got); data(football_edges); data(football_nodes)
+check("les_mis shape", nrow(les_mis) == 254 &&
+      identical(names(les_mis), c("source", "target", "weight")) &&
+      length(unique(c(les_mis$source, les_mis$target))) == 77)
+check("got shape", nrow(got) == 352 &&
+      length(unique(c(got$source, got$target))) == 107)
+check("football shape", nrow(football_edges) == 613 &&
+      nrow(football_nodes) == 115 &&
+      length(unique(football_nodes$group)) == 12)
+check("football edges match nodes",
+      setequal(c(football_edges$source, football_edges$target),
+               football_nodes$id))
+sm <- lg_summary(got)
+check("got summary", sm$nodes == 107 && sm$edges == 352 && sm$components == 1)
+w4 <- lightgraph(nodes = football_nodes, edges = football_edges)
+check("lightgraph accepts datasets", inherits(w4, "htmlwidget") &&
+      length(w4$x$nodes) == 115)
+
 cat("\nAll R checks passed\n")

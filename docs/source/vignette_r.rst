@@ -1,5 +1,5 @@
-Create Interactive Networks in R
-================================
+Use lightgraph in R
+===================
 
 This vignette is the R twin of the :doc:`Python vignette
 <vignette_python>`: a feature-by-feature tour where every option group
