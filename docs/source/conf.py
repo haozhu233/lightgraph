@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../../python'))
 project = 'lightgraph'
 copyright = '2025, Hao Zhu'
 author = 'Hao Zhu'
-release = '1.2.1'
+release = '1.1.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
