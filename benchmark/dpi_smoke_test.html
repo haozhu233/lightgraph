@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head><title>lightgraph high-DPI smoke test</title></head>
+<body>
+<!-- Run with --force-device-scale-factor=2: verifies the canvas backing
+     store follows devicePixelRatio and PNG export renders at export
+     resolution instead of copying the screen bitmap. -->
+<div id="graph" style="width: 600px; height: 400px;"></div>
+
+<script>
+    const capturedErrors = [];
+    window.onerror = (msg, src, line) => { capturedErrors.push(`${msg} (${src}:${line})`); };
+    const origError = console.error;
+    console.error = (...args) => { capturedErrors.push(args.join(' ')); origError(...args); };
+</script>
+<script src="d3.v7.min.js"></script>
+<script src="../lightgraph.js"></script>
+
+<script>
+    const { LightGraph } = window.lightGraph;
+
+    // Capture the PNG export instead of downloading it.
+    let exportedHref = null;
+    const origClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {
+        if (this.download) { exportedHref = this.href; return; }
+        return origClick.call(this);
+    };
+
+    const container = document.getElementById('graph');
+    const graph = new LightGraph(container, {
+        nodes: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+        edges: [{ source: 'a', target: 'b' }, { source: 'b', target: 'c' }],
+        config: { canvas: { exportScale: 2 } }
+    });
+
+    setTimeout(() => {
+        const results = { test: 'dpi-smoke', errors: capturedErrors, checks: {} };
+        const dpr = window.devicePixelRatio;
+        const canvas = container.querySelector('canvas');
+
+        results.checks.devicePixelRatio = dpr;
+        // Backing store scaled by dpr, CSS size unchanged
+        results.checks.backingMatchesDpr =
+            canvas.width === Math.round(600 * dpr) &&
+            canvas.height === Math.round(400 * dpr);
+        results.checks.cssSizeUnscaled =
+            canvas.getBoundingClientRect().width === 600 &&
+            canvas.getBoundingClientRect().height === 400;
+
+        // resize() keeps the scaled backing store
+        container.style.width = '500px';
+        graph.resize();
+        results.checks.resizeKeepsDpr = canvas.width === Math.round(500 * dpr);
+
+        // A fixed config.canvas.pixelRatio overrides the display's
+        graph.updateConfig({ canvas: { pixelRatio: 1 } });
+        graph.resize();
+        results.checks.pixelRatioOverride = canvas.width === 500;
+        graph.updateConfig({ canvas: { pixelRatio: null } });
+        graph.resize();
+
+        // PNG export renders at exportScale x dpr x CSS size
+        document.getElementById('exportPNG').click();
+        results.checks.exportCaptured = exportedHref !== null;
+        const img = new Image();
+        img.onload = () => {
+            results.checks.exportWidth = img.naturalWidth;
+            results.checks.exportSharp =
+                img.naturalWidth === Math.round(500 * 2 * dpr) &&
+                img.naturalHeight === Math.round(400 * 2 * dpr);
+            finish();
+        };
+        img.onerror = () => { results.checks.exportSharp = false; finish(); };
+        if (exportedHref) { img.src = exportedHref; } else { finish(); }
+
+        function finish() {
+            results.checks.noErrorsAtEnd = capturedErrors.length === 0;
+            results.pass = results.checks.noErrorsAtEnd
+                && results.checks.backingMatchesDpr
+                && results.checks.cssSizeUnscaled
+                && results.checks.resizeKeepsDpr
+                && results.checks.pixelRatioOverride
+                && results.checks.exportCaptured
+                && results.checks.exportSharp === true;
+            fetch('http://localhost:8000/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(results)
+            }).then(() => { document.title = 'DPI_SMOKE_DONE'; });
+        }
+    }, 2500);
+</script>
+</body>
+</html>

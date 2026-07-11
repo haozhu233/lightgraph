@@ -33,7 +33,8 @@ Features
 --------
 
 * **High Performance**: batched HTML5 Canvas rendering with viewport culling
-  keeps graphs with thousands of nodes and edges smooth
+  keeps graphs with thousands of nodes and edges smooth — see the
+  :doc:`benchmarks <benchmark>`
 * **Modeless Interaction**: pan, zoom, select, box-select, and drag nodes
   without switching tools
 * **Graph Exploration**: neighbor highlighting on hover and double-click
@@ -94,6 +95,7 @@ Contents
 
    installation
    examples
+   benchmark
    vignette_python
    vignette_r
    custom_js

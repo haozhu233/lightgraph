@@ -1,24 +1,27 @@
 Package: lightgraph
 Type: Package
 Title: High-Performance HTML Canvas-Based Network Visualization
-Version: 0.2.0
+Version: 1.1.0
 Authors@R: c(
     person("Hao", "Zhu", email = "haozhu233@gmail.com", role = c("aut", "cre")),
     person("Donna", "Slonim", email = "donna.slonim@tufts.edu", role = "aut")
     )
-Description: A lightweight R binding for lightGraph network visualization using
-    HTML canvas for high-performance rendering. This package provides an htmlwidget
-    interface for visualizing networks from adjacency matrices.
+Description: A lightweight R binding for the 'lightGraph' JavaScript library,
+    which renders interactive network visualizations on HTML canvas for
+    high performance. Provides an 'htmlwidgets' interface with weighted
+    edges, groups and community detection, metric-driven node styling, and
+    built-in graph analytics (degree, betweenness, closeness, eigenvector,
+    PageRank, components, and communities).
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: 
     R (>= 3.5.0)
 Imports:
-    htmlwidgets (>= 1.5.0),
-    htmltools
+    htmlwidgets (>= 1.5.0)
 Suggests:
     igraph,
+    jsonlite,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

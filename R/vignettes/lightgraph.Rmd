@@ -1,0 +1,220 @@
+---
+title: "Getting started with lightgraph"
+output:
+  rmarkdown::html_vignette:
+    fig_width: 7
+vignette: >
+  %\VignetteIndexEntry{Getting started with lightgraph}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+lightgraph is a high-performance HTML canvas-based network visualization
+htmlwidget. Every figure in this vignette is **live** — drag to pan,
+scroll to zoom, hover a node to light up its neighborhood, shift-drag to
+box-select, and double-click a node to isolate its ego network (Escape
+restores).
+
+```{r setup}
+library(lightgraph)
+```
+
+## A first graph
+
+Edges are enough; nodes are derived automatically:
+
+```{r first-graph}
+friends <- data.frame(
+  source = c("Amy", "Amy", "Ben", "Cat", "Dan", "Dan", "Eve"),
+  target = c("Ben", "Cat", "Cat", "Dan", "Eve", "Fay", "Fay"),
+  weight = c(3, 1, 2, 1, 2, 1, 3)
+)
+lightgraph(edges = friends, height = "320px")
+```
+
+A nodes data frame adds per-node attributes (`id` required; `group`,
+`color`, `size` optional), and `adjacency_to_lightgraph()` converts
+adjacency matrices:
+
+```{r nodes-frame, eval = FALSE}
+nodes <- data.frame(id = c("Amy", "Ben"), group = c("g1", "g2"))
+lightgraph(nodes, edges)
+
+parts <- adjacency_to_lightgraph(adj_matrix, node_names)
+lightgraph(parts$nodes, parts$edges)
+```
+
+## Les Misérables
+
+The package bundles three classic datasets: `les_mis` (weighted character
+co-occurrences from Victor Hugo's novel), `got` (A Storm of Swords
+character interactions), and `football_edges`/`football_nodes` (Division
+IA college football games). What does the Les Misérables network look
+like?
+
+```{r summary}
+str(lg_summary(les_mis))
+```
+
+`edge_weight_to_width` and `edge_weight_to_opacity` map edge weights into
+stroke width and opacity, and any named numeric vector drives node size
+via `node_metric` — here, weighted degree, so the protagonists stand
+out:
+
+```{r les-mis}
+strength <- lg_degree(les_mis, weighted = TRUE)
+lg_top_nodes(strength, 5)
+
+lightgraph(
+  edges = les_mis,
+  node_metric = strength,
+  edge_weight_to_width = TRUE,
+  weight_width_range = c(0.4, 6),
+  height = "480px"
+)
+```
+
+`metric_map` chooses the channel for the metric: `"size"` (default),
+`"color"`, or `"both"`, interpolating between the `metric_colors`
+endpoints — a PageRank heat map:
+
+```{r pagerank}
+lightgraph(
+  edges = les_mis,
+  node_metric = lg_pagerank(les_mis),
+  metric_map = "both",
+  metric_colors = c("#dbe9f6", "#08306b"),
+  show_legend = FALSE,
+  height = "480px"
+)
+```
+
+## Groups and communities
+
+A `group` column on the nodes data frame colors nodes and builds the
+interactive legend (click a legend entry to select the group). The
+football network ships its ground truth — each team's conference:
+
+```{r football}
+lightgraph(
+  nodes = football_nodes,
+  edges = football_edges,
+  show_ellipses = FALSE,
+  height = "480px"
+)
+```
+
+With no known grouping, `node_groups = "auto"` detects communities via
+`lg_communities()` (Louvain when igraph is installed, label propagation
+otherwise):
+
+```{r got-communities}
+lightgraph(
+  edges = got,
+  node_groups = "auto",
+  node_metric = lg_pagerank(got),
+  show_ellipses = FALSE,
+  height = "480px"
+)
+```
+
+## Graph analytics
+
+The `lg_*` helpers are dependency-free, treat graphs as undirected, and
+return named vectors keyed by node id:
+
+| Function | What it tells you |
+|---|---|
+| `lg_summary(edges)` | node/edge counts, density, degree stats, components, transitivity |
+| `lg_degree(edges, weighted = FALSE)` | connections per node (weighted: strength) |
+| `lg_betweenness(edges)` | who sits on the shortest paths |
+| `lg_closeness(edges)` | who can reach everyone fastest |
+| `lg_eigenvector(edges)` | who is connected to the well-connected |
+| `lg_pagerank(edges, damping = 0.85)` | random-surfer importance |
+| `lg_communities(edges)` | community labels ('c1', 'c2', ...) |
+| `lg_components(edges)` | connected component ids, largest first |
+| `lg_neighbors(edges, node, depth = 1)` | the k-hop ego set around a node |
+| `lg_top_nodes(metric, n = 10)` | the n best entries of any metric vector |
+
+Raw popularity and brokerage disagree — Valjean tops both, but the
+betweenness ranking surfaces the story's connectors:
+
+```{r metrics}
+metrics <- data.frame(
+  strength    = strength,
+  betweenness = lg_betweenness(les_mis),
+  pagerank    = lg_pagerank(les_mis)
+)
+head(metrics[order(-metrics$betweenness), ], 5)
+```
+
+`lg_components()` and `lg_neighbors()` slice a graph:
+
+```{r slicing}
+reach <- lg_neighbors(les_mis, "Fantine", depth = 1)
+sub <- les_mis[les_mis$source %in% reach & les_mis$target %in% reach, ]
+nrow(sub)
+```
+
+## Interaction and themes
+
+Everything is modeless — no tool switching. `ego_depth` sets how many
+hops a double-click reveals, `neighbor_fade` controls how hard
+non-neighbors fade on hover, and `theme = "dark"` swaps canvas, panels,
+labels, and default colors:
+
+```{r dark}
+lightgraph(
+  edges = got,
+  node_groups = "auto",
+  theme = "dark",
+  ego_depth = 2,
+  neighbor_fade = 0.06,
+  show_ellipses = FALSE,
+  height = "480px"
+)
+```
+
+## The config escape hatch
+
+Arguments cover the common surface; `config` deep-merges a raw lightGraph
+configuration (the JS shape) over the generated one, so any option in the
+JS `DEFAULT_CONFIG` is reachable:
+
+```{r config, eval = FALSE}
+lightgraph(
+  edges = les_mis,
+  config = list(
+    nodes = list(borderWidth = 2, selectedBorderColor = "#ffd700"),
+    labels = list(fontFamily = "Georgia, serif"),
+    simulation = list(centerStrength = 0.8)
+  )
+)
+```
+
+## Saving and Shiny
+
+```{r saving, eval = FALSE}
+w <- lightgraph(edges = les_mis)
+
+htmlwidgets::saveWidget(w, "les_mis.html")  # standalone file
+
+# Shiny
+ui <- fluidPage(lightgraphOutput("net"))
+server <- function(input, output) {
+  output$net <- renderLightgraph(lightgraph(edges = les_mis))
+}
+```
+
+Viewers can also export PNG, SVG, and JSON from the widget toolbar.
+
+## Learn more
+
+The full feature tour — including a 3,257-airport world flight network,
+metric-driven styling, circular layouts, and performance tuning — lives
+in the [online documentation](https://haozhu233.github.io/lightgraph/),
+and every argument has the same name and meaning in the Python package.

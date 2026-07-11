@@ -9,5 +9,7 @@ coverage/
 .coverage
 CLAUDE.md
 htmlcov/
-benchmark
+# generated benchmark artifacts (harness scripts are tracked)
+benchmark/pages/
+benchmark/benchmarks_v2/
 live_test.ipynb

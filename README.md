@@ -28,6 +28,12 @@ pip install lightgraph
 devtools::install_github("haozhu233/lightgraph", subdir = "R")
 ```
 
+**JavaScript** (from npm; d3 v7 is a peer dependency):
+
+```bash
+npm install lightgraph d3
+```
+
 ## Quick start
 
 Both bindings share the same interface: pass an edge table (and optionally a
@@ -89,6 +95,16 @@ create an instance per container — multiple graphs can share a page:
   graph.on('nodeClick', ({ node }) => console.log('clicked', node.id));
   graph.on('selectionChange', selected => console.log(selected.length, 'selected'));
 </script>
+```
+
+With a bundler, install from npm (`npm install lightgraph d3`) and pass d3
+in explicitly (it defaults to `window.d3`):
+
+```js
+import * as d3 from 'd3';
+import { LightGraph } from 'lightgraph';
+
+const graph = new LightGraph(container, { nodes, edges, d3 });
 ```
 
 Instance methods: `setData({nodes, edges})`, `updateConfig(partial)`,

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>lightgraph edge-density smoke test</title></head>
+<body>
+<!-- Verifies the ink-budget auto edge opacity: a dense hairball rendered
+     with auto opacity must saturate far fewer pixels than the same graph
+     with a high fixed opacity, while still drawing visible edges. Also
+     exercises the Style sliders and the settle() API. -->
+<div id="graphAuto" style="width: 500px; height: 400px;"></div>
+<div id="graphFixed" style="width: 500px; height: 400px;"></div>
+
+<script>
+    const capturedErrors = [];
+    window.onerror = (msg, src, line) => { capturedErrors.push(`${msg} (${src}:${line})`); };
+    const origError = console.error;
+    console.error = (...args) => { capturedErrors.push(args.join(' ')); origError(...args); };
+</script>
+<script src="d3.v7.min.js"></script>
+<script src="../lightgraph.js"></script>
+
+<script>
+    const { LightGraph } = window.lightGraph;
+
+    function mulberry32(a) {
+        return function () {
+            let t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+    function makeData() {
+        const rng = mulberry32(42);
+        const nodes = Array.from({ length: 400 }, (_, i) => ({ id: 'n' + i }));
+        const edges = [];
+        const seen = new Set();
+        for (let i = 1; i < nodes.length; i++) {
+            const j = Math.floor(rng() * i);
+            edges.push({ source: 'n' + i, target: 'n' + j });
+            seen.add(j + '|' + i);
+        }
+        while (edges.length < 1600) {
+            const a = Math.floor(rng() * rng() * 400);
+            const b = Math.floor(rng() * 400);
+            const key = Math.min(a, b) + '|' + Math.max(a, b);
+            if (a !== b && !seen.has(key)) {
+                seen.add(key);
+                edges.push({ source: 'n' + a, target: 'n' + b });
+            }
+        }
+        return { nodes: JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(edges)) };
+    }
+
+    const shared = { ui: { showLegend: false, showStatistics: false }, labels: { visible: false } };
+    const dataA = makeData();
+    const graphAuto = new LightGraph(document.getElementById('graphAuto'), {
+        nodes: dataA.nodes, edges: dataA.edges, config: { ...shared }
+    });
+    const dataB = makeData();
+    const graphFixed = new LightGraph(document.getElementById('graphFixed'), {
+        nodes: dataB.nodes, edges: dataB.edges,
+        config: { ...shared, edges: { defaultOpacity: 0.6 } }
+    });
+    graphAuto.settle();
+    graphFixed.settle();
+
+    // inked: count of non-white pixels; mass: total darkness deposited
+    // (0 for white, 255 for black per pixel) — a robust proxy for how
+    // "blocky" the accumulated edge ink is.
+    function measure(container) {
+        const canvas = container.querySelector('canvas');
+        const img = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+        let inked = 0, mass = 0;
+        for (let i = 0; i < img.length; i += 4) {
+            if (img[i + 3] === 0) continue;
+            const darkness = 255 - Math.min(img[i], img[i + 1], img[i + 2]);
+            if (darkness > 0) inked++;
+            mass += darkness;
+        }
+        return { inked, mass };
+    }
+
+    setTimeout(() => {
+        const results = { test: 'density-smoke', errors: capturedErrors, checks: {} };
+        const auto = measure(document.getElementById('graphAuto'));
+        const fixed = measure(document.getElementById('graphFixed'));
+        results.checks.autoInked = auto.inked;
+        results.checks.autoMass = auto.mass;
+        results.checks.fixedMass = fixed.mass;
+        // Edges still visible under auto opacity...
+        results.checks.edgesVisible = auto.inked > 5000;
+        // ...but far less accumulated ink than the same layout drawn at a
+        // high fixed opacity: the dense block is gone.
+        results.checks.blockReduced = auto.mass < fixed.mass * 0.4;
+
+        // Style sliders exist in both sidebars
+        results.checks.slidersPresent =
+            document.querySelectorAll('[id=edgeOpacitySlider]').length === 2 &&
+            document.querySelectorAll('[id=edgeWidthSlider]').length === 2 &&
+            document.querySelectorAll('[id=nodeSizeSlider]').length === 2;
+
+        // Sidebar must fit inside the (short) container and scroll instead
+        // of overflowing on small screens.
+        const sidebar = document.querySelector('[id=sceneSidebar]');
+        const holder = document.getElementById('graphAuto');
+        results.checks.sidebarFits =
+            sidebar.offsetHeight <= holder.clientHeight - 58 &&
+            getComputedStyle(sidebar).overflowY === 'auto';
+
+        // Auto toggle: on for graphAuto, off for graphFixed (explicit opacity)
+        const toggles = document.querySelectorAll('[id=autoOpacityToggle]');
+        results.checks.autoToggleStates = toggles[0].checked && !toggles[1].checked;
+
+        // Dragging the opacity slider takes over from auto mode
+        const slider = document.querySelectorAll('[id=edgeOpacitySlider]')[0];
+        slider.value = 80;
+        slider.dispatchEvent(new Event('input'));
+        results.checks.sliderDisablesAuto = !toggles[0].checked;
+
+        setTimeout(() => {
+            // Manual opacity 80% must darken the render vs auto
+            const manual = measure(document.getElementById('graphAuto'));
+            results.checks.sliderTookEffect = manual.mass > auto.mass * 2;
+            results.checks.noErrorsAtEnd = capturedErrors.length === 0;
+            results.pass = results.checks.noErrorsAtEnd
+                && results.checks.edgesVisible
+                && results.checks.blockReduced
+                && results.checks.sidebarFits
+                && results.checks.slidersPresent
+                && results.checks.autoToggleStates
+                && results.checks.sliderDisablesAuto
+                && results.checks.sliderTookEffect;
+            fetch('http://localhost:8000/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(results)
+            }).then(() => { document.title = 'DENSITY_SMOKE_DONE'; });
+        }, 300);
+    }, 300);
+</script>
+</body>
+</html>

@@ -1,33 +1,42 @@
 {
   "name": "lightgraph",
-  "version": "0.2.0",
-  "description": "A high-performance WebGL-based network visualization tool",
+  "version": "1.1.0",
+  "description": "High-performance HTML canvas network visualization: batched rendering, viewport culling, and modeless interaction keep graphs with tens of thousands of edges smooth",
   "main": "lightgraph.js",
+  "files": [
+    "lightgraph.js"
+  ],
   "scripts": {
-    "build": "node esbuild.config.js",
-    "dev": "node esbuild.config.js --watch",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "sync-assets": "cp lightgraph.js python/lightgraph/assets/lightgraph.js && cp lightgraph.js R/inst/assets/lightgraph.js && cp lightgraph.js docs/source/_static/demo/lightgraph.js",
-    "check-assets": "diff -q lightgraph.js python/lightgraph/assets/lightgraph.js && diff -q lightgraph.js R/inst/assets/lightgraph.js && diff -q lightgraph.js docs/source/_static/demo/lightgraph.js"
+    "check-assets": "diff -q lightgraph.js python/lightgraph/assets/lightgraph.js && diff -q lightgraph.js R/inst/assets/lightgraph.js && diff -q lightgraph.js docs/source/_static/demo/lightgraph.js",
+    "prepublishOnly": "npm test && npm run check-assets"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/haozhu233/lightgraph.git"
+    "url": "git+https://github.com/haozhu233/lightgraph.git"
+  },
+  "homepage": "https://haozhu233.github.io/lightgraph/",
+  "bugs": {
+    "url": "https://github.com/haozhu233/lightgraph/issues"
   },
   "keywords": [
     "visualization",
     "network",
     "graph",
-    "webgl",
-    "three.js",
+    "canvas",
+    "network-visualization",
+    "force-directed",
     "d3"
   ],
   "author": "Hao Zhu",
   "license": "MIT",
+  "peerDependencies": {
+    "d3": "^7.0.0"
+  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "esbuild": "^0.27.3",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0"
   },
@@ -42,13 +51,5 @@
     "collectCoverageFrom": [
       "lightgraph.js"
     ]
-  },
-  "dependencies": {
-    "d3-force": "^3.0.0",
-    "d3-scale": "^4.0.2",
-    "d3-scale-chromatic": "^3.1.0",
-    "d3-selection": "^3.0.0",
-    "d3-zoom": "^3.0.0",
-    "three": "^0.182.0"
   }
 }

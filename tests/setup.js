@@ -37,8 +37,11 @@ global.d3 = {
   })),
   zoom: jest.fn(() => ({
     scaleExtent: jest.fn().mockReturnThis(),
+    filter: jest.fn().mockReturnThis(),
     on: jest.fn().mockReturnThis(),
   })),
+  pointer: jest.fn(() => [0, 0]),
+  zoomIdentity: { x: 0, y: 0, k: 1, translate: jest.fn().mockReturnThis(), scale: jest.fn().mockReturnThis() },
   drag: jest.fn(() => ({
     on: jest.fn().mockReturnThis(),
   })),
@@ -50,6 +53,7 @@ global.d3 = {
     alphaTarget: jest.fn().mockReturnThis(),
     restart: jest.fn().mockReturnThis(),
     stop: jest.fn().mockReturnThis(),
+    tick: jest.fn().mockReturnThis(),
   })),
   forceLink: jest.fn(() => ({
     id: jest.fn().mockReturnThis(),
@@ -64,4 +68,6 @@ global.d3 = {
   })),
   scaleOrdinal: jest.fn(() => jest.fn()),
   schemeCategory10: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
+  schemeSet2: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494', '#b3b3b3'],
+  schemeSet3: ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f'],
 };
