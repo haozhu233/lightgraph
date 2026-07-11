@@ -92,6 +92,22 @@ check("auto groups on derived nodes", !any(is.na(grps)))
 check("metric sizes present", all(vapply(w$x$nodes, function(n) !is.null(n$size), TRUE)))
 check("metric colors present", all(vapply(w$x$nodes, function(n) !is.null(n$color), TRUE)))
 
+# Metric legend metadata
+ml <- cfg$ui$metricLegend
+pr_rng <- range(lg_pagerank(edges))
+check("metric legend map/range", !is.null(ml) && ml$map == "both" &&
+      approx_equal(ml$min, pr_rng[1]) && approx_equal(ml$max, pr_rng[2]))
+check("metric legend channels", identical(ml$sizeRange, c(4, 20)) &&
+      identical(ml$colors, c("#c6dbef", "#08306b")))
+check("metric legend label default absent", is.null(ml$label))
+w_lab <- lightgraph(edges = edges, node_metric = lg_pagerank(edges),
+                    metric_label = "PageRank")
+ml_lab <- w_lab$x$config$ui$metricLegend
+check("metric legend label + size-only map", ml_lab$label == "PageRank" &&
+      ml_lab$map == "size" && is.null(ml_lab$colors))
+w_noml <- lightgraph(edges = edges)
+check("no metric legend without metric", is.null(w_noml$x$config$ui$metricLegend))
+
 # Nodes with explicit group column + node_groups override
 nodes <- data.frame(id = c("A", "B", "X", "Y"), group = c("g1", "g1", "g2", "g2"))
 edges2 <- data.frame(source = c("A", "X"), target = c("B", "Y"))

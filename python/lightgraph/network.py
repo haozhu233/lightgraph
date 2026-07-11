@@ -162,6 +162,7 @@ def net_vis(
     metric_map: Literal['size', 'color', 'both'] = 'size',
     metric_size_range: tuple = (4, 20),
     metric_colors: tuple = ('#c6dbef', '#08306b'),
+    metric_label: Optional[str] = None,
     # Display options
     show_arrows: bool = False,
     show_labels: bool = True,
@@ -243,6 +244,10 @@ def net_vis(
         Node size range (min, max) for metric-driven sizing.
     metric_colors : tuple, default ('#c6dbef', '#08306b')
         Low/high hex colors for metric-driven coloring.
+    metric_label : str, optional
+        Title for the metric section of the legend (e.g. 'PageRank').
+        Defaults to 'Metric'. The legend section appears whenever
+        node_metric drives size and/or color and show_legend is on.
     node_groups : dict or 'auto', optional
         Dictionary mapping node names to group identifiers for coloring.
         Pass 'auto' to detect communities automatically (networkx Louvain
@@ -297,7 +302,7 @@ def net_vis(
     label_font_size : float, default 5
         Font size for node labels.
     edge_width : float, optional
-        Base width for edges (JS default 0.3).
+        Base width for edges (JS default 0.45).
     edge_color : str, optional
         Default edge color (hex). Defaults to the theme color.
     edge_opacity : float, optional
@@ -444,6 +449,9 @@ def net_vis(
 
     # Map node_metric onto size and/or color. Metric-derived values fill in
     # around explicit node_sizes/node_colors entries, never replace them.
+    # Channels the metric actually drove are described in the legend
+    # (ui.metricLegend) so the JS can render a size/color key.
+    metric_legend = None
     if node_metric is not None:
         def _metric_for(n):
             if n in node_metric:
@@ -455,6 +463,7 @@ def net_vis(
         if values:
             lo, hi = min(values), max(values)
             span = (hi - lo) or 1.0
+            applied = []
             if metric_map in ('size', 'both'):
                 node_sizes = dict(node_sizes or {})
                 size_lo, size_hi = metric_size_range
@@ -462,6 +471,8 @@ def net_vis(
                     if v is not None and n not in node_sizes:
                         t = (v - lo) / span
                         node_sizes[n] = size_lo + t * (size_hi - size_lo)
+                        if 'size' not in applied:
+                            applied.append('size')
             if metric_map in ('color', 'both'):
                 node_colors = dict(node_colors or {})
                 rgb0 = _hex_to_rgb(metric_colors[0])
@@ -470,6 +481,22 @@ def net_vis(
                     if v is not None and n not in node_colors:
                         t = (v - lo) / span
                         node_colors[n] = _lerp_hex(rgb0, rgb1, t)
+                        if 'color' not in applied:
+                            applied.append('color')
+            if applied:
+                metric_legend = {
+                    'map': 'both' if len(applied) == 2 else applied[0],
+                    'min': float(lo),
+                    'max': float(hi),
+                }
+                if metric_label is not None:
+                    metric_legend['label'] = str(metric_label)
+                if 'size' in applied:
+                    metric_legend['sizeRange'] = [float(metric_size_range[0]),
+                                                  float(metric_size_range[1])]
+                if 'color' in applied:
+                    metric_legend['colors'] = [str(metric_colors[0]),
+                                               str(metric_colors[1])]
 
     # Build nodes list. Attribute dicts may be keyed by the original node
     # objects or their string form (auto-detected communities use strings).
@@ -542,6 +569,8 @@ def net_vis(
         },
         'layout': layout,
     }
+    if metric_legend is not None:
+        graph_config['ui']['metricLegend'] = metric_legend
 
     # Only set optional values if explicitly provided
     if node_color is not None:

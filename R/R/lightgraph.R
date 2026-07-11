@@ -28,6 +28,9 @@
 #'   metric-driven sizing (default: c(4, 20)).
 #' @param metric_colors Character length-2, low/high hex colors for
 #'   metric-driven coloring (default: c("#c6dbef", "#08306b")).
+#' @param metric_label Character, title for the metric section of the legend
+#'   (e.g. "PageRank"; default: "Metric"). Shown whenever node_metric drives
+#'   size and/or color and show_legend is TRUE.
 #' @param show_arrows Logical, whether to show directional arrows on edges (default: FALSE).
 #' @param show_labels Logical, whether to show node labels (default: TRUE).
 #' @param show_ellipses Logical, whether to show group ellipses (default: TRUE).
@@ -55,7 +58,7 @@
 #' @param node_color Character, default node fill color (hex). Defaults to
 #'   the theme color.
 #' @param label_font_size Numeric, font size for labels (default: 5).
-#' @param edge_width Numeric, base width for edges (JS default 0.3).
+#' @param edge_width Numeric, base width for edges (JS default 0.45).
 #' @param edge_color Character, default edge color (hex). Defaults to the
 #'   theme color.
 #' @param edge_opacity Numeric, opacity for edges 0-1. By default opacity
@@ -132,6 +135,7 @@ lightgraph <- function(nodes = NULL, edges,
                        metric_map = "size",
                        metric_size_range = c(4, 20),
                        metric_colors = c("#c6dbef", "#08306b"),
+                       metric_label = NULL,
                        show_arrows = FALSE,
                        show_labels = TRUE,
                        show_ellipses = TRUE,
@@ -214,7 +218,10 @@ lightgraph <- function(nodes = NULL, edges,
     nodes <- nodes[as.character(nodes$id) %in% connected, , drop = FALSE]
   }
 
-  # Map node_metric onto size and/or color columns (explicit columns win)
+  # Map node_metric onto size and/or color columns (explicit columns win).
+  # Channels the metric actually drove are described in the legend
+  # (ui.metricLegend) so the JS can render a size/color key.
+  metric_legend <- NULL
   if (!is.null(node_metric)) {
     values <- node_metric[as.character(nodes$id)]
     finite <- is.finite(values)
@@ -223,8 +230,10 @@ lightgraph <- function(nodes = NULL, edges,
       span <- diff(rng)
       if (span == 0) span <- 1
       t <- pmin(pmax((values - rng[1]) / span, 0), 1)
+      applied <- character(0)
       if (metric_map %in% c("size", "both") && !"size" %in% names(nodes)) {
         nodes$size <- metric_size_range[1] + t * diff(metric_size_range)
+        applied <- c(applied, "size")
       }
       if (metric_map %in% c("color", "both") && !"color" %in% names(nodes)) {
         ramp <- grDevices::colorRamp(metric_colors)
@@ -233,6 +242,23 @@ lightgraph <- function(nodes = NULL, edges,
         node_col[finite] <- grDevices::rgb(
           rgb_vals[, 1], rgb_vals[, 2], rgb_vals[, 3], maxColorValue = 255)
         nodes$color <- node_col
+        applied <- c(applied, "color")
+      }
+      if (length(applied) > 0) {
+        metric_legend <- list(
+          map = if (length(applied) == 2) "both" else applied,
+          min = rng[1],
+          max = rng[2]
+        )
+        if (!is.null(metric_label)) {
+          metric_legend$label <- as.character(metric_label)
+        }
+        if ("size" %in% applied) {
+          metric_legend$sizeRange <- as.numeric(metric_size_range)
+        }
+        if ("color" %in% applied) {
+          metric_legend$colors <- as.character(metric_colors)
+        }
       }
     }
   }
@@ -313,6 +339,9 @@ lightgraph <- function(nodes = NULL, edges,
     ),
     layout = layout
   )
+  if (!is.null(metric_legend)) {
+    graph_config$ui$metricLegend <- metric_legend
+  }
   # Only set optional values if explicitly provided
   if (!is.null(node_color)) {
     graph_config$nodes$defaultColor <- node_color

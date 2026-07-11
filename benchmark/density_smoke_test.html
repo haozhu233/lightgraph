@@ -39,7 +39,10 @@
             edges.push({ source: 'n' + i, target: 'n' + j });
             seen.add(j + '|' + i);
         }
-        while (edges.length < 1600) {
+        // Mean degree 20: dense enough to sit firmly in the ink budget's
+        // dimming regime (the sub-linear budget leaves mid-density graphs
+        // at their configured opacity by design).
+        while (edges.length < 4000) {
             const a = Math.floor(rng() * rng() * 400);
             const b = Math.floor(rng() * 400);
             const key = Math.min(a, b) + '|' + Math.max(a, b);

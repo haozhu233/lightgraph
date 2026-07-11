@@ -218,8 +218,11 @@ Metric-driven color
 ~~~~~~~~~~~~~~~~~~~
 
 ``metric_map`` chooses the channel: ``"size"`` (default), ``"color"``,
-or ``"both"``, interpolating between the ``metric_colors`` endpoints —
-a PageRank heat map of the European network:
+or ``"both"``, interpolating between the ``metric_colors`` endpoints.
+When the legend is on, a metric section shows the size dots and color
+gradient with the metric's min/max values — title it with
+``metric_label`` (e.g. ``metric_label = "PageRank"``). Here a PageRank
+heat map of the European network:
 
 .. code-block:: r
 

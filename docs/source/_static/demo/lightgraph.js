@@ -34,9 +34,9 @@
         edges: {
             defaultColor: '#333333',
             selectedColor: '#999999',
-            defaultOpacity: 0.1,
+            defaultOpacity: 0.3,
             selectedOpacity: 0.6,
-            defaultWidth: 0.3,
+            defaultWidth: 0.45,
             selectedWidth: 2,
             // Scale edge opacity (and, when weight-mapped widths make
             // strokes thick, edge width) by on-screen ink density so dense
@@ -112,7 +112,14 @@
             theme: 'light',
             showLegend: true,
             showStatistics: false,
-            showTooltips: true
+            showTooltips: true,
+            // Metadata describing a numeric metric encoded as node size
+            // and/or color, rendered as an extra legend section. The
+            // Python/R wrappers set this automatically for node_metric;
+            // standalone users can supply it directly:
+            // { label, min, max, map: 'size'|'color'|'both',
+            //   sizeRange: [minPx, maxPx], colors: [lowHex, highHex] }
+            metricLegend: null
         },
         layout: 'force' // 'force' or 'circular'
     };
@@ -170,6 +177,25 @@
             rgbaCache.set(key, value);
         }
         return value;
+    }
+
+    // Linear interpolation between two '#rrggbb' colors; used for the
+    // metric legend's size dots when the metric also drives color.
+    function lerpHex(hex0, hex1, t) {
+        const c0 = [1, 3, 5].map(i => parseInt(hex0.slice(i, i + 2), 16));
+        const c1 = [1, 3, 5].map(i => parseInt(hex1.slice(i, i + 2), 16));
+        return '#' + c0.map((v, i) => Math.round(v + (c1[i] - v) * t)
+            .toString(16).padStart(2, '0')).join('');
+    }
+
+    // Compact human-readable form of a metric value for legend labels.
+    function formatMetricValue(value) {
+        if (!Number.isFinite(value)) return '';
+        const abs = Math.abs(value);
+        if (abs !== 0 && (abs < 0.001 || abs >= 100000)) {
+            return value.toExponential(2);
+        }
+        return String(parseFloat(value.toPrecision(3)));
     }
 
     // Eigen decomposition of a symmetric 2x2 covariance matrix; used for the
@@ -797,20 +823,18 @@
             bottom: '16px',
             left: '16px',
             padding: '10px 12px',
-            maxHeight: '220px',
+            // Cap the legend to roughly half the viewport; long group
+            // lists (plus the metric section) scroll beyond that.
+            maxHeight: 'min(50%, 340px)',
             overflowY: 'auto',
             fontSize: '12px',
             display: 'none',
             minWidth: '130px'
         });
-        const legendTitle = createElement('div', { textContent: 'Groups' }, {
-            marginBottom: '6px',
-            paddingBottom: '5px',
-            fontWeight: '600',
-            borderBottom: '1px solid var(--lg-border)'
-        });
+        // Section titles ('Groups', metric label) are rebuilt inside
+        // updateLegend along with the items.
         const legendContent = createElement('div', { id: 'legendContent' });
-        legendPanel.append(legendTitle, legendContent);
+        legendPanel.append(legendContent);
         lightGraph.appendChild(legendPanel);
 
         // 1.3.4 Statistics Panel
@@ -1024,6 +1048,76 @@
         function hideFloatingInput(x, y) {
             floatingInput.style.display = 'none';
         }
+        function legendSectionTitle(text, isFirst) {
+            return createElement('div', { textContent: text }, {
+                marginTop: isFirst ? '0' : '10px',
+                marginBottom: '6px',
+                paddingBottom: '5px',
+                fontWeight: '600',
+                borderBottom: '1px solid var(--lg-border)'
+            });
+        }
+
+        // Legend section for a metric encoded as node size and/or color:
+        // a row of proportionally sized dots for size, a gradient bar for
+        // color, and min/max value labels underneath.
+        function buildMetricLegend(metric) {
+            const section = createElement('div', { id: 'metricLegend' });
+            const mapsSize = metric.map === 'size' || metric.map === 'both';
+            const mapsColor = metric.map === 'color' || metric.map === 'both';
+            const colors = (mapsColor && Array.isArray(metric.colors)
+                && metric.colors.length >= 2) ? metric.colors : null;
+
+            if (mapsSize) {
+                const range = (Array.isArray(metric.sizeRange)
+                    && metric.sizeRange.length >= 2) ? metric.sizeRange : [4, 20];
+                // Dots keep their relative proportions but are capped so
+                // large node sizes do not blow up the panel.
+                const scale = Math.min(1, 16 / Math.max(range[0], range[1], 1));
+                const row = createElement('div', {}, {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    margin: '2px 0 4px'
+                });
+                [0, 0.5, 1].forEach(t => {
+                    const d = Math.max(3,
+                        (range[0] + t * (range[1] - range[0])) * scale);
+                    row.appendChild(createElement('div', {}, {
+                        width: `${d}px`,
+                        height: `${d}px`,
+                        borderRadius: '50%',
+                        backgroundColor: colors
+                            ? lerpHex(colors[0], colors[1], t)
+                            : config.nodes.defaultColor,
+                        flexShrink: '0'
+                    }));
+                });
+                section.appendChild(row);
+            }
+            if (colors) {
+                section.appendChild(createElement('div', { className: 'lg-metric-gradient' }, {
+                    height: '10px',
+                    borderRadius: '3px',
+                    background: `linear-gradient(to right, ${colors[0]}, ${colors[1]})`,
+                    margin: '2px 0 4px'
+                }));
+            }
+            const labels = createElement('div', {}, {
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: '12px',
+                color: 'var(--lg-muted)',
+                fontSize: '11px'
+            });
+            labels.append(
+                createElement('span', { textContent: formatMetricValue(metric.min) }),
+                createElement('span', { textContent: formatMetricValue(metric.max) })
+            );
+            section.appendChild(labels);
+            return section;
+        }
+
         function updateLegend() {
             if (!config.ui.showLegend) {
                 legendPanel.style.display = 'none';
@@ -1031,7 +1125,11 @@
             }
 
             const groups = [...new Set(nodes.map(node => node.group).filter(Boolean))].sort();
-            if (groups.length === 0) {
+            const metric = config.ui.metricLegend;
+            const hasMetric = !!(metric
+                && ['size', 'color', 'both'].includes(metric.map)
+                && Number.isFinite(metric.min) && Number.isFinite(metric.max));
+            if (groups.length === 0 && !hasMetric) {
                 legendPanel.style.display = 'none';
                 return;
             }
@@ -1039,6 +1137,9 @@
             legendPanel.style.display = 'block';
             legendContent.innerHTML = '';
 
+            if (groups.length > 0) {
+                legendContent.appendChild(legendSectionTitle('Groups', true));
+            }
             groups.forEach(group => {
                 const count = nodes.filter(n => n.group === group).length;
                 const item = createElement('div', { className: 'lg-legend-item' });
@@ -1063,6 +1164,12 @@
 
                 legendContent.appendChild(item);
             });
+
+            if (hasMetric) {
+                legendContent.appendChild(legendSectionTitle(
+                    metric.label || 'Metric', groups.length === 0));
+                legendContent.appendChild(buildMetricLegend(metric));
+            }
         }
 
         function updateStatistics() {
@@ -1211,11 +1318,16 @@
             const meanScreenWidth = screenEdgeWidth(totalWidth / counted);
             const coverage = edges.length * meanScreenLen *
                 meanScreenWidth * visibleShare / viewArea;
-            // Aim for ~40% accumulated alpha coverage. Only ever dim: sparse
-            // graphs keep their configured style (factors cap at 1), and
-            // the effective alpha never drops below 0.02.
+            // Sub-linear ink budget, tuned on a matrix of graph sizes and
+            // degrees (benchmark: 50-5000 nodes, mean degree 2-16): target
+            // alpha ~= 0.12/sqrt(coverage). Linear-in-coverage budgets fail
+            // at both ends — edges concentrate near the center, so a budget
+            // loose enough for hairballs lets mid-density graphs go gray,
+            // and one tight enough for mid-density erases hairball fringes.
+            // Only ever dims: sparse graphs keep their configured style
+            // (factors cap at 1), and effective alpha never drops below 0.02.
             const base = Math.max(baseEdgeAlpha(), 0.001);
-            const ideal = 0.4 / Math.max(coverage, 1e-6);
+            const ideal = 0.12 / Math.sqrt(Math.max(coverage, 1e-6));
             const needed = Math.min(1, ideal / base);
             // Width absorbs up to half the correction (in log space), but
             // the mean stroke never shrinks below the 0.5px hairline — so
@@ -2316,6 +2428,8 @@
         mergeConfig,
         escapeHtml,
         hexToRgba,
+        lerpHex,
+        formatMetricValue,
         computeEigen,
         isNodeInSelection
     };

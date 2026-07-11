@@ -284,6 +284,58 @@ describe('lightGraph Visualization Library', () => {
     });
   });
 
+  describe('Metric Legend', () => {
+    function setConfig(config) {
+      const el = document.createElement('script');
+      el.type = 'application/json';
+      el.id = 'lightGraphConfig';
+      el.textContent = JSON.stringify(config);
+      document.body.appendChild(el);
+    }
+
+    test('renders a metric section with gradient and min/max labels', () => {
+      setConfig({ ui: { metricLegend: {
+        label: 'PageRank', map: 'both', min: 0.01, max: 0.25,
+        sizeRange: [4, 20], colors: ['#c6dbef', '#08306b']
+      } } });
+      eval(lightgraphCode);
+      window.lightGraph.initializeVisualization();
+
+      const panel = document.getElementById('legendPanel');
+      expect(panel.style.display).toBe('block');
+      const metric = document.getElementById('metricLegend');
+      expect(metric).toBeTruthy();
+      expect(panel.textContent).toContain('PageRank');
+      expect(panel.textContent).toContain('0.01');
+      expect(panel.textContent).toContain('0.25');
+      // Gradient bar for the color channel
+      expect(metric.querySelectorAll('.lg-metric-gradient').length).toBe(1);
+    });
+
+    test('size-only metric renders dots but no gradient', () => {
+      setConfig({ ui: { metricLegend: {
+        map: 'size', min: 1, max: 10, sizeRange: [4, 20]
+      } } });
+      eval(lightgraphCode);
+      window.lightGraph.initializeVisualization();
+
+      const metric = document.getElementById('metricLegend');
+      expect(metric).toBeTruthy();
+      // Falls back to the generic 'Metric' title when no label is given
+      expect(document.getElementById('legendPanel').textContent).toContain('Metric');
+      expect(metric.querySelectorAll('.lg-metric-gradient').length).toBe(0);
+      const dots = [...metric.querySelectorAll('div')]
+        .filter(d => d.style.borderRadius === '50%');
+      expect(dots.length).toBe(3);
+    });
+
+    test('legend stays hidden without groups or metric', () => {
+      eval(lightgraphCode);
+      window.lightGraph.initializeVisualization();
+      expect(document.getElementById('legendPanel').style.display).toBe('none');
+    });
+  });
+
   describe('Namespace and Global Scope', () => {
     test('should define lightGraph namespace', () => {
       window.lightGraph = undefined;

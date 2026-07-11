@@ -226,6 +226,11 @@ class TestDataInputs:
         start = html.find('id="nodesData">') + len('id="nodesData">')
         return json.loads(html[start:html.find('</script>', start)])
 
+    def _extract_config(self, result):
+        html = result.html
+        start = html.find('id="lightGraphConfig">') + len('id="lightGraphConfig">')
+        return json.loads(html[start:html.find('</script>', start)])
+
     def test_edge_list_tuples(self):
         result = net_vis(edges=[('A', 'B'), ('B', 'C', 2.5)])
         edges = self._extract_edges(result)
@@ -297,6 +302,34 @@ class TestDataInputs:
         nodes = {n['id']: n for n in self._extract_nodes(result)}
         assert nodes['A']['size'] == 99.0   # explicit wins
         assert nodes['B']['size'] == 20.0   # metric-derived
+
+    def test_node_metric_legend_metadata(self):
+        result = net_vis(edges=[('A', 'B'), ('B', 'C')],
+                         node_metric={'A': 0.0, 'B': 5.0, 'C': 10.0},
+                         metric_map='both',
+                         metric_label='PageRank')
+        legend = self._extract_config(result)['ui']['metricLegend']
+        assert legend['label'] == 'PageRank'
+        assert legend['map'] == 'both'
+        assert legend['min'] == 0.0
+        assert legend['max'] == 10.0
+        assert legend['sizeRange'] == [4, 20]
+        assert legend['colors'] == ['#c6dbef', '#08306b']
+
+    def test_no_metric_legend_without_metric(self):
+        result = net_vis(edges=[('A', 'B')])
+        assert 'metricLegend' not in self._extract_config(result)['ui']
+
+    def test_metric_legend_reflects_driven_channels_only(self):
+        # Every node has an explicit size, so the metric only drives color.
+        result = net_vis(edges=[('A', 'B')],
+                         node_metric={'A': 0, 'B': 1},
+                         metric_map='both',
+                         node_sizes={'A': 5, 'B': 6})
+        legend = self._extract_config(result)['ui']['metricLegend']
+        assert legend['map'] == 'color'
+        assert 'sizeRange' not in legend
+        assert legend['colors'] == ['#c6dbef', '#08306b']
 
     def test_weight_mapping_config(self):
         result = net_vis(edges=[('A', 'B')],

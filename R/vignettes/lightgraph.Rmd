@@ -80,7 +80,9 @@ lightgraph(
 
 `metric_map` chooses the channel for the metric: `"size"` (default),
 `"color"`, or `"both"`, interpolating between the `metric_colors`
-endpoints — a PageRank heat map:
+endpoints. When the legend is on, a metric section shows the size/color
+scale with its min/max values — title it with `metric_label` (e.g.
+`metric_label = "PageRank"`). Here a PageRank heat map:
 
 ```{r pagerank}
 lightgraph(

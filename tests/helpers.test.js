@@ -8,6 +8,8 @@ const {
   mergeConfig,
   escapeHtml,
   hexToRgba,
+  lerpHex,
+  formatMetricValue,
   computeEigen,
   isNodeInSelection,
   LightGraph,
@@ -68,6 +70,37 @@ describe('hexToRgba', () => {
 
   test('returns cached value on repeat calls', () => {
     expect(hexToRgba('#123456', 0.3)).toBe(hexToRgba('#123456', 0.3));
+  });
+});
+
+describe('lerpHex', () => {
+  test('returns the endpoints at t=0 and t=1', () => {
+    expect(lerpHex('#000000', '#ffffff', 0)).toBe('#000000');
+    expect(lerpHex('#000000', '#ffffff', 1)).toBe('#ffffff');
+  });
+
+  test('interpolates each channel at the midpoint', () => {
+    expect(lerpHex('#000000', '#ffffff', 0.5)).toBe('#808080');
+    expect(lerpHex('#c6dbef', '#08306b', 0.5)).toBe('#6786ad');
+  });
+});
+
+describe('formatMetricValue', () => {
+  test('rounds to three significant digits', () => {
+    expect(formatMetricValue(0.123456)).toBe('0.123');
+    expect(formatMetricValue(1234)).toBe('1230');
+    expect(formatMetricValue(5)).toBe('5');
+  });
+
+  test('uses exponential notation for extreme magnitudes', () => {
+    expect(formatMetricValue(0.0000123)).toBe('1.23e-5');
+    expect(formatMetricValue(1234567)).toBe('1.23e+6');
+  });
+
+  test('handles zero and non-finite values', () => {
+    expect(formatMetricValue(0)).toBe('0');
+    expect(formatMetricValue(NaN)).toBe('');
+    expect(formatMetricValue(Infinity)).toBe('');
   });
 });
 

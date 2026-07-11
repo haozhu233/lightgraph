@@ -13,6 +13,7 @@ lightgraph(
   metric_map = "size",
   metric_size_range = c(4, 20),
   metric_colors = c("#c6dbef", "#08306b"),
+  metric_label = NULL,
   show_arrows = FALSE,
   show_labels = TRUE,
   show_ellipses = TRUE,
@@ -82,6 +83,10 @@ metric-driven sizing (default: c(4, 20)).}
 \item{metric_colors}{Character length-2, low/high hex colors for
 metric-driven coloring (default: c("#c6dbef", "#08306b")).}
 
+\item{metric_label}{Character, title for the metric section of the legend
+(e.g. "PageRank"; default: "Metric"). Shown whenever node_metric drives
+size and/or color and show_legend is TRUE.}
+
 \item{show_arrows}{Logical, whether to show directional arrows on edges (default: FALSE).}
 
 \item{show_labels}{Logical, whether to show node labels (default: TRUE).}
@@ -127,7 +132,7 @@ the theme color.}
 
 \item{label_font_size}{Numeric, font size for labels (default: 5).}
 
-\item{edge_width}{Numeric, base width for edges (JS default 0.3).}
+\item{edge_width}{Numeric, base width for edges (JS default 0.45).}
 
 \item{edge_color}{Character, default edge color (hex). Defaults to the
 theme color.}

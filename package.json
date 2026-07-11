@@ -1,6 +1,6 @@
 {
   "name": "lightgraph",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "High-performance HTML canvas network visualization: batched rendering, viewport culling, and modeless interaction keep graphs with tens of thousands of edges smooth",
   "main": "lightgraph.js",
   "files": [
