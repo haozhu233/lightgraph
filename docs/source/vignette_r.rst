@@ -206,7 +206,8 @@ Frankfurt and Paris once intercontinental routes are excluded:
    #  615  549  544  518  512  493  478  454
 
    lightgraph(edges = eu, node_metric = strength_eu,
-              metric_size_range = c(2, 26))
+              metric_size_range = c(2, 26),
+              metric_label = "Route volume")
 
 .. raw:: html
 
@@ -229,7 +230,7 @@ heat map of the European network:
    lightgraph(edges = eu, node_metric = lg_pagerank(eu),
               metric_map = "both",
               metric_colors = c("#dbe9f6", "#08306b"),
-              show_legend = FALSE)
+              metric_label = "PageRank")
 
 .. raw:: html
 
@@ -261,7 +262,8 @@ single-airline routes fade back:
               edge_weight_to_width = TRUE,
               edge_weight_to_opacity = TRUE,
               weight_width_range = c(0.3, 5),
-              node_metric = strength_eu)
+              node_metric = strength_eu,
+              metric_label = "Route volume")
 
 .. raw:: html
 
@@ -366,6 +368,7 @@ reach:
 
    lightgraph(edges = eu, theme = "dark",
               node_metric = strength_eu, metric_size_range = c(2, 24),
+              metric_label = "Route volume",
               ego_depth = 2, neighbor_fade = 0.06)
 
 .. raw:: html
@@ -430,7 +433,8 @@ route volume:
    lightgraph(edges = competitive, node_groups = comm,
               show_ellipses = FALSE,
               node_metric = lg_degree(competitive, weighted = TRUE),
-              metric_size_range = c(2, 22))
+              metric_size_range = c(2, 22),
+              metric_label = "Route volume")
 
 .. raw:: html
 
@@ -461,7 +465,8 @@ between route systems — take over:
 
    lightgraph(edges = sub, node_metric = bt, metric_map = "both",
               metric_colors = c("#d9d9d9", "#c22e00"),
-              show_legend = FALSE, edge_weight_to_opacity = TRUE)
+              metric_label = "Betweenness",
+              edge_weight_to_opacity = TRUE)
 
 .. raw:: html
 

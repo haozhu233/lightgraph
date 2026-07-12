@@ -147,7 +147,8 @@ slim_embed(lightgraph(nodes, edges, remove_unconnected = TRUE,
 
 # 4. Metric: strength -> size
 slim_embed(lightgraph(edges = eu, node_metric = strength_eu,
-                      metric_size_range = c(2, 26)),
+                      metric_size_range = c(2, 26),
+                      metric_label = "Route volume"),
            "r_flights_metric.html", "European hubs by route volume",
            shared_edges = F_EU)
 
@@ -155,7 +156,7 @@ slim_embed(lightgraph(edges = eu, node_metric = strength_eu,
 slim_embed(lightgraph(edges = eu, node_metric = lg_pagerank(eu),
                       metric_map = "both",
                       metric_colors = c("#dbe9f6", "#08306b"),
-                      show_legend = FALSE),
+                      metric_label = "PageRank"),
            "r_flights_pagerank.html", "PageRank heat map (Europe)",
            shared_edges = F_EU)
 
@@ -163,7 +164,8 @@ slim_embed(lightgraph(edges = eu, node_metric = lg_pagerank(eu),
 slim_embed(lightgraph(edges = eu, edge_weight_to_width = TRUE,
                       edge_weight_to_opacity = TRUE,
                       weight_width_range = c(0.3, 5),
-                      node_metric = strength_eu),
+                      node_metric = strength_eu,
+                      metric_label = "Route volume"),
            "r_flights_weights.html", "European routes, weighted",
            shared_edges = F_EU)
 
@@ -193,20 +195,23 @@ comm8 <- comm[comm %in% top8]
 strength_comp <- lg_degree(competitive, weighted = TRUE)
 slim_embed(lightgraph(edges = competitive, node_groups = comm8,
                       show_ellipses = FALSE, node_metric = strength_comp,
-                      metric_size_range = c(2, 22)),
+                      metric_size_range = c(2, 22),
+                      metric_label = "Route volume"),
            "r_flights_communities.html", "Detected route communities",
            shared_edges = F_COMP)
 
 # 10. Brokers: betweenness (top-500 subgraph)
 slim_embed(lightgraph(edges = sub500, node_metric = bt, metric_map = "both",
                       metric_colors = c("#d9d9d9", "#c22e00"),
-                      show_legend = FALSE, edge_weight_to_opacity = TRUE),
+                      metric_label = "Betweenness",
+                      edge_weight_to_opacity = TRUE),
            "r_flights_brokers.html", "Brokers of the flight network")
 
 # 11. Dark theme
 slim_embed(lightgraph(edges = eu, theme = "dark",
                       node_metric = strength_eu,
                       metric_size_range = c(2, 24),
+                      metric_label = "Route volume",
                       ego_depth = 2, neighbor_fade = 0.06),
            "r_flights_dark.html", "Dark theme", shared_edges = F_EU,
            bg = "#111827")

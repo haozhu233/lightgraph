@@ -72,6 +72,7 @@ lg_top_nodes(strength, 5)
 lightgraph(
   edges = les_mis,
   node_metric = strength,
+  metric_label = "Weighted degree",
   edge_weight_to_width = TRUE,
   weight_width_range = c(0.4, 6),
   height = "480px"
@@ -90,7 +91,7 @@ lightgraph(
   node_metric = lg_pagerank(les_mis),
   metric_map = "both",
   metric_colors = c("#dbe9f6", "#08306b"),
-  show_legend = FALSE,
+  metric_label = "PageRank",
   height = "480px"
 )
 ```
@@ -119,6 +120,7 @@ lightgraph(
   edges = got,
   node_groups = "auto",
   node_metric = lg_pagerank(got),
+  metric_label = "PageRank",
   show_ellipses = FALSE,
   height = "480px"
 )

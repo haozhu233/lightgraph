@@ -191,7 +191,8 @@ slim_embed(net_vis(edges=edges, nodes=nodes, show_ellipses=False),
 # 4. Metric-driven size: route volume within Europe
 # ---------------------------------------------------------------------------
 slim_embed(
-    net_vis(edges=eu, node_metric=strength_eu, metric_size_range=(2, 26)),
+    net_vis(edges=eu, node_metric=strength_eu, metric_size_range=(2, 26),
+            metric_label='Route volume'),
     'py_flights_metric.html', 'European hubs by route volume',
     shared_edges=F_EU)
 
@@ -200,7 +201,7 @@ slim_embed(
 # ---------------------------------------------------------------------------
 slim_embed(
     net_vis(edges=eu, node_metric=pagerank(eu), metric_map='both',
-            metric_colors=('#dbe9f6', '#08306b'), show_legend=False),
+            metric_colors=('#dbe9f6', '#08306b'), metric_label='PageRank'),
     'py_flights_pagerank.html', 'PageRank heat map (Europe)',
     shared_edges=F_EU)
 
@@ -209,7 +210,8 @@ slim_embed(
 # ---------------------------------------------------------------------------
 slim_embed(
     net_vis(edges=eu, edge_weight_to_width=True, edge_weight_to_opacity=True,
-            weight_width_range=(0.3, 5), node_metric=strength_eu),
+            weight_width_range=(0.3, 5), node_metric=strength_eu,
+            metric_label='Route volume'),
     'py_flights_weights.html', 'European routes, weighted',
     shared_edges=F_EU)
 
@@ -244,7 +246,8 @@ comm8 = {n: c for n, c in comm.items() if c in top8}
 strength_comp = degree(competitive, weighted=True)
 slim_embed(
     net_vis(edges=competitive, node_groups=comm8, show_ellipses=False,
-            node_metric=strength_comp, metric_size_range=(2, 22)),
+            node_metric=strength_comp, metric_size_range=(2, 22),
+            metric_label='Route volume'),
     'py_flights_communities.html', 'Detected route communities',
     shared_edges=F_COMP)
 
@@ -253,7 +256,7 @@ slim_embed(
 # ---------------------------------------------------------------------------
 slim_embed(
     net_vis(edges=sub500, node_metric=bt, metric_map='both',
-            metric_colors=('#d9d9d9', '#c22e00'), show_legend=False,
+            metric_colors=('#d9d9d9', '#c22e00'), metric_label='Betweenness',
             edge_weight_to_opacity=True),
     'py_flights_brokers.html', 'Brokers of the flight network')
 
@@ -262,7 +265,8 @@ slim_embed(
 # ---------------------------------------------------------------------------
 slim_embed(
     net_vis(edges=eu, theme='dark', node_metric=strength_eu,
-            metric_size_range=(2, 24), ego_depth=2, neighbor_fade=0.06),
+            metric_size_range=(2, 24), metric_label='Route volume',
+            ego_depth=2, neighbor_fade=0.06),
     'py_flights_dark.html', 'Dark theme', shared_edges=F_EU, bg='#111827')
 
 print('done')

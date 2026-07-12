@@ -201,7 +201,8 @@ subnetwork (561 airports, 5,088 routes). Size encodes route volume
    eu = edges[edges['source'].isin(europe) & edges['target'].isin(europe)]
 
    strength_eu = degree(eu, weighted=True)
-   net_vis(edges=eu, node_metric=strength_eu, metric_size_range=(2, 26))
+   net_vis(edges=eu, node_metric=strength_eu, metric_size_range=(2, 26),
+           metric_label='Route volume')
 
 .. raw:: html
 
@@ -237,7 +238,7 @@ heat map of the European network:
    from lightgraph import pagerank
 
    net_vis(edges=eu, node_metric=pagerank(eu), metric_map='both',
-           metric_colors=('#dbe9f6', '#08306b'), show_legend=False)
+           metric_colors=('#dbe9f6', '#08306b'), metric_label='PageRank')
 
 .. raw:: html
 
@@ -279,7 +280,8 @@ single-airline routes fade back:
            edge_weight_to_width=True,
            edge_weight_to_opacity=True,
            weight_width_range=(0.3, 5),
-           node_metric=strength_eu)
+           node_metric=strength_eu,
+           metric_label='Route volume')
 
 .. raw:: html
 
@@ -398,6 +400,7 @@ you get its two-hop reach:
 
    net_vis(edges=eu, theme='dark',
            node_metric=strength_eu, metric_size_range=(2, 24),
+           metric_label='Route volume',
            ego_depth=2, neighbor_fade=0.06)
 
 .. raw:: html
@@ -463,7 +466,7 @@ each community is a regional route system, sized by its route volume:
 
    net_vis(edges=competitive, node_groups=comm, show_ellipses=False,
            node_metric=degree(competitive, weighted=True),
-           metric_size_range=(2, 22))
+           metric_size_range=(2, 22), metric_label='Route volume')
 
 .. raw:: html
 
@@ -500,7 +503,7 @@ between route systems — take over:
 .. code-block:: python
 
    net_vis(edges=sub, node_metric=bt, metric_map='both',
-           metric_colors=('#d9d9d9', '#c22e00'), show_legend=False,
+           metric_colors=('#d9d9d9', '#c22e00'), metric_label='Betweenness',
            edge_weight_to_opacity=True)
 
 .. raw:: html
