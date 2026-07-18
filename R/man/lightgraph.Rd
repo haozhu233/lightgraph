@@ -8,6 +8,8 @@ lightgraph(
   nodes = NULL,
   edges,
   node_groups = NULL,
+  group_colors = NULL,
+  group_order = NULL,
   remove_unconnected = FALSE,
   node_metric = NULL,
   metric_map = "size",
@@ -64,6 +66,20 @@ columns. Optional 'weight' column for edge weights.}
 labels, or the string "auto" to detect communities automatically via
 \code{\link{lg_communities}}. Values given here win over an existing
 'group' column in \code{nodes}.}
+
+\item{group_colors}{An optional named vector mapping group names to hex
+colors (e.g. \code{c(alpha = "#ff7f0e")}), pinning those groups'
+colors. Unpinned groups stay on the default palette. Names matching no
+group are ignored, so one vector can be reused across filtered subsets
+of the same data.}
+
+\item{group_order}{An optional character vector giving the group ordering
+for palette assignment. Groups keep their palette slot even when absent
+from the data, so passing the same vector (e.g. computed once from the
+full dataset) to every figure in a series keeps each group's color
+stable across subsets. Groups not listed are appended in sorted order.
+Without group_order, groups are assigned palette colors in sorted-name
+order.}
 
 \item{remove_unconnected}{Logical, whether to remove nodes with no
 connections (default: FALSE; the Python binding defaults to TRUE

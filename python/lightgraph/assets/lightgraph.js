@@ -91,7 +91,15 @@
         groups: {
             fillOpacity: 0.125,
             strokeWidth: 2,
-            showEllipses: true
+            showEllipses: true,
+            // Pinned assignments: {groupName: hexColor}. Wins over the
+            // palette for the named groups; unmatched names are ignored so
+            // one map can be reused across filtered subsets.
+            colors: null,
+            // Explicit palette domain: [groupName, ...]. Listed groups keep
+            // their palette slot even when absent from the data, so a shared
+            // order keeps colors stable across a series of figures.
+            colorOrder: null
         },
         canvas: {
             backgroundColor: '#ffffff',
@@ -918,6 +926,35 @@
             ...d3.schemeSet3
         ];
         const groupColorScale = d3.scaleOrdinal(extendedColors);
+        // Seed the palette domain deterministically on every data load:
+        // config.groups.colorOrder first (listed groups keep their slot even
+        // when absent from the data), then the remaining groups in sorted
+        // order. Without an explicit domain d3 assigns colors by first paint
+        // order, so the same group changes color whenever the node array does.
+        function updateGroupColorDomain() {
+            const present = [...new Set(nodes.map(n => n.group).filter(Boolean))].sort();
+            const order = config.groups.colorOrder;
+            const ordered = Array.isArray(order) ? order.map(String)
+                : (order != null ? [String(order)] : []);
+            const orderSet = new Set(ordered);
+            const domain = [...new Set([...ordered, ...present.filter(g => !orderSet.has(g))])];
+            if (domain.length > extendedColors.length) {
+                console.warn(`lightGraph: ${domain.length} groups exceed the `
+                    + `${extendedColors.length}-color palette; colors will repeat. `
+                    + `Pin colors via config.groups.colors to disambiguate.`);
+            }
+            groupColorScale.domain(domain);
+        }
+        // Single resolution point for every group-colored surface (legend
+        // swatch, node fill, ellipse, tooltip dot, SVG export): pinned
+        // config.groups.colors first, palette otherwise.
+        function getGroupColor(group) {
+            const pinned = config.groups.colors;
+            if (pinned && Object.prototype.hasOwnProperty.call(pinned, group)) {
+                return pinned[group];
+            }
+            return groupColorScale(group);
+        }
         // Modeless interaction: d3-zoom owns wheel events and drags that
         // start on empty space; node drags and shift box-selects fall
         // through to the canvas listeners below.
@@ -1148,7 +1185,7 @@
                     width: '11px',
                     height: '11px',
                     borderRadius: '3px',
-                    backgroundColor: groupColorScale(group),
+                    backgroundColor: getGroupColor(group),
                     flexShrink: '0'
                 });
 
@@ -1403,7 +1440,7 @@
             maxNodeSize = config.nodes.defaultSize;
             for (const d of nodes) {
                 if (egoSet && !egoSet.has(d)) continue;
-                const color = d.group ? groupColorScale(d.group) : (d.color || config.nodes.defaultColor);
+                const color = d.group ? getGroupColor(d.group) : (d.color || config.nodes.defaultColor);
                 const isSelected = selectedNodes.has(d);
                 const isFaded = highlightSet !== null && !highlightSet.has(d);
                 let opacity = d.opacity !== undefined ? d.opacity : config.nodes.defaultOpacity;
@@ -1608,9 +1645,9 @@
                 context.rotate(angle);
                 context.beginPath();
                 context.ellipse(0, 0, radiusX + 5, radiusY + 5, 0, 0, 2 * Math.PI);
-                context.fillStyle = hexToRgba(groupColorScale(group), config.groups.fillOpacity);
+                context.fillStyle = hexToRgba(getGroupColor(group), config.groups.fillOpacity);
                 context.fill();
-                context.strokeStyle = groupColorScale(group);
+                context.strokeStyle = getGroupColor(group);
                 context.lineWidth = config.groups.strokeWidth;
                 context.stroke();
                 context.restore();
@@ -1648,6 +1685,7 @@
             nodes = newNodes;
             edges = newEdges;
 
+            updateGroupColorDomain();
             recalculateForce();
             updateEdgeAlpha();
             updateLegend();
@@ -1929,7 +1967,7 @@
             if (config.ui.showTooltips && hoveredNode) {
                 let tooltipContent = `<strong>${escapeHtml(hoveredNode.id)}</strong>`;
                 if (hoveredNode.group) {
-                    tooltipContent += `<br><span style="color: ${groupColorScale(hoveredNode.group)};">● ${escapeHtml(hoveredNode.group)}</span>`;
+                    tooltipContent += `<br><span style="color: ${getGroupColor(hoveredNode.group)};">● ${escapeHtml(hoveredNode.group)}</span>`;
                 }
                 // Add any custom metadata
                 if (hoveredNode.metadata) {
@@ -2158,7 +2196,7 @@
                 circle.setAttribute('cy', node.y);
                 circle.setAttribute('r',
                     (node.size || config.nodes.defaultSize) * config.nodes.sizeScale / 2);
-                circle.setAttribute('fill', node.group ? groupColorScale(node.group) : (node.color || config.nodes.defaultColor));
+                circle.setAttribute('fill', node.group ? getGroupColor(node.group) : (node.color || config.nodes.defaultColor));
                 circle.setAttribute('stroke', config.nodes.borderColor);
                 circle.setAttribute('stroke-width', config.nodes.borderWidth);
                 g.appendChild(circle);
@@ -2246,6 +2284,9 @@
         // Merge a partial config over the current one and re-render.
         this.updateConfig = (partial = {}) => {
             config = mergeConfig(config, partial);
+            if (partial.groups && ('colors' in partial.groups || 'colorOrder' in partial.groups)) {
+                updateGroupColorDomain();
+            }
             if (partial.edges && 'showArrows' in partial.edges) {
                 showArrows = config.edges.showArrows;
                 arrowsToggle.checked = showArrows;

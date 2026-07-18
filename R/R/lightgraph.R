@@ -15,6 +15,18 @@
 #'   labels, or the string "auto" to detect communities automatically via
 #'   \code{\link{lg_communities}}. Values given here win over an existing
 #'   'group' column in \code{nodes}.
+#' @param group_colors An optional named vector mapping group names to hex
+#'   colors (e.g. \code{c(alpha = "#ff7f0e")}), pinning those groups'
+#'   colors. Unpinned groups stay on the default palette. Names matching no
+#'   group are ignored, so one vector can be reused across filtered subsets
+#'   of the same data.
+#' @param group_order An optional character vector giving the group ordering
+#'   for palette assignment. Groups keep their palette slot even when absent
+#'   from the data, so passing the same vector (e.g. computed once from the
+#'   full dataset) to every figure in a series keeps each group's color
+#'   stable across subsets. Groups not listed are appended in sorted order.
+#'   Without group_order, groups are assigned palette colors in sorted-name
+#'   order.
 #' @param remove_unconnected Logical, whether to remove nodes with no
 #'   connections (default: FALSE; the Python binding defaults to TRUE
 #'   because adjacency-matrix workflows often carry empty rows).
@@ -130,6 +142,8 @@
 #' @export
 lightgraph <- function(nodes = NULL, edges,
                        node_groups = NULL,
+                       group_colors = NULL,
+                       group_order = NULL,
                        remove_unconnected = FALSE,
                        node_metric = NULL,
                        metric_map = "size",
@@ -197,6 +211,9 @@ lightgraph <- function(nodes = NULL, edges,
   }
   if (!metric_map %in% c("size", "color", "both")) {
     stop("metric_map must be 'size', 'color', or 'both'")
+  }
+  if (!is.null(group_colors) && is.null(names(group_colors))) {
+    stop("group_colors must be a named vector of group = hex color")
   }
 
   # Resolve node_groups ("auto" or a named vector) into the group column.
@@ -343,6 +360,13 @@ lightgraph <- function(nodes = NULL, edges,
     graph_config$ui$metricLegend <- metric_legend
   }
   # Only set optional values if explicitly provided
+  if (!is.null(group_colors)) {
+    graph_config$groups$colors <- as.list(group_colors)
+  }
+  if (!is.null(group_order)) {
+    # I() keeps a length-1 vector serializing as a JSON array, not a scalar
+    graph_config$groups$colorOrder <- I(as.character(group_order))
+  }
   if (!is.null(node_color)) {
     graph_config$nodes$defaultColor <- node_color
   }

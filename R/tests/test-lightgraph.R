@@ -115,10 +115,30 @@ w2 <- lightgraph(nodes, edges2, node_groups = c(A = "override"))
 g2 <- vapply(w2$x$nodes, `[[`, "", "group")
 check("node_groups override wins", g2[1] == "override" && g2[2] == "g1")
 
+# Stable group colors: pinned colors and explicit palette order
+wg <- lightgraph(nodes, edges2,
+                 group_colors = c(g1 = "#ff7f0e"),
+                 group_order = c("g2", "g1"))
+check("group_colors in config",
+      identical(wg$x$config$groups$colors, list(g1 = "#ff7f0e")))
+check("group_order in config",
+      identical(as.character(wg$x$config$groups$colorOrder), c("g2", "g1")))
+check("group colors omitted by default",
+      is.null(lightgraph(nodes, edges2)$x$config$groups$colors))
+gc_err <- tryCatch({ lightgraph(nodes, edges2, group_colors = "#ff0000"); NULL },
+                   error = function(e) e)
+check("unnamed group_colors rejected", !is.null(gc_err))
+
 # JSON payload shape (as htmlwidgets would serialize it)
 json <- jsonlite::toJSON(w$x$config, auto_unbox = TRUE)
 check("json scalars unboxed", grepl('"defaultWidth":0.5', json))
 check("json ranges are arrays", grepl('"weightWidthRange":\\[1,5\\]', json))
+json_g <- jsonlite::toJSON(wg$x$config, auto_unbox = TRUE)
+check("json group colors object", grepl('"colors":\\{"g1":"#ff7f0e"\\}', json_g))
+check("json group order array", grepl('"colorOrder":\\["g2","g1"\\]', json_g))
+json_g1 <- jsonlite::toJSON(
+  lightgraph(nodes, edges2, group_order = "g1")$x$config, auto_unbox = TRUE)
+check("json length-1 group order stays array", grepl('"colorOrder":\\["g1"\\]', json_g1))
 
 # Legacy positional call still works
 w3 <- lightgraph(nodes, edges2)

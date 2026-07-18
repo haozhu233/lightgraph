@@ -184,6 +184,33 @@ recognizable world map from route topology alone. ``show_ellipses``
 (default ``TRUE``) adds a covariance ellipse per group; for groups as
 interwoven as continents it reads better off.
 
+Stable colors across figures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Palette colors are assigned to groups in sorted-name order, so the same
+data always renders the same colors. In a *series* of figures that
+filters the data, though, a group that drops out of one figure would
+shift the palette for every group after it. Compute ``group_order``
+once from the full dataset and pass it to every figure: listed groups
+keep their palette slot even when absent, so each group's color is
+identical in every subset. ``group_colors`` pins exact colors on top of
+that; names matching no group in a given figure are ignored, so one
+vector serves the whole series:
+
+.. code-block:: r
+
+   continents <- sort(unique(nodes$group[!is.na(nodes$group)]))
+
+   lightgraph(nodes, edges, group_order = continents)
+
+   # the competitive slice drops whole continents — colors hold anyway
+   competitive <- edges[edges$weight >= 3, ]
+   lightgraph(nodes, competitive, group_order = continents)
+
+   # or pin colors outright
+   lightgraph(nodes, edges,
+              group_colors = c(Europe = "#1f77b4", Asia = "#ff7f0e"))
+
 Metric-driven size
 ~~~~~~~~~~~~~~~~~~
 

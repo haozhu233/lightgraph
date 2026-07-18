@@ -336,6 +336,127 @@ describe('lightGraph Visualization Library', () => {
     });
   });
 
+  describe('Group Colors', () => {
+    // d3.schemeCategory10 in rgb form, as jsdom reports backgroundColor
+    function hexToRgb(hex) {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
+    }
+
+    function setUp(nodes, config) {
+      document.body.innerHTML = `
+        <div id="lightGraph" style="width: 800px; height: 600px;"></div>
+        <script type="application/json" id="nodesData">${JSON.stringify(nodes)}</script>
+        <script type="application/json" id="edgesData">[]</script>
+      `;
+      if (config) {
+        const el = document.createElement('script');
+        el.type = 'application/json';
+        el.id = 'lightGraphConfig';
+        el.textContent = JSON.stringify(config);
+        document.body.appendChild(el);
+      }
+      window.lightGraph = {};
+      eval(lightgraphCode);
+      window.lightGraph.initializeVisualization();
+    }
+
+    // Legend renders groups alphabetically; returns {group: rgbColor}
+    function legendColors() {
+      const colors = {};
+      document.querySelectorAll('#legendContent .lg-legend-item').forEach(item => {
+        const group = item.querySelector('span').textContent.split(' ')[0];
+        colors[group] = item.firstChild.style.backgroundColor;
+      });
+      return colors;
+    }
+
+    test('colors follow sorted group order, not node order', () => {
+      setUp([
+        { id: 'A', group: 'gamma' },
+        { id: 'B', group: 'alpha' },
+        { id: 'C', group: 'beta' }
+      ]);
+      expect(legendColors()).toEqual({
+        alpha: hexToRgb('#1f77b4'),
+        beta: hexToRgb('#ff7f0e'),
+        gamma: hexToRgb('#2ca02c')
+      });
+    });
+
+    test('same groups get same colors regardless of node order', () => {
+      setUp([
+        { id: 'A', group: 'gamma' },
+        { id: 'B', group: 'alpha' },
+        { id: 'C', group: 'beta' }
+      ]);
+      const first = legendColors();
+      setUp([
+        { id: 'C', group: 'beta' },
+        { id: 'A', group: 'gamma' },
+        { id: 'B', group: 'alpha' }
+      ]);
+      expect(legendColors()).toEqual(first);
+    });
+
+    test('colorOrder keeps colors stable when a group is absent', () => {
+      const config = { groups: { colorOrder: ['alpha', 'beta', 'gamma'] } };
+      setUp([
+        { id: 'A', group: 'alpha' },
+        { id: 'B', group: 'beta' },
+        { id: 'C', group: 'gamma' }
+      ], config);
+      const full = legendColors();
+
+      // Drop beta entirely: alpha and gamma must keep their colors.
+      setUp([
+        { id: 'A', group: 'alpha' },
+        { id: 'C', group: 'gamma' }
+      ], config);
+      const subset = legendColors();
+      expect(subset.alpha).toBe(full.alpha);
+      expect(subset.gamma).toBe(full.gamma);
+      expect(subset.beta).toBeUndefined();
+    });
+
+    test('groups not in colorOrder follow the listed ones in sorted order', () => {
+      setUp([
+        { id: 'A', group: 'alpha' },
+        { id: 'B', group: 'beta' },
+        { id: 'C', group: 'gamma' }
+      ], { groups: { colorOrder: ['gamma'] } });
+      expect(legendColors()).toEqual({
+        gamma: hexToRgb('#1f77b4'),
+        alpha: hexToRgb('#ff7f0e'),
+        beta: hexToRgb('#2ca02c')
+      });
+    });
+
+    test('groups.colors pins named groups and leaves the rest on the palette', () => {
+      setUp([
+        { id: 'A', group: 'alpha' },
+        { id: 'B', group: 'beta' },
+        { id: 'C', group: 'gamma' }
+      ], { groups: { colors: { beta: '#123456', missing: '#ffffff' } } });
+      expect(legendColors()).toEqual({
+        alpha: hexToRgb('#1f77b4'),
+        beta: hexToRgb('#123456'),
+        gamma: hexToRgb('#2ca02c')
+      });
+    });
+
+    test('updateConfig({groups}) recolors an existing instance', () => {
+      setUp([
+        { id: 'A', group: 'alpha' },
+        { id: 'B', group: 'beta' }
+      ]);
+      const instance = document.getElementById('lightGraph').lightgraph;
+      instance.updateConfig({ groups: { colors: { alpha: '#abcdef' } } });
+      expect(legendColors().alpha).toBe(hexToRgb('#abcdef'));
+      expect(legendColors().beta).toBe(hexToRgb('#ff7f0e'));
+    });
+  });
+
   describe('Namespace and Global Scope', () => {
     test('should define lightGraph namespace', () => {
       window.lightGraph = undefined;
