@@ -186,6 +186,33 @@ With ``show_ellipses=True`` (the default) each group also gets a
 covariance ellipse — useful for cluster-like groups; for groups as
 interwoven as continents, switching it off reads better.
 
+Stable colors across figures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Palette colors are assigned to groups in sorted-name order, so the same
+data always renders the same colors. In a *series* of figures that
+filters the data, though, a group that drops out of one figure would
+shift the palette for every group after it. Compute ``group_order``
+once from the full dataset and pass it to every figure: listed groups
+keep their palette slot even when absent, so each group's color is
+identical in every subset. ``group_colors`` pins exact colors on top of
+that; names matching no group in a given figure are ignored, so one
+value serves the whole series:
+
+.. code-block:: python
+
+   continents = sorted(nodes['group'].dropna().unique())
+
+   net_vis(edges=edges, nodes=nodes, group_order=continents)
+
+   # the competitive slice drops whole continents — colors hold anyway
+   competitive = edges[edges['weight'] >= 3]
+   net_vis(edges=competitive, nodes=nodes, group_order=continents)
+
+   # or pin colors outright
+   net_vis(edges=edges, nodes=nodes,
+           group_colors={'Europe': '#1f77b4', 'Asia': '#ff7f0e'})
+
 Metric-driven size
 ~~~~~~~~~~~~~~~~~~
 

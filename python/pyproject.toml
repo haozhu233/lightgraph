@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "lightgraph"
-version = "1.1.1"
+version = "1.2.0"
 description = "A lightweight Python binding for lightGraph network visualization"
 authors = [
     {name = "Hao Zhu", email = "haozhu233@gmail.com"},

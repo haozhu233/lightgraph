@@ -367,6 +367,28 @@ class TestDataInputs:
         with pytest.raises(ValueError, match="dictionary or 'auto'"):
             net_vis(edges=[('A', 'B')], node_groups='louvain')
 
+    def test_group_colors_and_order_config(self):
+        result = net_vis(edges=[('A', 'B'), ('B', 'C')],
+                         node_groups={'A': 'g1', 'B': 'g2', 'C': 'g1'},
+                         group_colors={'g1': '#ff7f0e'},
+                         group_order=['g2', 'g1'])
+        groups = self._extract_config(result)['groups']
+        assert groups['colors'] == {'g1': '#ff7f0e'}
+        assert groups['colorOrder'] == ['g2', 'g1']
+
+    def test_group_colors_omitted_by_default(self):
+        result = net_vis(edges=[('A', 'B')],
+                         node_groups={'A': 'g1', 'B': 'g2'})
+        groups = self._extract_config(result)['groups']
+        assert 'colors' not in groups
+        assert 'colorOrder' not in groups
+
+    def test_group_colors_validation(self):
+        with pytest.raises(ValueError, match="group_colors"):
+            net_vis(edges=[('A', 'B')], group_colors=['#ff0000'])
+        with pytest.raises(ValueError, match="group_order"):
+            net_vis(edges=[('A', 'B')], group_order='g1')
+
     def test_sparse_matrix(self):
         scipy_sparse = pytest.importorskip('scipy.sparse')
         adj = scipy_sparse.csr_matrix(np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]]))

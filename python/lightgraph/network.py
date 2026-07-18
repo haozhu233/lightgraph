@@ -8,7 +8,7 @@ import base64
 import uuid
 import numpy as np
 import os
-from typing import Optional, Dict, Union, Literal
+from typing import Optional, Dict, List, Union, Literal
 
 from .analytics import _normalize_edges, communities as _communities
 
@@ -151,6 +151,8 @@ def net_vis(
     adj_matrix=None,
     node_names=None,
     node_groups: Optional[Union[Dict[str, str], str]] = None,
+    group_colors: Optional[Dict[str, str]] = None,
+    group_order: Optional[List[str]] = None,
     node_colors: Optional[Dict[str, str]] = None,
     node_sizes: Optional[Dict[str, float]] = None,
     remove_unconnected: bool = True,
@@ -252,6 +254,18 @@ def net_vis(
         Dictionary mapping node names to group identifiers for coloring.
         Pass 'auto' to detect communities automatically (networkx Louvain
         when installed, else a built-in label-propagation fallback).
+    group_colors : dict, optional
+        Mapping of group name to hex color (e.g. {'alpha': '#ff7f0e'}),
+        pinning those groups' colors. Unpinned groups stay on the default
+        palette. Names matching no group are ignored, so one mapping can be
+        reused across filtered subsets of the same data.
+    group_order : list, optional
+        Explicit group ordering for palette assignment. Groups keep their
+        palette slot even when absent from the data, so passing the same
+        list (e.g. computed once from the full dataset) to every figure in
+        a series keeps each group's color stable across subsets. Groups not
+        listed are appended in sorted order. Without group_order, groups
+        are assigned palette colors in sorted-name order.
     node_colors : dict, optional
         Dictionary mapping node names to hex color strings (e.g., '#FF5733').
     node_sizes : dict, optional
@@ -381,6 +395,10 @@ def net_vis(
         raise ValueError("node_groups must be a dictionary or 'auto'.")
     if node_colors is not None and not isinstance(node_colors, dict):
         raise ValueError("node_colors must be a dictionary.")
+    if group_colors is not None and not isinstance(group_colors, dict):
+        raise ValueError("group_colors must be a dictionary of {group: hex_color}.")
+    if group_order is not None and isinstance(group_order, (str, dict)):
+        raise ValueError("group_order must be a list of group names.")
     if node_sizes is not None and not isinstance(node_sizes, dict):
         raise ValueError("node_sizes must be a dictionary.")
     if node_metric is not None and not isinstance(node_metric, dict):
@@ -573,6 +591,11 @@ def net_vis(
         graph_config['ui']['metricLegend'] = metric_legend
 
     # Only set optional values if explicitly provided
+    if group_colors is not None:
+        graph_config['groups']['colors'] = {
+            str(k): str(v) for k, v in group_colors.items()}
+    if group_order is not None:
+        graph_config['groups']['colorOrder'] = [str(g) for g in group_order]
     if node_color is not None:
         graph_config['nodes']['defaultColor'] = node_color
     if edge_width is not None:

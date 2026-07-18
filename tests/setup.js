@@ -66,7 +66,36 @@ global.d3 = {
   forceCollide: jest.fn(() => ({
     radius: jest.fn().mockReturnThis(),
   })),
-  scaleOrdinal: jest.fn(() => jest.fn()),
+  // Faithful mini-implementation of d3.scaleOrdinal: explicit domain plus
+  // implicit append for unknown inputs, so the group color logic under test
+  // behaves as it does in the browser.
+  scaleOrdinal: jest.fn((range = []) => {
+    let domain = [];
+    const index = new Map();
+    const scale = (key) => {
+      if (!index.has(key)) {
+        index.set(key, domain.push(key) - 1);
+      }
+      return range[index.get(key) % range.length];
+    };
+    scale.domain = (d) => {
+      if (d === undefined) return domain.slice();
+      domain = [];
+      index.clear();
+      d.forEach((key) => {
+        if (!index.has(key)) {
+          index.set(key, domain.push(key) - 1);
+        }
+      });
+      return scale;
+    };
+    scale.range = (r) => {
+      if (r === undefined) return range.slice();
+      range = r.slice();
+      return scale;
+    };
+    return scale;
+  }),
   schemeCategory10: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'],
   schemeSet2: ['#66c2a5', '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854', '#ffd92f', '#e5c494', '#b3b3b3'],
   schemeSet3: ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f'],

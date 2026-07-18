@@ -4,6 +4,6 @@ dependencies:
     src: htmlwidgets/lib/d3
     script: d3.v7.min.js
   - name: lightgraph
-    version: 0.2.0
+    version: 1.2.0
     src: assets
     script: lightgraph.js
