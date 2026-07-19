@@ -145,6 +145,20 @@ slim_embed(lightgraph(nodes, edges, remove_unconnected = TRUE,
            "r_flights_groups.html", "Flight network by continent",
            shared_edges = F_FULL)
 
+# 3b. Stable colors: full network and the busy slice (weight >= 5, which
+#     drops the Arctic) share one group_order, so colors match across both
+continents <- sort(unique(nodes$group[!is.na(nodes$group)]))
+busy <- edges[edges$weight >= 5, ]
+slim_embed(lightgraph(nodes, edges, remove_unconnected = TRUE,
+                      show_ellipses = FALSE, group_order = continents),
+           "r_flights_stable_full.html",
+           "Full flight network with a fixed group order",
+           shared_edges = F_FULL)
+slim_embed(lightgraph(nodes, busy, remove_unconnected = TRUE,
+                      show_ellipses = FALSE, group_order = continents),
+           "r_flights_stable_busy.html",
+           "Busy routes only — continent colors held by group_order")
+
 # 4. Metric: strength -> size
 slim_embed(lightgraph(edges = eu, node_metric = strength_eu,
                       metric_size_range = c(2, 26),

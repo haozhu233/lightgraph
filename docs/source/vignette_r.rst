@@ -201,15 +201,36 @@ vector serves the whole series:
 
    continents <- sort(unique(nodes$group[!is.na(nodes$group)]))
 
-   lightgraph(nodes, edges, group_order = continents)
+   lightgraph(nodes, edges, remove_unconnected = TRUE,
+              show_ellipses = FALSE, group_order = continents)
 
-   # the competitive slice drops whole continents — colors hold anyway
-   competitive <- edges[edges$weight >= 3, ]
-   lightgraph(nodes, competitive, group_order = continents)
+   # routes flown by 5+ airlines: the Arctic drops out — colors hold anyway
+   busy <- edges[edges$weight >= 5, ]
+   lightgraph(nodes, busy, remove_unconnected = TRUE,
+              show_ellipses = FALSE, group_order = continents)
 
    # or pin colors outright
-   lightgraph(nodes, edges,
+   lightgraph(nodes, edges, remove_unconnected = TRUE,
               group_colors = c(Europe = "#1f77b4", Asia = "#ff7f0e"))
+
+.. raw:: html
+
+   <iframe src="./_static/vignettes/r_flights_stable_full.html"
+     title="Full flight network with a fixed group order" loading="lazy"
+     style="width:100%; height:620px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
+
+.. raw:: html
+
+   <iframe src="./_static/vignettes/r_flights_stable_busy.html"
+     title="Busy routes only — continent colors held by group_order" loading="lazy"
+     style="width:100%; height:620px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
+
+Both figures share one ``group_order``. The busy slice has no Arctic
+routes left — without ``group_order`` every continent sorting after
+Arctic would slide up one palette slot in the second figure; here each
+keeps its color. Note ``continents`` also lists Antarctica, which has
+no scheduled routes and appears in neither figure — absent names simply
+hold their slot, so one list serves every figure in the series.
 
 Metric-driven size
 ~~~~~~~~~~~~~~~~~~

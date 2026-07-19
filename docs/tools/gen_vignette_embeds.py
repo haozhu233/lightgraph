@@ -188,6 +188,24 @@ slim_embed(net_vis(edges=edges, nodes=nodes, show_ellipses=False),
            shared_edges=F_FULL)
 
 # ---------------------------------------------------------------------------
+# 3b. Stable colors: full network and the busy slice (weight >= 5, which
+#     drops the Arctic) share one group_order, so colors match across both
+# ---------------------------------------------------------------------------
+continents = sorted(nodes['group'].dropna().unique())
+busy = edges[edges['weight'] >= 5]
+slim_embed(
+    net_vis(edges=edges, nodes=nodes, show_ellipses=False,
+            group_order=continents),
+    'py_flights_stable_full.html',
+    'Full flight network with a fixed group order',
+    shared_edges=F_FULL)
+slim_embed(
+    net_vis(edges=busy, nodes=nodes, show_ellipses=False,
+            group_order=continents),
+    'py_flights_stable_busy.html',
+    'Busy routes only — continent colors held by group_order')
+
+# ---------------------------------------------------------------------------
 # 4. Metric-driven size: route volume within Europe
 # ---------------------------------------------------------------------------
 slim_embed(

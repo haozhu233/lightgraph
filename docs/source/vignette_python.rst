@@ -203,15 +203,36 @@ value serves the whole series:
 
    continents = sorted(nodes['group'].dropna().unique())
 
-   net_vis(edges=edges, nodes=nodes, group_order=continents)
+   net_vis(edges=edges, nodes=nodes, show_ellipses=False,
+           group_order=continents)
 
-   # the competitive slice drops whole continents — colors hold anyway
-   competitive = edges[edges['weight'] >= 3]
-   net_vis(edges=competitive, nodes=nodes, group_order=continents)
+   # routes flown by 5+ airlines: the Arctic drops out — colors hold anyway
+   busy = edges[edges['weight'] >= 5]
+   net_vis(edges=busy, nodes=nodes, show_ellipses=False,
+           group_order=continents)
 
    # or pin colors outright
    net_vis(edges=edges, nodes=nodes,
            group_colors={'Europe': '#1f77b4', 'Asia': '#ff7f0e'})
+
+.. raw:: html
+
+   <iframe src="./_static/vignettes/py_flights_stable_full.html"
+     title="Full flight network with a fixed group order" loading="lazy"
+     style="width:100%; height:620px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
+
+.. raw:: html
+
+   <iframe src="./_static/vignettes/py_flights_stable_busy.html"
+     title="Busy routes only — continent colors held by group_order" loading="lazy"
+     style="width:100%; height:620px; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden;"></iframe>
+
+Both figures share one ``group_order``. The busy slice has no Arctic
+routes left — without ``group_order`` every continent sorting after
+Arctic would slide up one palette slot in the second figure; here each
+keeps its color. Note ``continents`` also lists Antarctica, which has
+no scheduled routes and appears in neither figure — absent names simply
+hold their slot, so one list serves every figure in the series.
 
 Metric-driven size
 ~~~~~~~~~~~~~~~~~~
