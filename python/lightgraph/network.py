@@ -30,12 +30,21 @@ class NetworkVisualization:
         """The raw HTML content as a string."""
         return self._html
 
-    def _repr_html_(self) -> str:
-        """Jupyter rich display: renders in an iframe for DOM isolation."""
-        full_html = (
+    def _full_document(self) -> str:
+        """Wrap the raw fragment in a standalone HTML document with an
+        explicit UTF-8 charset declaration. Without this, a file opened
+        directly in a browser/editor (no HTTP Content-Type header, no BOM)
+        has its encoding guessed, which mangles the non-ASCII characters
+        lightGraph's own UI uses (e.g. the legend bullet '●') into mojibake.
+        """
+        return (
             "<!DOCTYPE html><html><head><meta charset='utf-8'></head>"
             f"<body style='margin:0;padding:0;overflow:hidden;'>{self._html}</body></html>"
         )
+
+    def _repr_html_(self) -> str:
+        """Jupyter rich display: renders in an iframe for DOM isolation."""
+        full_html = self._full_document()
         b64 = base64.b64encode(full_html.encode('utf-8')).decode('ascii')
         uid = uuid.uuid4().hex[:8]
         return (
@@ -63,7 +72,7 @@ class NetworkVisualization:
     def save(self, filepath: str) -> None:
         """Save the visualization as a standalone HTML file."""
         with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(self._html)
+            f.write(self._full_document())
 
 
 def _edges_from_dense(adj_matrix, node_names, dedup_symmetric):
