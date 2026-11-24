@@ -1,5 +1,8 @@
 # lightgraph
 
+[![Total downloads](https://api.pepy.tech/badge/lightgraph)](https://pepy.tech/projects/lightgraph)
+[![Monthly downloads](https://api.pepy.tech/badge/lightgraph/month)](https://pepy.tech/projects/lightgraph)
+
 `lightgraph` is a high-performance HTML canvas-based network visualization tool
 for the browser, Jupyter notebooks (Python), and R. Batched canvas rendering
 and viewport culling keep graphs with thousands of nodes and edges smooth and

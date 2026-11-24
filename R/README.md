@@ -155,3 +155,18 @@ MIT
 
 - GitHub: https://github.com/haozhu233/lightgraph
 - Issues: https://github.com/haozhu233/lightgraph/issues
+
+## Citation
+
+If you use `lightgraph` in your work, please cite the software using the
+following BibTeX entry:
+
+```bibtex
+@misc{lightgraph2026,
+  author = {Zhu, Hao and McComiskey, Aiden and Slonim, Donna},
+  title = {{lightgraph}: High-Performance HTML Canvas-Based Network Visualization},
+  year = {2026},
+  howpublished = {\url{https://github.com/haozhu233/lightgraph}},
+  note = {Version 1.2.2}
+}
+```
